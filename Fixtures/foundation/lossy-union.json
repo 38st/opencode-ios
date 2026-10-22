@@ -1,0 +1,8 @@
+[
+  {"type": "text", "text": "before", "futureKey": {"allowed": true}},
+  {"type": "future", "payload": [1, null, false]},
+  {"type": "text", "text": 123},
+  null,
+  42,
+  {"type": "text", "text": "after"}
+]

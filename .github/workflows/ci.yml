@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Xcode ${{ matrix.xcode }}
+    # GitHub's arm64 Xcode 27 preview image runs macOS 27 (see README).
+    runs-on: xcode-27
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # Both versions are listed in the 20261012 xcode-27-arm64 runner inventory.
+        xcode: ['27.0', '27.1']
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_${{ matrix.xcode }}.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Check toolchain
+        run: |
+          ls -d /Applications/Xcode_*.app
+          test -d "$DEVELOPER_DIR"
+          xcodebuild -version
+          swift --version
+      - name: Install XcodeGen
+        run: |
+          brew install xcodegen
+          xcodegen --version
+      - name: Generate project
+        run: xcodegen generate
+      - name: Test package
+        run: swift test --package-path Packages/OpencodeKit
+      - name: Build app
+        # The hosted image has iPhone 18 Pro / iOS 27; local verification uses 17 Pro / 26.5.
+        run: xcodebuild -project Opencode.xcodeproj -scheme Opencode -destination 'platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0' -derivedDataPath .build/DerivedData build
+      - name: Test composer editor
+        run: xcodebuild -project Opencode.xcodeproj -scheme Opencode -destination 'platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0' -derivedDataPath .build/DerivedData -only-testing:ComposerEditorTests -parallel-testing-enabled NO test
+
+  paths:
+    name: No home directory paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '26'
+      - name: Check tracked files
+        run: node --test Tools/fixture-recorder/home-paths.test.mjs

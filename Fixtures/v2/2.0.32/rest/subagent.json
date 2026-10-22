@@ -1,0 +1,934 @@
+[
+  {
+    "request": {
+      "method": "POST",
+      "path": "/api/session",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]",
+        "content-type": "application/json"
+      },
+      "body": {
+        "title": "Fixture subagent",
+        "location": {
+          "directory": "/sandbox/project"
+        },
+        "model": {
+          "providerID": "mock",
+          "id": "mock-1"
+        }
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "412",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:16 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "ses_eb8719ce8ffeWjxRXXn7jM2Ffw",
+          "projectID": "global",
+          "model": {
+            "id": "mock-1",
+            "providerID": "mock",
+            "variant": "default"
+          },
+          "cost": 0,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "reasoning": 0,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          },
+          "time": {
+            "created": 1792201876339,
+            "updated": 1792201876339
+          },
+          "title": "Fixture subagent",
+          "location": {
+            "directory": "/sandbox/project"
+          }
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8719ce8ffeWjxRXXn7jM2Ffw",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "412",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:16 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "ses_eb8719ce8ffeWjxRXXn7jM2Ffw",
+          "projectID": "global",
+          "model": {
+            "id": "mock-1",
+            "providerID": "mock",
+            "variant": "default"
+          },
+          "cost": 0,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "reasoning": 0,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          },
+          "time": {
+            "created": 1792201876339,
+            "updated": 1792201876339
+          },
+          "title": "Fixture subagent",
+          "location": {
+            "directory": "/sandbox/project"
+          }
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8719ce8ffeWjxRXXn7jM2Ffw/message?limit=200&order=asc",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "50",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:16 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": [],
+        "cursor": {
+          "previous": null,
+          "next": null
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8719ce8ffeWjxRXXn7jM2Ffw/inbox",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:16 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8719ce8ffeWjxRXXn7jM2Ffw/permission",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:16 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8719ce8ffeWjxRXXn7jM2Ffw/form",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:16 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "path": "/api/session/ses_eb8719ce8ffeWjxRXXn7jM2Ffw/prompt",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]",
+        "content-type": "application/json"
+      },
+      "body": {
+        "text": "Run the subagent fixture scenario."
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "215",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:16 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "msg_1478e6384001j8pxazpzODz8h6",
+          "sessionID": "ses_eb8719ce8ffeWjxRXXn7jM2Ffw",
+          "time": {
+            "created": 1792201876357
+          },
+          "type": "user",
+          "payload": {
+            "text": "Run the subagent fixture scenario."
+          },
+          "delivery": "steer"
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "path": "/api/experimental/session/ses_eb8719ce8ffeWjxRXXn7jM2Ffw/wait",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 204,
+      "headers": {
+        "connection": "keep-alive",
+        "date": "Sat, 17 Oct 2026 01:51:17 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin"
+      },
+      "body": null,
+      "bodyFormat": "empty"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8719ce8ffeWjxRXXn7jM2Ffw/message?limit=200&order=asc",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "2025",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:17 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": [
+          {
+            "id": "msg_1478e6384001j8pxazpzODz8h6",
+            "time": {
+              "created": 1792201876363
+            },
+            "text": "Run the subagent fixture scenario.",
+            "type": "user"
+          },
+          {
+            "id": "msg_1478e63cc001lhShEh08Qd3g5W",
+            "time": {
+              "created": 1792201876430,
+              "streamed": 1792201876688,
+              "completed": 1792201877144
+            },
+            "type": "assistant",
+            "agent": "build",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "content": [
+              {
+                "type": "tool",
+                "id": "call_18_0",
+                "name": "subagent",
+                "executed": false,
+                "state": {
+                  "status": "completed",
+                  "input": {
+                    "agent": "general",
+                    "prompt": "Report fixture child result.",
+                    "description": "Fixture child"
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "<subagent sessionID=\"ses_eb8719b2effeJSUHThQ2ydE721\" state=\"completed\">\nFixture child result.\n</subagent>"
+                    }
+                  ],
+                  "metadata": {
+                    "sessionID": "ses_eb8719b2effeJSUHThQ2ydE721",
+                    "status": "completed",
+                    "truncated": false
+                  }
+                },
+                "time": {
+                  "created": 1792201876685,
+                  "ran": 1792201876687,
+                  "completed": 1792201877049
+                }
+              }
+            ],
+            "snapshot": {
+              "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "files": []
+            },
+            "finish": "tool-calls",
+            "rawFinish": "tool_calls",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e66a100120YNGqxF5635i8",
+            "time": {
+              "created": 1792201877155,
+              "streamed": 1792201877279,
+              "completed": 1792201877336
+            },
+            "type": "assistant",
+            "agent": "build",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Child session completed."
+              }
+            ],
+            "snapshot": {
+              "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "files": []
+            },
+            "finish": "stop",
+            "rawFinish": "stop",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e675a002NDtMs1l533pfjD",
+            "time": {
+              "created": 1792201877338
+            },
+            "type": "idle",
+            "outcome": "succeeded"
+          }
+        ],
+        "cursor": {
+          "previous": "eyJpZCI6Im1zZ18xNDc4ZTYzODQwMDFqOHB4YXpwek9EejhoNiIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoicHJldmlvdXMifQ",
+          "next": "eyJpZCI6Im1zZ18xNDc4ZTY3NWEwMDJORHRNczFsNTMzcGZqRCIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoibmV4dCJ9"
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session?parentID=ses_eb8719ce8ffeWjxRXXn7jM2Ffw",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "915",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:17 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": [
+          {
+            "id": "ses_eb8719b2effeJSUHThQ2ydE721",
+            "parentID": "ses_eb8719ce8ffeWjxRXXn7jM2Ffw",
+            "projectID": "global",
+            "agent": "general",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            },
+            "outcome": "succeeded",
+            "time": {
+              "created": 1792201876778,
+              "updated": 1792201877039,
+              "idle": 1792201877043
+            },
+            "title": "Fixture child",
+            "location": {
+              "directory": "/sandbox/project"
+            }
+          }
+        ],
+        "cursor": {
+          "previous": "eyJwYXJlbnRJRCI6InNlc19lYjg3MTljZThmZmVXanhSWFhuN2pNMkZmdyIsImFuY2hvciI6eyJpZCI6InNlc19lYjg3MTliMmVmZmVKU1VIVGhRMnlkRTcyMSIsInRpbWUiOjE3OTIyMDE4NzcwMzksImRpcmVjdGlvbiI6InByZXZpb3VzIn19",
+          "next": "eyJwYXJlbnRJRCI6InNlc19lYjg3MTljZThmZmVXanhSWFhuN2pNMkZmdyIsImFuY2hvciI6eyJpZCI6InNlc19lYjg3MTliMmVmZmVKU1VIVGhRMnlkRTcyMSIsInRpbWUiOjE3OTIyMDE4NzcwMzksImRpcmVjdGlvbiI6Im5leHQifX0"
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8719b2effeJSUHThQ2ydE721/message?limit=200&order=asc",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "1053",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:17 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": [
+          {
+            "id": "msg_1478e653c001FeQHPBee3Bsp0L",
+            "time": {
+              "created": 1792201876816
+            },
+            "text": "You are a subagent spawned by another session.\nReport fixture child result.",
+            "type": "user"
+          },
+          {
+            "id": "msg_1478e6552001xgWXiUuGxARB2E",
+            "time": {
+              "created": 1792201876819,
+              "streamed": 1792201876976,
+              "completed": 1792201877039
+            },
+            "type": "assistant",
+            "agent": "general",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Fixture child result."
+              }
+            ],
+            "snapshot": {
+              "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "files": []
+            },
+            "finish": "stop",
+            "rawFinish": "stop",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e6633001P876POcUwMdqbC",
+            "time": {
+              "created": 1792201877043
+            },
+            "type": "idle",
+            "outcome": "succeeded"
+          }
+        ],
+        "cursor": {
+          "previous": "eyJpZCI6Im1zZ18xNDc4ZTY1M2MwMDFGZVFIUEJlZTNCc3AwTCIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoicHJldmlvdXMifQ",
+          "next": "eyJpZCI6Im1zZ18xNDc4ZTY2MzMwMDFQODc2UE9jVXdNZHFiQyIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoibmV4dCJ9"
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8719ce8ffeWjxRXXn7jM2Ffw",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "457",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:17 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "ses_eb8719ce8ffeWjxRXXn7jM2Ffw",
+          "projectID": "global",
+          "model": {
+            "id": "mock-1",
+            "providerID": "mock",
+            "variant": "default"
+          },
+          "cost": 0,
+          "tokens": {
+            "input": 48,
+            "output": 18,
+            "reasoning": 6,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          },
+          "outcome": "succeeded",
+          "time": {
+            "created": 1792201876339,
+            "updated": 1792201877336,
+            "idle": 1792201877338
+          },
+          "title": "Fixture subagent",
+          "location": {
+            "directory": "/sandbox/project"
+          }
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8719ce8ffeWjxRXXn7jM2Ffw",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "457",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:17 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "ses_eb8719ce8ffeWjxRXXn7jM2Ffw",
+          "projectID": "global",
+          "model": {
+            "id": "mock-1",
+            "providerID": "mock",
+            "variant": "default"
+          },
+          "cost": 0,
+          "tokens": {
+            "input": 48,
+            "output": 18,
+            "reasoning": 6,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          },
+          "outcome": "succeeded",
+          "time": {
+            "created": 1792201876339,
+            "updated": 1792201877336,
+            "idle": 1792201877338
+          },
+          "title": "Fixture subagent",
+          "location": {
+            "directory": "/sandbox/project"
+          }
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8719ce8ffeWjxRXXn7jM2Ffw/message?limit=200&order=asc",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "2025",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:17 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": [
+          {
+            "id": "msg_1478e6384001j8pxazpzODz8h6",
+            "time": {
+              "created": 1792201876363
+            },
+            "text": "Run the subagent fixture scenario.",
+            "type": "user"
+          },
+          {
+            "id": "msg_1478e63cc001lhShEh08Qd3g5W",
+            "time": {
+              "created": 1792201876430,
+              "streamed": 1792201876688,
+              "completed": 1792201877144
+            },
+            "type": "assistant",
+            "agent": "build",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "content": [
+              {
+                "type": "tool",
+                "id": "call_18_0",
+                "name": "subagent",
+                "executed": false,
+                "state": {
+                  "status": "completed",
+                  "input": {
+                    "agent": "general",
+                    "prompt": "Report fixture child result.",
+                    "description": "Fixture child"
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "<subagent sessionID=\"ses_eb8719b2effeJSUHThQ2ydE721\" state=\"completed\">\nFixture child result.\n</subagent>"
+                    }
+                  ],
+                  "metadata": {
+                    "sessionID": "ses_eb8719b2effeJSUHThQ2ydE721",
+                    "status": "completed",
+                    "truncated": false
+                  }
+                },
+                "time": {
+                  "created": 1792201876685,
+                  "ran": 1792201876687,
+                  "completed": 1792201877049
+                }
+              }
+            ],
+            "snapshot": {
+              "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "files": []
+            },
+            "finish": "tool-calls",
+            "rawFinish": "tool_calls",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e66a100120YNGqxF5635i8",
+            "time": {
+              "created": 1792201877155,
+              "streamed": 1792201877279,
+              "completed": 1792201877336
+            },
+            "type": "assistant",
+            "agent": "build",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Child session completed."
+              }
+            ],
+            "snapshot": {
+              "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "files": []
+            },
+            "finish": "stop",
+            "rawFinish": "stop",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e675a002NDtMs1l533pfjD",
+            "time": {
+              "created": 1792201877338
+            },
+            "type": "idle",
+            "outcome": "succeeded"
+          }
+        ],
+        "cursor": {
+          "previous": "eyJpZCI6Im1zZ18xNDc4ZTYzODQwMDFqOHB4YXpwek9EejhoNiIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoicHJldmlvdXMifQ",
+          "next": "eyJpZCI6Im1zZ18xNDc4ZTY3NWEwMDJORHRNczFsNTMzcGZqRCIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoibmV4dCJ9"
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8719ce8ffeWjxRXXn7jM2Ffw/inbox",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:17 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8719ce8ffeWjxRXXn7jM2Ffw/permission",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:17 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8719ce8ffeWjxRXXn7jM2Ffw/form",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:17 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  }
+]

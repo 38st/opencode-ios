@@ -1,0 +1,211 @@
+[
+  {
+    "phase": "start",
+    "sessionID": "ses_eb871a0d1ffeoFD6hscvmLd5eI",
+    "eventOffset": 2,
+    "session": {
+      "id": "ses_eb871a0d1ffeoFD6hscvmLd5eI",
+      "projectID": "global",
+      "model": {
+        "id": "mock-1",
+        "providerID": "mock",
+        "variant": "default"
+      },
+      "cost": 0,
+      "tokens": {
+        "input": 0,
+        "output": 0,
+        "reasoning": 0,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "time": {
+        "created": 1792201875373,
+        "updated": 1792201875373
+      },
+      "title": "Fixture question-form",
+      "location": {
+        "directory": "/sandbox/project"
+      }
+    },
+    "messages": [],
+    "inbox": [],
+    "permissions": [],
+    "forms": []
+  },
+  {
+    "phase": "end",
+    "sessionID": "ses_eb871a0d1ffeoFD6hscvmLd5eI",
+    "eventOffset": 24,
+    "session": {
+      "id": "ses_eb871a0d1ffeoFD6hscvmLd5eI",
+      "projectID": "global",
+      "model": {
+        "id": "mock-1",
+        "providerID": "mock",
+        "variant": "default"
+      },
+      "cost": 0,
+      "tokens": {
+        "input": 48,
+        "output": 18,
+        "reasoning": 6,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "outcome": "succeeded",
+      "time": {
+        "created": 1792201875373,
+        "updated": 1792201876200,
+        "idle": 1792201876221
+      },
+      "title": "Fixture question-form",
+      "location": {
+        "directory": "/sandbox/project"
+      }
+    },
+    "messages": [
+      {
+        "id": "msg_1478e5fc2001zhETzP0rPjTmNF",
+        "time": {
+          "created": 1792201875478
+        },
+        "text": "Run the question-form fixture scenario.",
+        "type": "user"
+      },
+      {
+        "id": "msg_1478e601f001GryHMF8EnTHqzV",
+        "time": {
+          "created": 1792201875493,
+          "streamed": 1792201875779,
+          "completed": 1792201876066
+        },
+        "type": "assistant",
+        "agent": "build",
+        "model": {
+          "id": "mock-1",
+          "providerID": "mock",
+          "variant": "default"
+        },
+        "content": [
+          {
+            "type": "tool",
+            "id": "call_16_0",
+            "name": "question",
+            "executed": false,
+            "state": {
+              "status": "completed",
+              "input": {
+                "questions": [
+                  {
+                    "header": "Color",
+                    "question": "Which color?",
+                    "options": [
+                      {
+                        "label": "Blue",
+                        "description": "Use blue"
+                      },
+                      {
+                        "label": "Green",
+                        "description": "Use green"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "User has answered your questions: \"Which color?\"=\"Blue\". You can now continue with the user's answers in mind."
+                }
+              ],
+              "metadata": {
+                "answers": [
+                  [
+                    "Blue"
+                  ]
+                ],
+                "truncated": false
+              }
+            },
+            "time": {
+              "created": 1792201875773,
+              "ran": 1792201875776,
+              "completed": 1792201876027
+            }
+          }
+        ],
+        "snapshot": {
+          "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+          "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+          "files": []
+        },
+        "finish": "tool-calls",
+        "rawFinish": "tool_calls",
+        "cost": 0,
+        "tokens": {
+          "input": 24,
+          "output": 9,
+          "reasoning": 3,
+          "cache": {
+            "read": 0,
+            "write": 0
+          }
+        }
+      },
+      {
+        "id": "msg_1478e62690015mE6ouqCAVQBU0",
+        "time": {
+          "created": 1792201876075,
+          "streamed": 1792201876143,
+          "completed": 1792201876200
+        },
+        "type": "assistant",
+        "agent": "build",
+        "model": {
+          "id": "mock-1",
+          "providerID": "mock",
+          "variant": "default"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Blue selected."
+          }
+        ],
+        "snapshot": {
+          "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+          "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+          "files": []
+        },
+        "finish": "stop",
+        "rawFinish": "stop",
+        "cost": 0,
+        "tokens": {
+          "input": 24,
+          "output": 9,
+          "reasoning": 3,
+          "cache": {
+            "read": 0,
+            "write": 0
+          }
+        }
+      },
+      {
+        "id": "msg_1478e62fd001UQh5CmTnhAgQec",
+        "time": {
+          "created": 1792201876221
+        },
+        "type": "idle",
+        "outcome": "succeeded"
+      }
+    ],
+    "inbox": [],
+    "permissions": [],
+    "forms": []
+  }
+]

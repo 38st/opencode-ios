@@ -1,0 +1,93 @@
+[
+  {
+    "name": "swift",
+    "repo": "alex-pinkus/tree-sitter-swift",
+    "tag": "SwiftTreeSitter 0.10.0 submodule",
+    "revision": "eda05af7ac41adb4eb19c346883c0fa32fe3bdd8",
+    "subpath": ""
+  },
+  {
+    "name": "typescript",
+    "repo": "tree-sitter/tree-sitter-typescript",
+    "tag": "v0.23.2",
+    "revision": "f975a621f4e7f532fe322e13c4f79495e0a7b2e7",
+    "subpath": "typescript"
+  },
+  {
+    "name": "tsx",
+    "repo": "tree-sitter/tree-sitter-typescript",
+    "tag": "v0.23.2",
+    "revision": "f975a621f4e7f532fe322e13c4f79495e0a7b2e7",
+    "subpath": "tsx"
+  },
+  {
+    "name": "javascript",
+    "repo": "tree-sitter/tree-sitter-javascript",
+    "tag": "v0.23.1",
+    "revision": "3a837b6f3658ca3618f2022f8707e29739c91364",
+    "subpath": ""
+  },
+  {
+    "name": "python",
+    "repo": "tree-sitter/tree-sitter-python",
+    "tag": "v0.23.6",
+    "revision": "bffb65a8cfe4e46290331dfef0dbf0ef3679de11",
+    "subpath": ""
+  },
+  {
+    "name": "json",
+    "repo": "tree-sitter/tree-sitter-json",
+    "tag": "v0.24.8",
+    "revision": "ee35a6ebefcef0c5c416c0d1ccec7370cfca5a24",
+    "subpath": ""
+  },
+  {
+    "name": "bash",
+    "repo": "tree-sitter/tree-sitter-bash",
+    "tag": "v0.23.3",
+    "revision": "487734f87fd87118028a65a4599352fa99c9cde8",
+    "subpath": ""
+  },
+  {
+    "name": "go",
+    "repo": "tree-sitter/tree-sitter-go",
+    "tag": "v0.23.4",
+    "revision": "3c3775faa968158a8b4ac190a7fda867fd5fb748",
+    "subpath": ""
+  },
+  {
+    "name": "rust",
+    "repo": "tree-sitter/tree-sitter-rust",
+    "tag": "v0.23.2",
+    "revision": "cad8a206f2e4194676b9699f26f6560d07130d3f",
+    "subpath": ""
+  },
+  {
+    "name": "markdown",
+    "repo": "tree-sitter-grammars/tree-sitter-markdown",
+    "tag": "v0.5.1",
+    "revision": "2dfd57f547f06ca5631a80f601e129d73fc8e9f0",
+    "subpath": "tree-sitter-markdown"
+  },
+  {
+    "name": "yaml",
+    "repo": "tree-sitter-grammars/tree-sitter-yaml",
+    "tag": "v0.7.1",
+    "revision": "9632edc32eb86966a482fcb3c9a7f4bb78ae0ddb",
+    "subpath": ""
+  },
+  {
+    "name": "html",
+    "repo": "tree-sitter/tree-sitter-html",
+    "tag": "v0.23.2",
+    "revision": "5a5ca8551a179998360b4a4ca2c0f366a35acc03",
+    "subpath": ""
+  },
+  {
+    "name": "css",
+    "repo": "tree-sitter/tree-sitter-css",
+    "tag": "v0.23.2",
+    "revision": "c0d581e32d183a536731ed6c3a72758b27e20411",
+    "subpath": ""
+  }
+]

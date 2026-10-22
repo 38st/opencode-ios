@@ -1,0 +1,10 @@
+{
+  "integer": 9007199254740993,
+  "maximum": 9223372036854775807,
+  "minimum": -9223372036854775808,
+  "fraction": 1.25,
+  "boolean": true,
+  "string": "NaN",
+  "array": [null, false, 7, "hello", {"extra": [1, 2]}],
+  "null": null
+}

@@ -1,0 +1,62 @@
+{
+  "randomBytes": [
+    0,
+    9,
+    10,
+    35,
+    36,
+    61,
+    62,
+    123,
+    124,
+    185,
+    248,
+    249,
+    254,
+    255
+  ],
+  "vectors": [
+    {
+      "timestamp": 0,
+      "descending": false,
+      "counter": 1,
+      "encodedTime": "000000000001",
+      "suffix": "09AZaz0z0z0167"
+    },
+    {
+      "timestamp": 0,
+      "descending": false,
+      "counter": 2,
+      "encodedTime": "000000000002",
+      "suffix": "09AZaz0z0z0167"
+    },
+    {
+      "timestamp": 1792022400000,
+      "descending": false,
+      "counter": 1,
+      "encodedTime": "13cdbcc00001",
+      "suffix": "09AZaz0z0z0167"
+    },
+    {
+      "timestamp": 1792022400000,
+      "descending": true,
+      "counter": 2,
+      "encodedTime": "ec32433ffffd",
+      "suffix": "09AZaz0z0z0167"
+    },
+    {
+      "timestamp": 1792022400001,
+      "descending": false,
+      "counter": 1,
+      "encodedTime": "13cdbcc01001",
+      "suffix": "09AZaz0z0z0167"
+    },
+    {
+      "timestamp": 1792022399999,
+      "descending": false,
+      "counter": 1,
+      "encodedTime": "13cdbcbff001",
+      "suffix": "09AZaz0z0z0167"
+    }
+  ]
+}

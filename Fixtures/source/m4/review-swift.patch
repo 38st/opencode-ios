@@ -1,0 +1,9 @@
+--- a/Example.swift
++++ b/Example.swift
+@@ -1,4 +1,4 @@
+ struct Example {
+-    let value = 1
+-    let title = "Original"
++    let value = 2
++    let title = "Updated"
+ }

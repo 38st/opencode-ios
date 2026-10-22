@@ -1,0 +1,53 @@
+name: Server contract
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact V2 version (empty resolves latest stable 2.x once)
+        required: false
+        type: string
+  schedule:
+    - cron: '23 7 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: xcode-27
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '26'
+      - name: Test mock and harness
+        run: node --test Tools/mock-llm/*.test.mjs Tools/opencode-sandbox/*.test.mjs Tools/fixture-recorder/*.test.mjs
+      - name: Resolve V2 once for contracts and recordings
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: |
+          node --input-type=module <<'JS'
+          import { appendFileSync } from 'node:fs';
+          import { resolveVersion } from './Tools/opencode-sandbox/index.mjs';
+          appendFileSync(process.env.GITHUB_ENV, `SERVER_VERSION=${await resolveVersion(process.env.REQUESTED_VERSION)}\n`);
+          JS
+      - name: Offline Swift tests (live cases skipped)
+        run: swift test --package-path Packages/OpencodeKit
+      - name: Live contract (Node and Swift, including stalled-stream recovery)
+        run: node Tools/contract/index.mjs --version "$SERVER_VERSION"
+      - name: Refresh fixtures as an artifact
+        run: node Tools/fixture-recorder/index.mjs --version "$SERVER_VERSION" --output .build/contract-fixtures
+      - name: Upload fixtures and isolation evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: opencode-contract
+          path: |
+            .build/contract-fixtures
+            .build/opencode-sandbox/audits
+          if-no-files-found: warn
+          include-hidden-files: true
