@@ -1,0 +1,306 @@
+name: Opencode
+options:
+  minimumXcodeGenVersion: 2.46.0
+  xcodeVersion: "27.0"
+  projectFormat: xcode16_3
+  deploymentTarget:
+    iOS: "26.4"
+packages:
+  OpencodeKit:
+    path: Packages/OpencodeKit
+  SnapshotTesting:
+    url: https://github.com/pointfreeco/swift-snapshot-testing
+    exactVersion: 1.18.7
+configFiles:
+  Debug: Config/Signing.xcconfig
+  Release: Config/Signing.xcconfig
+settings:
+  base:
+    OTHER_LDFLAGS: ["$(inherited)", "-framework", "AppIntents"]
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+    SWIFT_UPCOMING_FEATURE_NONISOLATED_NONSENDING_BY_DEFAULT: YES
+    SWIFT_UPCOMING_FEATURE_INFER_ISOLATED_CONFORMANCES: YES
+    SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY: YES
+    SWIFT_UPCOMING_FEATURE_EXISTENTIAL_ANY: YES
+targets:
+  Opencode:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+        type: syncedFolder
+        excludes:
+          - Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_PREFIX).client
+        TARGETED_DEVICE_FAMILY: "1,2"
+        MARKETING_VERSION: 0.1.0
+        CURRENT_PROJECT_VERSION: 1
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SUPPORTS_MACCATALYST: NO
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: YES
+        CODE_SIGN_STYLE: Automatic
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleURLTypes:
+          - CFBundleURLName: dev.opencodeios.routes
+            CFBundleURLSchemes: [opencodeios]
+        CFBundleDisplayName: Opencode
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        NSCameraUsageDescription: Opencode uses the camera to scan server pairing QR codes and attach photos to prompts.
+        NSFaceIDUsageDescription: Opencode verifies it is you before always allowing an action or approving a high-risk request.
+        NSLocalNetworkUsageDescription: Opencode uses your local network to connect to opencode servers you choose on your computers.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    dependencies:
+      - package: OpencodeKit
+        product: FeatureServers
+      - package: OpencodeKit
+        product: OCSync
+  OpencodeUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_PREFIX).uitests
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: Opencode
+  ServerSnapshots:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Packages/OpencodeKit/Tests/FeatureServersTests
+        excludes: [__Snapshots__]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_PREFIX).snapshots
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - package: OpencodeKit
+        product: OCFoundation
+      - package: OpencodeKit
+        product: FeatureServers
+      - package: OpencodeKit
+        product: OCModels
+      - package: OpencodeKit
+        product: OCDesign
+      - package: OpencodeKit
+        product: OCSync
+      - package: OpencodeKit
+        product: OCNetworking
+      - package: OpencodeKit
+        product: OCSecurity
+      - package: SnapshotTesting
+        product: SnapshotTesting
+  ReadSnapshots:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Packages/OpencodeKit/Tests/ReadSnapshots
+        excludes: [__Snapshots__]
+      - path: Packages/OpencodeKit/Tests/OCSyncTests/ReadPerformanceTests.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_PREFIX).read-snapshots
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/ComposerSnapshotHost.app/ComposerSnapshotHost
+        BUNDLE_LOADER: $(TEST_HOST)
+    dependencies:
+      - target: ComposerSnapshotHost
+      - package: OpencodeKit
+        product: OCFoundation
+      - package: OpencodeKit
+        product: OCModels
+      - package: OpencodeKit
+        product: OCDesign
+      - package: OpencodeKit
+        product: OCSync
+      - package: OpencodeKit
+        product: OCRender
+      - package: OpencodeKit
+        product: FeatureTranscript
+      - package: OpencodeKit
+        product: FeatureInbox
+      - package: OpencodeKit
+        product: OCNetworking
+      - package: OpencodeKit
+        product: OCSecurity
+      - package: SnapshotTesting
+        product: SnapshotTesting
+
+  ApprovalSnapshots:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Packages/OpencodeKit/Tests/ApprovalSnapshots
+        excludes: [__Snapshots__]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_PREFIX).approval-snapshots
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/ComposerSnapshotHost.app/ComposerSnapshotHost
+        BUNDLE_LOADER: $(TEST_HOST)
+    dependencies:
+      - target: ComposerSnapshotHost
+      - package: OpencodeKit
+        product: OCFoundation
+      - package: OpencodeKit
+        product: OCModels
+      - package: OpencodeKit
+        product: OCDesign
+      - package: OpencodeKit
+        product: FeatureApprovals
+      - package: SnapshotTesting
+        product: SnapshotTesting
+
+
+  ReviewSnapshots:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Packages/OpencodeKit/Tests/ReviewSnapshots
+        excludes: [__Snapshots__]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_PREFIX).review-snapshots
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/ComposerSnapshotHost.app/ComposerSnapshotHost
+        BUNDLE_LOADER: $(TEST_HOST)
+    dependencies:
+      - target: ComposerSnapshotHost
+      - package: OpencodeKit
+        product: OCFoundation
+      - package: OpencodeKit
+        product: OCModels
+      - package: OpencodeKit
+        product: OCDesign
+      - package: OpencodeKit
+        product: OCRender
+      - package: OpencodeKit
+        product: OCNetworking
+      - package: OpencodeKit
+        product: OCPersistence
+      - package: OpencodeKit
+        product: OCSync
+      - package: OpencodeKit
+        product: FeatureReview
+      - package: OpencodeKit
+        product: FeatureFiles
+      - package: OpencodeKit
+        product: FeatureComposer
+      - package: OpencodeKit
+        product: FeatureTranscript
+      - package: SnapshotTesting
+        product: SnapshotTesting
+
+  ComposerEditorTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests/ComposerEditorTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_PREFIX).composer-editor-tests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/ComposerSnapshotHost.app/ComposerSnapshotHost
+        BUNDLE_LOADER: $(TEST_HOST)
+    dependencies:
+      - target: ComposerSnapshotHost
+      - package: OpencodeKit
+        product: FeatureComposer
+      - package: OpencodeKit
+        product: OCModels
+
+  ComposerSnapshotHost:
+    type: application
+    platform: iOS
+    sources: [Tests/ComposerSnapshotHost]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_PREFIX).composer-snapshot-host
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGN_STYLE: Automatic
+  ComposerSnapshots:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Packages/OpencodeKit/Tests/ComposerSnapshots
+        excludes: [__Snapshots__]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_PREFIX).composer-snapshots
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/ComposerSnapshotHost.app/ComposerSnapshotHost
+        BUNDLE_LOADER: $(TEST_HOST)
+    dependencies:
+      - target: ComposerSnapshotHost
+      - package: OpencodeKit
+        product: OCFoundation
+      - package: OpencodeKit
+        product: OCModels
+      - package: OpencodeKit
+        product: OCDesign
+      - package: OpencodeKit
+        product: OCSync
+      - package: OpencodeKit
+        product: OCPersistence
+      - package: OpencodeKit
+        product: OCNetworking
+      - package: OpencodeKit
+        product: OCSecurity
+      - package: OpencodeKit
+        product: FeatureComposer
+      - package: OpencodeKit
+        product: FeatureTranscript
+      - package: OpencodeKit
+        product: OCRender
+      - package: SnapshotTesting
+        product: SnapshotTesting
+
+schemes:
+  Opencode:
+    build:
+      targets:
+        Opencode: all
+    run:
+      config: Debug
+    test:
+      targets:
+        - OpencodeUITests
+        - ServerSnapshots
+        - ReadSnapshots
+        - ApprovalSnapshots
+        - ComposerSnapshots
+        - ComposerEditorTests
+        - ReviewSnapshots
+      gatherCoverageData: false
+  ComposerEditor:
+    build:
+      targets:
+        Opencode: all
+    test:
+      targets:
+        - ComposerEditorTests
+      gatherCoverageData: false

@@ -1,0 +1,869 @@
+[
+  {
+    "request": {
+      "method": "POST",
+      "path": "/api/session",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]",
+        "content-type": "application/json"
+      },
+      "body": {
+        "title": "Fixture compaction",
+        "location": {
+          "directory": "/sandbox/project"
+        },
+        "model": {
+          "providerID": "mock",
+          "id": "mock-1"
+        }
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "414",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:22 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "ses_eb8718516ffeLQFpetwVV72MgV",
+          "projectID": "global",
+          "model": {
+            "id": "mock-1",
+            "providerID": "mock",
+            "variant": "default"
+          },
+          "cost": 0,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "reasoning": 0,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          },
+          "time": {
+            "created": 1792201882437,
+            "updated": 1792201882437
+          },
+          "title": "Fixture compaction",
+          "location": {
+            "directory": "/sandbox/project"
+          }
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8718516ffeLQFpetwVV72MgV",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "414",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:22 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "ses_eb8718516ffeLQFpetwVV72MgV",
+          "projectID": "global",
+          "model": {
+            "id": "mock-1",
+            "providerID": "mock",
+            "variant": "default"
+          },
+          "cost": 0,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "reasoning": 0,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          },
+          "time": {
+            "created": 1792201882437,
+            "updated": 1792201882437
+          },
+          "title": "Fixture compaction",
+          "location": {
+            "directory": "/sandbox/project"
+          }
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8718516ffeLQFpetwVV72MgV/message?limit=200&order=asc",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "50",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:22 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": [],
+        "cursor": {
+          "previous": null,
+          "next": null
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8718516ffeLQFpetwVV72MgV/inbox",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:22 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8718516ffeLQFpetwVV72MgV/permission",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:22 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8718516ffeLQFpetwVV72MgV/form",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:22 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "path": "/api/session/ses_eb8718516ffeLQFpetwVV72MgV/prompt",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]",
+        "content-type": "application/json"
+      },
+      "body": {
+        "text": "Run the compaction fixture scenario."
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "217",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:22 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "msg_1478e7b52001fREkw8NI1eZfUy",
+          "sessionID": "ses_eb8718516ffeLQFpetwVV72MgV",
+          "time": {
+            "created": 1792201882452
+          },
+          "type": "user",
+          "payload": {
+            "text": "Run the compaction fixture scenario."
+          },
+          "delivery": "steer"
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "path": "/api/experimental/session/ses_eb8718516ffeLQFpetwVV72MgV/wait",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 204,
+      "headers": {
+        "connection": "keep-alive",
+        "date": "Sat, 17 Oct 2026 01:51:22 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin"
+      },
+      "body": null,
+      "bodyFormat": "empty"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8718516ffeLQFpetwVV72MgV/message?limit=200&order=asc",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "1019",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:22 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": [
+          {
+            "id": "msg_1478e7b52001fREkw8NI1eZfUy",
+            "time": {
+              "created": 1792201882474
+            },
+            "text": "Run the compaction fixture scenario.",
+            "type": "user"
+          },
+          {
+            "id": "msg_1478e7b6c001AVtKXBOFf5ljZA",
+            "time": {
+              "created": 1792201882478,
+              "streamed": 1792201882650,
+              "completed": 1792201882674
+            },
+            "type": "assistant",
+            "agent": "build",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Remember the fixture context."
+              }
+            ],
+            "snapshot": {
+              "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "files": []
+            },
+            "finish": "stop",
+            "rawFinish": "stop",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e7c35002Xeke0pSgMnJ78y",
+            "time": {
+              "created": 1792201882677
+            },
+            "type": "idle",
+            "outcome": "succeeded"
+          }
+        ],
+        "cursor": {
+          "previous": "eyJpZCI6Im1zZ18xNDc4ZTdiNTIwMDFmUkVrdzhOSTFlWmZVeSIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoicHJldmlvdXMifQ",
+          "next": "eyJpZCI6Im1zZ18xNDc4ZTdjMzUwMDJYZWtlMHBTZ01uSjc4eSIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoibmV4dCJ9"
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "path": "/api/session/ses_eb8718516ffeLQFpetwVV72MgV/compact",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]",
+        "content-type": "application/json"
+      },
+      "body": {}
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "178",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:22 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "msg_1478e7c3c001fCB3TaEY4A6eKK",
+          "sessionID": "ses_eb8718516ffeLQFpetwVV72MgV",
+          "time": {
+            "created": 1792201882685
+          },
+          "type": "compaction",
+          "payload": {},
+          "delivery": "steer"
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "path": "/api/experimental/session/ses_eb8718516ffeLQFpetwVV72MgV/wait",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 204,
+      "headers": {
+        "connection": "keep-alive",
+        "date": "Sat, 17 Oct 2026 01:51:22 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin"
+      },
+      "body": null,
+      "bodyFormat": "empty"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8718516ffeLQFpetwVV72MgV/message?limit=200&order=asc",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "1777",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:22 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": [
+          {
+            "id": "msg_1478e7b52001fREkw8NI1eZfUy",
+            "time": {
+              "created": 1792201882474
+            },
+            "text": "Run the compaction fixture scenario.",
+            "type": "user"
+          },
+          {
+            "id": "msg_1478e7b6c001AVtKXBOFf5ljZA",
+            "time": {
+              "created": 1792201882478,
+              "streamed": 1792201882650,
+              "completed": 1792201882674
+            },
+            "type": "assistant",
+            "agent": "build",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Remember the fixture context."
+              }
+            ],
+            "snapshot": {
+              "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "files": []
+            },
+            "finish": "stop",
+            "rawFinish": "stop",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e7c35002Xeke0pSgMnJ78y",
+            "time": {
+              "created": 1792201882677
+            },
+            "type": "idle",
+            "outcome": "succeeded"
+          },
+          {
+            "type": "compaction",
+            "id": "msg_1478e7c3c001fCB3TaEY4A6eKK",
+            "time": {
+              "created": 1792201882690
+            },
+            "status": "completed",
+            "reason": "manual",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock"
+            },
+            "summary": "## Objective\n- Record deterministic fixtures.\n## Requirements\n- Keep the server isolated.\n## Decisions\n- Use the mock provider.\n## Work State\n### Completed\n- Recorded a reply.\n### Active\n- (none)\n### Blocked\n- (none)\n## Next Move\n1. Continue fixture checks.\n## Relevant Files\n- (none)\n## Important Context\n- The fixture context is deterministic.",
+            "recent": "",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e7c58001lC3v7d0r3DqNPb",
+            "time": {
+              "created": 1792201882712
+            },
+            "type": "idle",
+            "outcome": "succeeded"
+          }
+        ],
+        "cursor": {
+          "previous": "eyJpZCI6Im1zZ18xNDc4ZTdiNTIwMDFmUkVrdzhOSTFlWmZVeSIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoicHJldmlvdXMifQ",
+          "next": "eyJpZCI6Im1zZ18xNDc4ZTdjNTgwMDFsQzN2N2QwcjNEcU5QYiIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoibmV4dCJ9"
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8718516ffeLQFpetwVV72MgV",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "459",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:22 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "ses_eb8718516ffeLQFpetwVV72MgV",
+          "projectID": "global",
+          "model": {
+            "id": "mock-1",
+            "providerID": "mock",
+            "variant": "default"
+          },
+          "cost": 0,
+          "tokens": {
+            "input": 48,
+            "output": 18,
+            "reasoning": 6,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          },
+          "outcome": "succeeded",
+          "time": {
+            "created": 1792201882437,
+            "updated": 1792201882685,
+            "idle": 1792201882712
+          },
+          "title": "Fixture compaction",
+          "location": {
+            "directory": "/sandbox/project"
+          }
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8718516ffeLQFpetwVV72MgV",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "459",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:22 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "ses_eb8718516ffeLQFpetwVV72MgV",
+          "projectID": "global",
+          "model": {
+            "id": "mock-1",
+            "providerID": "mock",
+            "variant": "default"
+          },
+          "cost": 0,
+          "tokens": {
+            "input": 48,
+            "output": 18,
+            "reasoning": 6,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          },
+          "outcome": "succeeded",
+          "time": {
+            "created": 1792201882437,
+            "updated": 1792201882685,
+            "idle": 1792201882712
+          },
+          "title": "Fixture compaction",
+          "location": {
+            "directory": "/sandbox/project"
+          }
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8718516ffeLQFpetwVV72MgV/message?limit=200&order=asc",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "1777",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:22 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": [
+          {
+            "id": "msg_1478e7b52001fREkw8NI1eZfUy",
+            "time": {
+              "created": 1792201882474
+            },
+            "text": "Run the compaction fixture scenario.",
+            "type": "user"
+          },
+          {
+            "id": "msg_1478e7b6c001AVtKXBOFf5ljZA",
+            "time": {
+              "created": 1792201882478,
+              "streamed": 1792201882650,
+              "completed": 1792201882674
+            },
+            "type": "assistant",
+            "agent": "build",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Remember the fixture context."
+              }
+            ],
+            "snapshot": {
+              "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "files": []
+            },
+            "finish": "stop",
+            "rawFinish": "stop",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e7c35002Xeke0pSgMnJ78y",
+            "time": {
+              "created": 1792201882677
+            },
+            "type": "idle",
+            "outcome": "succeeded"
+          },
+          {
+            "type": "compaction",
+            "id": "msg_1478e7c3c001fCB3TaEY4A6eKK",
+            "time": {
+              "created": 1792201882690
+            },
+            "status": "completed",
+            "reason": "manual",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock"
+            },
+            "summary": "## Objective\n- Record deterministic fixtures.\n## Requirements\n- Keep the server isolated.\n## Decisions\n- Use the mock provider.\n## Work State\n### Completed\n- Recorded a reply.\n### Active\n- (none)\n### Blocked\n- (none)\n## Next Move\n1. Continue fixture checks.\n## Relevant Files\n- (none)\n## Important Context\n- The fixture context is deterministic.",
+            "recent": "",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e7c58001lC3v7d0r3DqNPb",
+            "time": {
+              "created": 1792201882712
+            },
+            "type": "idle",
+            "outcome": "succeeded"
+          }
+        ],
+        "cursor": {
+          "previous": "eyJpZCI6Im1zZ18xNDc4ZTdiNTIwMDFmUkVrdzhOSTFlWmZVeSIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoicHJldmlvdXMifQ",
+          "next": "eyJpZCI6Im1zZ18xNDc4ZTdjNTgwMDFsQzN2N2QwcjNEcU5QYiIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoibmV4dCJ9"
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8718516ffeLQFpetwVV72MgV/inbox",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:22 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8718516ffeLQFpetwVV72MgV/permission",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:22 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb8718516ffeLQFpetwVV72MgV/form",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:22 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  }
+]

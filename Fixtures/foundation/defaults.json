@@ -1,0 +1,11 @@
+{
+  "name": null,
+  "items": null,
+  "count": null,
+  "optionalNumber": null,
+  "nan": "NaN",
+  "positive": "Infinity",
+  "negative": "-Infinity",
+  "finite": 12.5,
+  "future": {"ignored": true}
+}

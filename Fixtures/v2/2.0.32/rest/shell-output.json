@@ -1,0 +1,816 @@
+[
+  {
+    "request": {
+      "method": "POST",
+      "path": "/api/session",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]",
+        "content-type": "application/json"
+      },
+      "body": {
+        "title": "Fixture shell-output",
+        "location": {
+          "directory": "/sandbox/project"
+        },
+        "model": {
+          "providerID": "mock",
+          "id": "mock-1"
+        }
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "416",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:14 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "ses_eb871a466ffeIYJ2ixaPl96VXs",
+          "projectID": "global",
+          "model": {
+            "id": "mock-1",
+            "providerID": "mock",
+            "variant": "default"
+          },
+          "cost": 0,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "reasoning": 0,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          },
+          "time": {
+            "created": 1792201874473,
+            "updated": 1792201874473
+          },
+          "title": "Fixture shell-output",
+          "location": {
+            "directory": "/sandbox/project"
+          }
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871a466ffeIYJ2ixaPl96VXs",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "416",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:14 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "ses_eb871a466ffeIYJ2ixaPl96VXs",
+          "projectID": "global",
+          "model": {
+            "id": "mock-1",
+            "providerID": "mock",
+            "variant": "default"
+          },
+          "cost": 0,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "reasoning": 0,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          },
+          "time": {
+            "created": 1792201874473,
+            "updated": 1792201874473
+          },
+          "title": "Fixture shell-output",
+          "location": {
+            "directory": "/sandbox/project"
+          }
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871a466ffeIYJ2ixaPl96VXs/message?limit=200&order=asc",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "50",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:14 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": [],
+        "cursor": {
+          "previous": null,
+          "next": null
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871a466ffeIYJ2ixaPl96VXs/inbox",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:14 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871a466ffeIYJ2ixaPl96VXs/permission",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:14 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871a466ffeIYJ2ixaPl96VXs/form",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:14 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "path": "/api/session/ses_eb871a466ffeIYJ2ixaPl96VXs/prompt",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]",
+        "content-type": "application/json"
+      },
+      "body": {
+        "text": "Run the shell-output fixture scenario."
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "219",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:14 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "msg_1478e5c41001YStkiJyIn0g3Bb",
+          "sessionID": "ses_eb871a466ffeIYJ2ixaPl96VXs",
+          "time": {
+            "created": 1792201874498
+          },
+          "type": "user",
+          "payload": {
+            "text": "Run the shell-output fixture scenario."
+          },
+          "delivery": "steer"
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "path": "/api/experimental/session/ses_eb871a466ffeIYJ2ixaPl96VXs/wait",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 204,
+      "headers": {
+        "connection": "keep-alive",
+        "date": "Sat, 17 Oct 2026 01:51:15 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin"
+      },
+      "body": null,
+      "bodyFormat": "empty"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871a466ffeIYJ2ixaPl96VXs/message?limit=200&order=asc",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "1850",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:15 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": [
+          {
+            "id": "msg_1478e5c41001YStkiJyIn0g3Bb",
+            "time": {
+              "created": 1792201874503
+            },
+            "text": "Run the shell-output fixture scenario.",
+            "type": "user"
+          },
+          {
+            "id": "msg_1478e5c49001J6tzNI0tJ9HfQo",
+            "time": {
+              "created": 1792201874506,
+              "streamed": 1792201874712,
+              "completed": 1792201874985
+            },
+            "type": "assistant",
+            "agent": "build",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "content": [
+              {
+                "type": "tool",
+                "id": "call_14_0",
+                "name": "shell",
+                "executed": false,
+                "state": {
+                  "status": "completed",
+                  "input": {
+                    "command": "printf 'fixture-shell-output\\n'"
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "fixture-shell-output\n"
+                    }
+                  ],
+                  "metadata": {
+                    "status": "completed",
+                    "truncated": false,
+                    "exit": 0
+                  }
+                },
+                "time": {
+                  "created": 1792201874709,
+                  "ran": 1792201874710,
+                  "completed": 1792201874819
+                }
+              }
+            ],
+            "snapshot": {
+              "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "files": []
+            },
+            "finish": "tool-calls",
+            "rawFinish": "tool_calls",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e5e3f001BmFAFnSfqOpTyu",
+            "time": {
+              "created": 1792201875009,
+              "streamed": 1792201875121,
+              "completed": 1792201875172
+            },
+            "type": "assistant",
+            "agent": "build",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Shell completed."
+              }
+            ],
+            "snapshot": {
+              "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "files": []
+            },
+            "finish": "stop",
+            "rawFinish": "stop",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e5ee7002ce8Gz3kS0BTcQb",
+            "time": {
+              "created": 1792201875175
+            },
+            "type": "idle",
+            "outcome": "succeeded"
+          }
+        ],
+        "cursor": {
+          "previous": "eyJpZCI6Im1zZ18xNDc4ZTVjNDEwMDFZU3RraUp5SW4wZzNCYiIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoicHJldmlvdXMifQ",
+          "next": "eyJpZCI6Im1zZ18xNDc4ZTVlZTcwMDJjZThHejNrUzBCVGNRYiIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoibmV4dCJ9"
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/shell/sh_1478e5d6b001uLN5BiEHkKE63G/output",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "195",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:15 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "location": {
+          "directory": "/sandbox/project"
+        },
+        "data": {
+          "output": "fixture-shell-output\n",
+          "cursor": 21,
+          "size": 21,
+          "truncated": false
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871a466ffeIYJ2ixaPl96VXs",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "461",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:15 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "ses_eb871a466ffeIYJ2ixaPl96VXs",
+          "projectID": "global",
+          "model": {
+            "id": "mock-1",
+            "providerID": "mock",
+            "variant": "default"
+          },
+          "cost": 0,
+          "tokens": {
+            "input": 48,
+            "output": 18,
+            "reasoning": 6,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          },
+          "outcome": "succeeded",
+          "time": {
+            "created": 1792201874473,
+            "updated": 1792201875172,
+            "idle": 1792201875175
+          },
+          "title": "Fixture shell-output",
+          "location": {
+            "directory": "/sandbox/project"
+          }
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871a466ffeIYJ2ixaPl96VXs",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "461",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:15 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "ses_eb871a466ffeIYJ2ixaPl96VXs",
+          "projectID": "global",
+          "model": {
+            "id": "mock-1",
+            "providerID": "mock",
+            "variant": "default"
+          },
+          "cost": 0,
+          "tokens": {
+            "input": 48,
+            "output": 18,
+            "reasoning": 6,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          },
+          "outcome": "succeeded",
+          "time": {
+            "created": 1792201874473,
+            "updated": 1792201875172,
+            "idle": 1792201875175
+          },
+          "title": "Fixture shell-output",
+          "location": {
+            "directory": "/sandbox/project"
+          }
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871a466ffeIYJ2ixaPl96VXs/message?limit=200&order=asc",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "1850",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:15 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": [
+          {
+            "id": "msg_1478e5c41001YStkiJyIn0g3Bb",
+            "time": {
+              "created": 1792201874503
+            },
+            "text": "Run the shell-output fixture scenario.",
+            "type": "user"
+          },
+          {
+            "id": "msg_1478e5c49001J6tzNI0tJ9HfQo",
+            "time": {
+              "created": 1792201874506,
+              "streamed": 1792201874712,
+              "completed": 1792201874985
+            },
+            "type": "assistant",
+            "agent": "build",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "content": [
+              {
+                "type": "tool",
+                "id": "call_14_0",
+                "name": "shell",
+                "executed": false,
+                "state": {
+                  "status": "completed",
+                  "input": {
+                    "command": "printf 'fixture-shell-output\\n'"
+                  },
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "fixture-shell-output\n"
+                    }
+                  ],
+                  "metadata": {
+                    "status": "completed",
+                    "truncated": false,
+                    "exit": 0
+                  }
+                },
+                "time": {
+                  "created": 1792201874709,
+                  "ran": 1792201874710,
+                  "completed": 1792201874819
+                }
+              }
+            ],
+            "snapshot": {
+              "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "files": []
+            },
+            "finish": "tool-calls",
+            "rawFinish": "tool_calls",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e5e3f001BmFAFnSfqOpTyu",
+            "time": {
+              "created": 1792201875009,
+              "streamed": 1792201875121,
+              "completed": 1792201875172
+            },
+            "type": "assistant",
+            "agent": "build",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Shell completed."
+              }
+            ],
+            "snapshot": {
+              "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "files": []
+            },
+            "finish": "stop",
+            "rawFinish": "stop",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e5ee7002ce8Gz3kS0BTcQb",
+            "time": {
+              "created": 1792201875175
+            },
+            "type": "idle",
+            "outcome": "succeeded"
+          }
+        ],
+        "cursor": {
+          "previous": "eyJpZCI6Im1zZ18xNDc4ZTVjNDEwMDFZU3RraUp5SW4wZzNCYiIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoicHJldmlvdXMifQ",
+          "next": "eyJpZCI6Im1zZ18xNDc4ZTVlZTcwMDJjZThHejNrUzBCVGNRYiIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoibmV4dCJ9"
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871a466ffeIYJ2ixaPl96VXs/inbox",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:15 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871a466ffeIYJ2ixaPl96VXs/permission",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:15 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871a466ffeIYJ2ixaPl96VXs/form",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:15 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  }
+]

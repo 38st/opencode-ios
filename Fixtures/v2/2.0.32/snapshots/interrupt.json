@@ -1,0 +1,124 @@
+[
+  {
+    "phase": "start",
+    "sessionID": "ses_eb87191acffeXxJWRhfKQ3gEwC",
+    "eventOffset": 2,
+    "session": {
+      "id": "ses_eb87191acffeXxJWRhfKQ3gEwC",
+      "projectID": "global",
+      "model": {
+        "id": "mock-1",
+        "providerID": "mock",
+        "variant": "default"
+      },
+      "cost": 0,
+      "tokens": {
+        "input": 0,
+        "output": 0,
+        "reasoning": 0,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "time": {
+        "created": 1792201879267,
+        "updated": 1792201879267
+      },
+      "title": "Fixture interrupt",
+      "location": {
+        "directory": "/sandbox/project"
+      }
+    },
+    "messages": [],
+    "inbox": [],
+    "permissions": [],
+    "forms": []
+  },
+  {
+    "phase": "end",
+    "sessionID": "ses_eb87191acffeXxJWRhfKQ3gEwC",
+    "eventOffset": 13,
+    "session": {
+      "id": "ses_eb87191acffeXxJWRhfKQ3gEwC",
+      "projectID": "global",
+      "model": {
+        "id": "mock-1",
+        "providerID": "mock",
+        "variant": "default"
+      },
+      "cost": 0,
+      "tokens": {
+        "input": 0,
+        "output": 0,
+        "reasoning": 0,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "outcome": "interrupted",
+      "time": {
+        "created": 1792201879267,
+        "updated": 1792201880058,
+        "idle": 1792201880061
+      },
+      "title": "Fixture interrupt",
+      "location": {
+        "directory": "/sandbox/project"
+      }
+    },
+    "messages": [
+      {
+        "id": "msg_1478e6ef7001tkH6scBlJ1xjlr",
+        "time": {
+          "created": 1792201879300
+        },
+        "text": "Run the interrupt fixture scenario.",
+        "type": "user"
+      },
+      {
+        "id": "msg_1478e6f07001CBvgoSW1ioAGcY",
+        "time": {
+          "created": 1792201879308,
+          "streamed": 1792201880023,
+          "completed": 1792201880058
+        },
+        "type": "assistant",
+        "agent": "build",
+        "model": {
+          "id": "mock-1",
+          "providerID": "mock",
+          "variant": "default"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Starting."
+          }
+        ],
+        "snapshot": {
+          "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+          "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+          "files": []
+        },
+        "finish": "error",
+        "error": {
+          "type": "aborted",
+          "message": "Step interrupted"
+        }
+      },
+      {
+        "id": "msg_1478e71fd001dILsgunmLhFGHg",
+        "time": {
+          "created": 1792201880061
+        },
+        "type": "idle",
+        "outcome": "interrupted"
+      }
+    ],
+    "inbox": [],
+    "permissions": [],
+    "forms": []
+  }
+]

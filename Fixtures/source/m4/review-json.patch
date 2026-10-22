@@ -1,0 +1,7 @@
+--- a/data.json
++++ b/data.json
+@@ -1,3 +1,3 @@
+ {
+-  "enabled": false
++  "enabled": true
+ }

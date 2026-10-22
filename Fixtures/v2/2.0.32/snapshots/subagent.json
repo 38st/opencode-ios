@@ -1,0 +1,195 @@
+[
+  {
+    "phase": "start",
+    "sessionID": "ses_eb8719ce8ffeWjxRXXn7jM2Ffw",
+    "eventOffset": 2,
+    "session": {
+      "id": "ses_eb8719ce8ffeWjxRXXn7jM2Ffw",
+      "projectID": "global",
+      "model": {
+        "id": "mock-1",
+        "providerID": "mock",
+        "variant": "default"
+      },
+      "cost": 0,
+      "tokens": {
+        "input": 0,
+        "output": 0,
+        "reasoning": 0,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "time": {
+        "created": 1792201876339,
+        "updated": 1792201876339
+      },
+      "title": "Fixture subagent",
+      "location": {
+        "directory": "/sandbox/project"
+      }
+    },
+    "messages": [],
+    "inbox": [],
+    "permissions": [],
+    "forms": []
+  },
+  {
+    "phase": "end",
+    "sessionID": "ses_eb8719ce8ffeWjxRXXn7jM2Ffw",
+    "eventOffset": 36,
+    "session": {
+      "id": "ses_eb8719ce8ffeWjxRXXn7jM2Ffw",
+      "projectID": "global",
+      "model": {
+        "id": "mock-1",
+        "providerID": "mock",
+        "variant": "default"
+      },
+      "cost": 0,
+      "tokens": {
+        "input": 48,
+        "output": 18,
+        "reasoning": 6,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "outcome": "succeeded",
+      "time": {
+        "created": 1792201876339,
+        "updated": 1792201877336,
+        "idle": 1792201877338
+      },
+      "title": "Fixture subagent",
+      "location": {
+        "directory": "/sandbox/project"
+      }
+    },
+    "messages": [
+      {
+        "id": "msg_1478e6384001j8pxazpzODz8h6",
+        "time": {
+          "created": 1792201876363
+        },
+        "text": "Run the subagent fixture scenario.",
+        "type": "user"
+      },
+      {
+        "id": "msg_1478e63cc001lhShEh08Qd3g5W",
+        "time": {
+          "created": 1792201876430,
+          "streamed": 1792201876688,
+          "completed": 1792201877144
+        },
+        "type": "assistant",
+        "agent": "build",
+        "model": {
+          "id": "mock-1",
+          "providerID": "mock",
+          "variant": "default"
+        },
+        "content": [
+          {
+            "type": "tool",
+            "id": "call_18_0",
+            "name": "subagent",
+            "executed": false,
+            "state": {
+              "status": "completed",
+              "input": {
+                "agent": "general",
+                "prompt": "Report fixture child result.",
+                "description": "Fixture child"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "<subagent sessionID=\"ses_eb8719b2effeJSUHThQ2ydE721\" state=\"completed\">\nFixture child result.\n</subagent>"
+                }
+              ],
+              "metadata": {
+                "sessionID": "ses_eb8719b2effeJSUHThQ2ydE721",
+                "status": "completed",
+                "truncated": false
+              }
+            },
+            "time": {
+              "created": 1792201876685,
+              "ran": 1792201876687,
+              "completed": 1792201877049
+            }
+          }
+        ],
+        "snapshot": {
+          "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+          "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+          "files": []
+        },
+        "finish": "tool-calls",
+        "rawFinish": "tool_calls",
+        "cost": 0,
+        "tokens": {
+          "input": 24,
+          "output": 9,
+          "reasoning": 3,
+          "cache": {
+            "read": 0,
+            "write": 0
+          }
+        }
+      },
+      {
+        "id": "msg_1478e66a100120YNGqxF5635i8",
+        "time": {
+          "created": 1792201877155,
+          "streamed": 1792201877279,
+          "completed": 1792201877336
+        },
+        "type": "assistant",
+        "agent": "build",
+        "model": {
+          "id": "mock-1",
+          "providerID": "mock",
+          "variant": "default"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Child session completed."
+          }
+        ],
+        "snapshot": {
+          "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+          "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+          "files": []
+        },
+        "finish": "stop",
+        "rawFinish": "stop",
+        "cost": 0,
+        "tokens": {
+          "input": 24,
+          "output": 9,
+          "reasoning": 3,
+          "cache": {
+            "read": 0,
+            "write": 0
+          }
+        }
+      },
+      {
+        "id": "msg_1478e675a002NDtMs1l533pfjD",
+        "time": {
+          "created": 1792201877338
+        },
+        "type": "idle",
+        "outcome": "succeeded"
+      }
+    ],
+    "inbox": [],
+    "permissions": [],
+    "forms": []
+  }
+]

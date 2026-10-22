@@ -1,0 +1,981 @@
+[
+  {
+    "request": {
+      "method": "POST",
+      "path": "/api/session",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]",
+        "content-type": "application/json"
+      },
+      "body": {
+        "title": "Fixture steer-queue",
+        "location": {
+          "directory": "/sandbox/project"
+        },
+        "model": {
+          "providerID": "mock",
+          "id": "mock-1"
+        }
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "415",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:17 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "ses_eb871987cffeMhCoyQ2xNF9shy",
+          "projectID": "global",
+          "model": {
+            "id": "mock-1",
+            "providerID": "mock",
+            "variant": "default"
+          },
+          "cost": 0,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "reasoning": 0,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          },
+          "time": {
+            "created": 1792201877538,
+            "updated": 1792201877538
+          },
+          "title": "Fixture steer-queue",
+          "location": {
+            "directory": "/sandbox/project"
+          }
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871987cffeMhCoyQ2xNF9shy",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "415",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:17 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "ses_eb871987cffeMhCoyQ2xNF9shy",
+          "projectID": "global",
+          "model": {
+            "id": "mock-1",
+            "providerID": "mock",
+            "variant": "default"
+          },
+          "cost": 0,
+          "tokens": {
+            "input": 0,
+            "output": 0,
+            "reasoning": 0,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          },
+          "time": {
+            "created": 1792201877538,
+            "updated": 1792201877538
+          },
+          "title": "Fixture steer-queue",
+          "location": {
+            "directory": "/sandbox/project"
+          }
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871987cffeMhCoyQ2xNF9shy/message?limit=200&order=asc",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "50",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:17 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": [],
+        "cursor": {
+          "previous": null,
+          "next": null
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871987cffeMhCoyQ2xNF9shy/inbox",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:17 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871987cffeMhCoyQ2xNF9shy/permission",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:17 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871987cffeMhCoyQ2xNF9shy/form",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:17 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "path": "/api/session/ses_eb871987cffeMhCoyQ2xNF9shy/prompt",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]",
+        "content-type": "application/json"
+      },
+      "body": {
+        "text": "Run the steer-queue fixture scenario."
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "218",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:17 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "msg_1478e6836001FbQZqu4eTE6u1W",
+          "sessionID": "ses_eb871987cffeMhCoyQ2xNF9shy",
+          "time": {
+            "created": 1792201877558
+          },
+          "type": "user",
+          "payload": {
+            "text": "Run the steer-queue fixture scenario."
+          },
+          "delivery": "steer"
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "path": "/api/session/ses_eb871987cffeMhCoyQ2xNF9shy/prompt",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]",
+        "content-type": "application/json"
+      },
+      "body": {
+        "text": "Apply steering input.",
+        "delivery": "steer"
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "202",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:18 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "msg_1478e6d2d0015ru4FuJH4fFS6R",
+          "sessionID": "ses_eb871987cffeMhCoyQ2xNF9shy",
+          "time": {
+            "created": 1792201878830
+          },
+          "type": "user",
+          "payload": {
+            "text": "Apply steering input."
+          },
+          "delivery": "steer"
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "path": "/api/session/ses_eb871987cffeMhCoyQ2xNF9shy/prompt",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]",
+        "content-type": "application/json"
+      },
+      "body": {
+        "text": "Run this on the next turn.",
+        "delivery": "queue"
+      }
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "207",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:18 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "msg_1478e6d3a0016mUJU1esLgTi7c",
+          "sessionID": "ses_eb871987cffeMhCoyQ2xNF9shy",
+          "time": {
+            "created": 1792201878842
+          },
+          "type": "user",
+          "payload": {
+            "text": "Run this on the next turn."
+          },
+          "delivery": "queue"
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871987cffeMhCoyQ2xNF9shy/inbox",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "209",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:18 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": [
+          {
+            "id": "msg_1478e6d3a0016mUJU1esLgTi7c",
+            "sessionID": "ses_eb871987cffeMhCoyQ2xNF9shy",
+            "time": {
+              "created": 1792201878842
+            },
+            "type": "user",
+            "payload": {
+              "text": "Run this on the next turn."
+            },
+            "delivery": "queue"
+          }
+        ]
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "POST",
+      "path": "/api/experimental/session/ses_eb871987cffeMhCoyQ2xNF9shy/wait",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 204,
+      "headers": {
+        "connection": "keep-alive",
+        "date": "Sat, 17 Oct 2026 01:51:19 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin"
+      },
+      "body": null,
+      "bodyFormat": "empty"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871987cffeMhCoyQ2xNF9shy/message?limit=200&order=asc",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "2403",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:19 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": [
+          {
+            "id": "msg_1478e6836001FbQZqu4eTE6u1W",
+            "time": {
+              "created": 1792201877563
+            },
+            "text": "Run the steer-queue fixture scenario.",
+            "type": "user"
+          },
+          {
+            "id": "msg_1478e683c0011EkM2urMBjW3IU",
+            "time": {
+              "created": 1792201877565,
+              "streamed": 1792201878788,
+              "completed": 1792201878816
+            },
+            "type": "assistant",
+            "agent": "build",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Initial turn."
+              }
+            ],
+            "snapshot": {
+              "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "files": []
+            },
+            "finish": "stop",
+            "rawFinish": "stop",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e6d290019QMNkqvY3u4txw",
+            "time": {
+              "created": 1792201878825
+            },
+            "type": "idle",
+            "outcome": "succeeded"
+          },
+          {
+            "id": "msg_1478e6d2d0015ru4FuJH4fFS6R",
+            "time": {
+              "created": 1792201878837
+            },
+            "text": "Apply steering input.",
+            "type": "user"
+          },
+          {
+            "id": "msg_1478e6d37001JgLxAtXTwIQ3D1",
+            "time": {
+              "created": 1792201878841,
+              "streamed": 1792201878914,
+              "completed": 1792201878970
+            },
+            "type": "assistant",
+            "agent": "build",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Steering applied."
+              }
+            ],
+            "snapshot": {
+              "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "files": []
+            },
+            "finish": "stop",
+            "rawFinish": "stop",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e6d3a0016mUJU1esLgTi7c",
+            "time": {
+              "created": 1792201878976
+            },
+            "text": "Run this on the next turn.",
+            "type": "user"
+          },
+          {
+            "id": "msg_1478e6dc2001hi6T8v3VpvYHE6",
+            "time": {
+              "created": 1792201878980,
+              "streamed": 1792201879014,
+              "completed": 1792201879079
+            },
+            "type": "assistant",
+            "agent": "build",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Queued turn completed."
+              }
+            ],
+            "snapshot": {
+              "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "files": []
+            },
+            "finish": "stop",
+            "rawFinish": "stop",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e6e30001uRmr4hIYmqLfYx",
+            "time": {
+              "created": 1792201879088
+            },
+            "type": "idle",
+            "outcome": "succeeded"
+          }
+        ],
+        "cursor": {
+          "previous": "eyJpZCI6Im1zZ18xNDc4ZTY4MzYwMDFGYlFacXU0ZVRFNnUxVyIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoicHJldmlvdXMifQ",
+          "next": "eyJpZCI6Im1zZ18xNDc4ZTZlMzAwMDF1Um1yNGhJWW1xTGZZeCIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoibmV4dCJ9"
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871987cffeMhCoyQ2xNF9shy",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "460",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:19 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "ses_eb871987cffeMhCoyQ2xNF9shy",
+          "projectID": "global",
+          "model": {
+            "id": "mock-1",
+            "providerID": "mock",
+            "variant": "default"
+          },
+          "cost": 0,
+          "tokens": {
+            "input": 72,
+            "output": 27,
+            "reasoning": 9,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          },
+          "outcome": "succeeded",
+          "time": {
+            "created": 1792201877538,
+            "updated": 1792201879079,
+            "idle": 1792201879088
+          },
+          "title": "Fixture steer-queue",
+          "location": {
+            "directory": "/sandbox/project"
+          }
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871987cffeMhCoyQ2xNF9shy",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "460",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:19 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": {
+          "id": "ses_eb871987cffeMhCoyQ2xNF9shy",
+          "projectID": "global",
+          "model": {
+            "id": "mock-1",
+            "providerID": "mock",
+            "variant": "default"
+          },
+          "cost": 0,
+          "tokens": {
+            "input": 72,
+            "output": 27,
+            "reasoning": 9,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          },
+          "outcome": "succeeded",
+          "time": {
+            "created": 1792201877538,
+            "updated": 1792201879079,
+            "idle": 1792201879088
+          },
+          "title": "Fixture steer-queue",
+          "location": {
+            "directory": "/sandbox/project"
+          }
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871987cffeMhCoyQ2xNF9shy/message?limit=200&order=asc",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "2403",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:19 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": [
+          {
+            "id": "msg_1478e6836001FbQZqu4eTE6u1W",
+            "time": {
+              "created": 1792201877563
+            },
+            "text": "Run the steer-queue fixture scenario.",
+            "type": "user"
+          },
+          {
+            "id": "msg_1478e683c0011EkM2urMBjW3IU",
+            "time": {
+              "created": 1792201877565,
+              "streamed": 1792201878788,
+              "completed": 1792201878816
+            },
+            "type": "assistant",
+            "agent": "build",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Initial turn."
+              }
+            ],
+            "snapshot": {
+              "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "files": []
+            },
+            "finish": "stop",
+            "rawFinish": "stop",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e6d290019QMNkqvY3u4txw",
+            "time": {
+              "created": 1792201878825
+            },
+            "type": "idle",
+            "outcome": "succeeded"
+          },
+          {
+            "id": "msg_1478e6d2d0015ru4FuJH4fFS6R",
+            "time": {
+              "created": 1792201878837
+            },
+            "text": "Apply steering input.",
+            "type": "user"
+          },
+          {
+            "id": "msg_1478e6d37001JgLxAtXTwIQ3D1",
+            "time": {
+              "created": 1792201878841,
+              "streamed": 1792201878914,
+              "completed": 1792201878970
+            },
+            "type": "assistant",
+            "agent": "build",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Steering applied."
+              }
+            ],
+            "snapshot": {
+              "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "files": []
+            },
+            "finish": "stop",
+            "rawFinish": "stop",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e6d3a0016mUJU1esLgTi7c",
+            "time": {
+              "created": 1792201878976
+            },
+            "text": "Run this on the next turn.",
+            "type": "user"
+          },
+          {
+            "id": "msg_1478e6dc2001hi6T8v3VpvYHE6",
+            "time": {
+              "created": 1792201878980,
+              "streamed": 1792201879014,
+              "completed": 1792201879079
+            },
+            "type": "assistant",
+            "agent": "build",
+            "model": {
+              "id": "mock-1",
+              "providerID": "mock",
+              "variant": "default"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Queued turn completed."
+              }
+            ],
+            "snapshot": {
+              "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+              "files": []
+            },
+            "finish": "stop",
+            "rawFinish": "stop",
+            "cost": 0,
+            "tokens": {
+              "input": 24,
+              "output": 9,
+              "reasoning": 3,
+              "cache": {
+                "read": 0,
+                "write": 0
+              }
+            }
+          },
+          {
+            "id": "msg_1478e6e30001uRmr4hIYmqLfYx",
+            "time": {
+              "created": 1792201879088
+            },
+            "type": "idle",
+            "outcome": "succeeded"
+          }
+        ],
+        "cursor": {
+          "previous": "eyJpZCI6Im1zZ18xNDc4ZTY4MzYwMDFGYlFacXU0ZVRFNnUxVyIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoicHJldmlvdXMifQ",
+          "next": "eyJpZCI6Im1zZ18xNDc4ZTZlMzAwMDF1Um1yNGhJWW1xTGZZeCIsIm9yZGVyIjoiYXNjIiwiZGlyZWN0aW9uIjoibmV4dCJ9"
+        }
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871987cffeMhCoyQ2xNF9shy/inbox",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:19 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871987cffeMhCoyQ2xNF9shy/permission",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:19 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  },
+  {
+    "request": {
+      "method": "GET",
+      "path": "/api/session/ses_eb871987cffeMhCoyQ2xNF9shy/form",
+      "headers": {
+        "accept": "application/json",
+        "accept-encoding": "identity",
+        "authorization": "[REDACTED]"
+      },
+      "body": null
+    },
+    "response": {
+      "status": 200,
+      "headers": {
+        "connection": "keep-alive",
+        "content-length": "11",
+        "content-type": "application/json",
+        "date": "Sat, 17 Oct 2026 01:51:19 GMT",
+        "keep-alive": "timeout=5",
+        "vary": "Origin, Accept-Encoding"
+      },
+      "body": {
+        "data": []
+      },
+      "bodyFormat": "json"
+    }
+  }
+]

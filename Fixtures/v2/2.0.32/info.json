@@ -1,0 +1,13 @@
+{
+  "version": "2.0.32",
+  "pid": 25043,
+  "urls": [
+    "http://127.0.0.1:62762"
+  ],
+  "paths": {
+    "tmp": "/sandbox/tmp/opencode"
+  },
+  "capabilities": {
+    "persistentPty": true
+  }
+}

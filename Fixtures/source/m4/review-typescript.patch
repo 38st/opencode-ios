@@ -1,0 +1,8 @@
+--- a/example.ts
++++ b/example.ts
+@@ -1,4 +1,4 @@
+ export function greeting(name: string): string {
+-  const prefix = "Hello";
++  const prefix = "Welcome";
+   return `${prefix}, ${name}`;
+ }

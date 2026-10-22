@@ -1,0 +1,131 @@
+[
+  {
+    "phase": "start",
+    "sessionID": "ses_eb871838effeRgD34l9r9SBnvw",
+    "eventOffset": 2,
+    "session": {
+      "id": "ses_eb871838effeRgD34l9r9SBnvw",
+      "projectID": "global",
+      "model": {
+        "id": "mock-1",
+        "providerID": "mock",
+        "variant": "default"
+      },
+      "cost": 0,
+      "tokens": {
+        "input": 0,
+        "output": 0,
+        "reasoning": 0,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "time": {
+        "created": 1792201882922,
+        "updated": 1792201882922
+      },
+      "title": "Fixture retry-429",
+      "location": {
+        "directory": "/sandbox/project"
+      }
+    },
+    "messages": [],
+    "inbox": [],
+    "permissions": [],
+    "forms": []
+  },
+  {
+    "phase": "end",
+    "sessionID": "ses_eb871838effeRgD34l9r9SBnvw",
+    "eventOffset": 16,
+    "session": {
+      "id": "ses_eb871838effeRgD34l9r9SBnvw",
+      "projectID": "global",
+      "model": {
+        "id": "mock-1",
+        "providerID": "mock",
+        "variant": "default"
+      },
+      "cost": 0,
+      "tokens": {
+        "input": 24,
+        "output": 9,
+        "reasoning": 3,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "outcome": "succeeded",
+      "time": {
+        "created": 1792201882922,
+        "updated": 1792201885363,
+        "idle": 1792201885365
+      },
+      "title": "Fixture retry-429",
+      "location": {
+        "directory": "/sandbox/project"
+      }
+    },
+    "messages": [
+      {
+        "id": "msg_1478e7d53001aIPoS8TlO7m2qe",
+        "time": {
+          "created": 1792201882970
+        },
+        "text": "Run the retry-429 fixture scenario.",
+        "type": "user"
+      },
+      {
+        "id": "msg_1478e7d5e001Eh1mDzoi0cnEmi",
+        "time": {
+          "created": 1792201885204,
+          "streamed": 1792201885331,
+          "completed": 1792201885363
+        },
+        "type": "assistant",
+        "agent": "build",
+        "model": {
+          "id": "mock-1",
+          "providerID": "mock",
+          "variant": "default"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Recovered from 429."
+          }
+        ],
+        "snapshot": {
+          "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+          "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+          "files": []
+        },
+        "finish": "stop",
+        "rawFinish": "stop",
+        "cost": 0,
+        "tokens": {
+          "input": 24,
+          "output": 9,
+          "reasoning": 3,
+          "cache": {
+            "read": 0,
+            "write": 0
+          }
+        }
+      },
+      {
+        "id": "msg_1478e86b5002itxtKWlEYVwOOv",
+        "time": {
+          "created": 1792201885365
+        },
+        "type": "idle",
+        "outcome": "succeeded"
+      }
+    ],
+    "inbox": [],
+    "permissions": [],
+    "forms": []
+  }
+]

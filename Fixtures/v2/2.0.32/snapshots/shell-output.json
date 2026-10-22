@@ -1,0 +1,193 @@
+[
+  {
+    "phase": "start",
+    "sessionID": "ses_eb871a466ffeIYJ2ixaPl96VXs",
+    "eventOffset": 2,
+    "session": {
+      "id": "ses_eb871a466ffeIYJ2ixaPl96VXs",
+      "projectID": "global",
+      "model": {
+        "id": "mock-1",
+        "providerID": "mock",
+        "variant": "default"
+      },
+      "cost": 0,
+      "tokens": {
+        "input": 0,
+        "output": 0,
+        "reasoning": 0,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "time": {
+        "created": 1792201874473,
+        "updated": 1792201874473
+      },
+      "title": "Fixture shell-output",
+      "location": {
+        "directory": "/sandbox/project"
+      }
+    },
+    "messages": [],
+    "inbox": [],
+    "permissions": [],
+    "forms": []
+  },
+  {
+    "phase": "end",
+    "sessionID": "ses_eb871a466ffeIYJ2ixaPl96VXs",
+    "eventOffset": 25,
+    "session": {
+      "id": "ses_eb871a466ffeIYJ2ixaPl96VXs",
+      "projectID": "global",
+      "model": {
+        "id": "mock-1",
+        "providerID": "mock",
+        "variant": "default"
+      },
+      "cost": 0,
+      "tokens": {
+        "input": 48,
+        "output": 18,
+        "reasoning": 6,
+        "cache": {
+          "read": 0,
+          "write": 0
+        }
+      },
+      "outcome": "succeeded",
+      "time": {
+        "created": 1792201874473,
+        "updated": 1792201875172,
+        "idle": 1792201875175
+      },
+      "title": "Fixture shell-output",
+      "location": {
+        "directory": "/sandbox/project"
+      }
+    },
+    "messages": [
+      {
+        "id": "msg_1478e5c41001YStkiJyIn0g3Bb",
+        "time": {
+          "created": 1792201874503
+        },
+        "text": "Run the shell-output fixture scenario.",
+        "type": "user"
+      },
+      {
+        "id": "msg_1478e5c49001J6tzNI0tJ9HfQo",
+        "time": {
+          "created": 1792201874506,
+          "streamed": 1792201874712,
+          "completed": 1792201874985
+        },
+        "type": "assistant",
+        "agent": "build",
+        "model": {
+          "id": "mock-1",
+          "providerID": "mock",
+          "variant": "default"
+        },
+        "content": [
+          {
+            "type": "tool",
+            "id": "call_14_0",
+            "name": "shell",
+            "executed": false,
+            "state": {
+              "status": "completed",
+              "input": {
+                "command": "printf 'fixture-shell-output\\n'"
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "fixture-shell-output\n"
+                }
+              ],
+              "metadata": {
+                "status": "completed",
+                "truncated": false,
+                "exit": 0
+              }
+            },
+            "time": {
+              "created": 1792201874709,
+              "ran": 1792201874710,
+              "completed": 1792201874819
+            }
+          }
+        ],
+        "snapshot": {
+          "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+          "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+          "files": []
+        },
+        "finish": "tool-calls",
+        "rawFinish": "tool_calls",
+        "cost": 0,
+        "tokens": {
+          "input": 24,
+          "output": 9,
+          "reasoning": 3,
+          "cache": {
+            "read": 0,
+            "write": 0
+          }
+        }
+      },
+      {
+        "id": "msg_1478e5e3f001BmFAFnSfqOpTyu",
+        "time": {
+          "created": 1792201875009,
+          "streamed": 1792201875121,
+          "completed": 1792201875172
+        },
+        "type": "assistant",
+        "agent": "build",
+        "model": {
+          "id": "mock-1",
+          "providerID": "mock",
+          "variant": "default"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Shell completed."
+          }
+        ],
+        "snapshot": {
+          "start": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+          "end": "86c6a54396e5e29eeb224a26866f7c5f7786cbd0",
+          "files": []
+        },
+        "finish": "stop",
+        "rawFinish": "stop",
+        "cost": 0,
+        "tokens": {
+          "input": 24,
+          "output": 9,
+          "reasoning": 3,
+          "cache": {
+            "read": 0,
+            "write": 0
+          }
+        }
+      },
+      {
+        "id": "msg_1478e5ee7002ce8Gz3kS0BTcQb",
+        "time": {
+          "created": 1792201875175
+        },
+        "type": "idle",
+        "outcome": "succeeded"
+      }
+    ],
+    "inbox": [],
+    "permissions": [],
+    "forms": []
+  }
+]
