@@ -52,6 +52,24 @@ test('auxiliary calls do not consume the primary script; exhaustion fails closed
   assert.deepEqual(f.mock.state().consumed.map(call => call.kind), ['title', 'compaction', 'summary', 'primary']);
 });
 
+test('title requests are recognised in the 2.1.2 and the 2.1.3 wording, by their system prompt', async t => {
+  const f = await fixture(t);
+  // Up to 2.1.2: the old system prompt, and the first message as it was.
+  const before = { role: 'system', content: 'You are a title generator. You output ONLY a thread title. Nothing else.' };
+  // From 2.1.3 (upstream d2812d147): a new system prompt, and the input framed as a message or a conversation.
+  const after = { role: 'system', content: 'You name conversations so the user can find them later in a list of past sessions.\n\nYou will receive the first message of a conversation.' };
+  const message = 'Here is the first message of the conversation:\n\n<message>\nRun the fixture.\n</message>\n\nReply with only the title.';
+  const conversation = 'Here is the conversation so far:\n\n<conversation>\nOriginal request:\nRun the fixture.\n\nRecent conversation:\nAssistant: Done.\n</conversation>\n\nReply with only the title.';
+  for (const messages of [[before, { role: 'user', content: 'Run the fixture.' }], [after, { role: 'user', content: message }], [after, { role: 'user', content: conversation }]]) {
+    const response = await f.call({ stream: false, messages });
+    assert.equal((await response.json()).choices[0].message.content, 'Fixture conversation');
+  }
+  assert.equal(f.mock.state().remaining, 1, 'A title request consumed a scripted turn');
+  // The user-side wording alone is not a title request: it takes the scripted turn.
+  await (await f.call({ stream: false, messages: [{ role: 'system', content: 'You are an AI agent running in OpenCode.' }, { role: 'user', content: message }] })).text();
+  assert.deepEqual(f.mock.state().consumed.map(call => call.kind), ['title', 'title', 'title', 'primary']);
+});
+
 test('429 and 500 responses consume one step, then a successful retry', async t => {
   const f = await fixture(t);
   for (const status of [429, 500]) {

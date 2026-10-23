@@ -48,7 +48,9 @@ export const checkpoint = `## Objective
 
 export function auxiliaryKind(body) {
   const system = (body.messages ?? []).filter(m => ['system', 'developer'].includes(m.role)).map(m => JSON.stringify(m.content)).join('\n');
-  if (system.includes('You are a title generator')) return 'title';
+  // Title requests are known by their system prompt. 2.1.3 rewrote it (upstream d2812d147); 2.1.2 and
+  // earlier, like the d0732ea source, use the first wording. Its user text alone is not a signal.
+  if (system.includes('You are a title generator') || system.includes('You name conversations so the user can find them later')) return 'title';
   // Compaction appends a user instruction, so inspect its final message as well.
   const last = JSON.stringify(body.messages?.at(-1)?.content ?? '');
   if (last.includes('structured summary') || last.includes('consolidated summary') || last.includes('required summary template')) return 'compaction';
