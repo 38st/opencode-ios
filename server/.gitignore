@@ -1,0 +1,12 @@
+node_modules/
+.wrangler/
+# The Node relay's database holds APNs tokens and secret hashes.
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+# Wrangler reads local secrets such as APNS_PRIVATE_KEY from these.
+.dev.vars*
+.env*
+# APNs authentication keys never belong in the checkout; keep AuthKey_*.p8 outside it.
+*.p8
+*.pem

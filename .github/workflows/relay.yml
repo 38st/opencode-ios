@@ -1,0 +1,28 @@
+name: Push relay
+
+on:
+  push:
+    paths: ['server/relay/**', 'server/contracts/**', '.github/workflows/relay.yml']
+  pull_request:
+    paths: ['server/relay/**', 'server/contracts/**', '.github/workflows/relay.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '26'
+      # The relay imports the dependency-free contract modules from ../contracts; it needs no install there.
+      - name: Relay (workerd and Node)
+        working-directory: server/relay
+        run: |
+          npm ci
+          npm test

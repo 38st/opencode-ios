@@ -1,0 +1,130 @@
+{
+  "description": "RFC 8785 canonical JSON. canonical is the exact expected output.",
+  "cases": [
+    {
+      "name": "literals",
+      "input": [
+        null,
+        true,
+        false
+      ],
+      "canonical": "[null,true,false]"
+    },
+    {
+      "name": "integers",
+      "input": [
+        0,
+        -1,
+        1,
+        42,
+        -9007199254740991,
+        9007199254740991
+      ],
+      "canonical": "[0,-1,1,42,-9007199254740991,9007199254740991]"
+    },
+    {
+      "name": "empty-containers",
+      "input": {
+        "array": [],
+        "object": {},
+        "string": ""
+      },
+      "canonical": "{\"array\":[],\"object\":{},\"string\":\"\"}"
+    },
+    {
+      "name": "nested-arrays",
+      "input": [
+        [],
+        [
+          []
+        ],
+        [
+          1,
+          [
+            2,
+            [
+              3
+            ]
+          ]
+        ]
+      ],
+      "canonical": "[[],[[]],[1,[2,[3]]]]"
+    },
+    {
+      "name": "ascii-key-order",
+      "input": {
+        "2": 6,
+        "10": 5,
+        "b": 1,
+        "a": 2,
+        "B": 3,
+        "A": 4,
+        "": 7,
+        "_": 8,
+        "-": 9
+      },
+      "canonical": "{\"\":7,\"-\":9,\"10\":5,\"2\":6,\"A\":4,\"B\":3,\"_\":8,\"a\":2,\"b\":1}"
+    },
+    {
+      "name": "nested-key-order",
+      "input": {
+        "z": {
+          "y": 1,
+          "x": [
+            {
+              "b": 1,
+              "a": 2
+            }
+          ]
+        },
+        "a": null
+      },
+      "canonical": "{\"a\":null,\"z\":{\"x\":[{\"a\":2,\"b\":1}],\"y\":1}}"
+    },
+    {
+      "name": "utf16-key-order",
+      "input": {
+        "😀": 1,
+        "": 2,
+        "�": 3,
+        "ä": 4,
+        "z": 5,
+        "€": 6
+      },
+      "canonical": "{\"z\":5,\"ä\":4,\"€\":6,\"😀\":1,\"\":2,\"�\":3}"
+    },
+    {
+      "name": "escapes",
+      "input": {
+        "quote": "\"",
+        "backslash": "\\",
+        "slash": "/",
+        "controls": "\b\f\n\r\t",
+        "nul": "\u0000"
+      },
+      "canonical": "{\"backslash\":\"\\\\\",\"controls\":\"\\b\\f\\n\\r\\t\",\"nul\":\"\\u0000\",\"quote\":\"\\\"\",\"slash\":\"/\"}"
+    },
+    {
+      "name": "control-characters",
+      "input": [
+        "\u0001\u001f",
+        "",
+        "",
+        "  "
+      ],
+      "canonical": "[\"\\u0001\\u001f\",\"\",\"\",\"  \"]"
+    },
+    {
+      "name": "unicode-literal",
+      "input": [
+        "é",
+        "é",
+        "日本語",
+        "שלום",
+        "👩‍💻",
+        " "
+      ],
+      "canonical": "[\"é\",\"é\",\"日本語\",\"שלום\",\"👩‍💻\",\" \"]"
+    }
+  ]
+}

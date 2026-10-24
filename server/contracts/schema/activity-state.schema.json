@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opencode-ios.invalid/push/activity-state.schema.json",
+  "title": "Live Activity content state",
+  "description": "Plaintext to the relay and Apple, so it stays coarse. The relay rejects any other key. Times are Unix seconds, so the app's ContentState must decode them as numbers, not Date (ActivityKit's default Date decoding counts from 2001).",
+  "type": "object",
+  "required": ["phase", "step", "toolGlyph", "startedAt", "updatedAt"],
+  "properties": {
+    "phase": { "enum": ["running", "needsInput", "retrying", "succeeded", "failed", "interrupted"] },
+    "step": { "description": "Steps started in this run.", "type": "integer", "minimum": 0, "maximum": 100000 },
+    "toolGlyph": { "enum": ["none", "read", "edit", "shell", "search", "web", "agent", "question", "other"] },
+    "startedAt": { "type": "number", "minimum": 0 },
+    "updatedAt": { "type": "number", "minimum": 0 }
+  },
+  "additionalProperties": false
+}

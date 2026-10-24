@@ -1,0 +1,225 @@
+{
+  "description": "Segments: [\"hex\", h] literal bytes, [\"zeros\", n] zero bytes, [\"pattern\", n] bytes with byte i = i mod 251. Padded output is checked by length and SHA-256.",
+  "pad": [
+    {
+      "name": "empty",
+      "input": [],
+      "length": 512,
+      "sha256": "898b7737d69e351e54b406aebda27652c04413344d19dfb698a8642e33b698f9"
+    },
+    {
+      "name": "one-byte",
+      "input": [
+        [
+          "hex",
+          "7b"
+        ]
+      ],
+      "length": 512,
+      "sha256": "ca924fea9fa55706529816f811655db9cb9e46f0fcdfb6d0342a1d16a2ff7c77"
+    },
+    {
+      "name": "fills-512",
+      "input": [
+        [
+          "pattern",
+          511
+        ]
+      ],
+      "length": 512,
+      "sha256": "3553399f299f97215d340e3526765a2e8e767a9560f10ed4ffd2a7698379b27d"
+    },
+    {
+      "name": "spills-to-1024",
+      "input": [
+        [
+          "pattern",
+          512
+        ]
+      ],
+      "length": 1024,
+      "sha256": "0b95905be71de03f490846b910b27cce79cf6f21633a3892425b8161af7810ba"
+    },
+    {
+      "name": "fills-1024",
+      "input": [
+        [
+          "pattern",
+          1023
+        ]
+      ],
+      "length": 1024,
+      "sha256": "9928aeaab146cd9296908ce7feb29f70c5c36074886d04421f3967804683789a"
+    },
+    {
+      "name": "spills-to-2048",
+      "input": [
+        [
+          "pattern",
+          1024
+        ]
+      ],
+      "length": 2048,
+      "sha256": "83120d18a794db613e9eea9be2efe1e2e2ff3c85f42c0a14e2e13002e9cbb077"
+    },
+    {
+      "name": "fills-2048",
+      "input": [
+        [
+          "pattern",
+          2047
+        ]
+      ],
+      "length": 2048,
+      "sha256": "2fdb602f2fb5f6c62a796852f3b994de7494b2907eefd22cbec74a9253f1ca50"
+    },
+    {
+      "name": "trailing-zero-bytes",
+      "input": [
+        [
+          "hex",
+          "41"
+        ],
+        [
+          "zeros",
+          3
+        ]
+      ],
+      "length": 512,
+      "sha256": "98945a01c2f838ec06102989ec84714365edc946842f2f6a13302fb688551a48"
+    },
+    {
+      "name": "too-large",
+      "input": [
+        [
+          "pattern",
+          2048
+        ]
+      ],
+      "error": "tooLarge"
+    }
+  ],
+  "unpad": [
+    {
+      "name": "valid-empty",
+      "input": [
+        [
+          "hex",
+          "80"
+        ],
+        [
+          "zeros",
+          511
+        ]
+      ],
+      "output": ""
+    },
+    {
+      "name": "valid-full-512",
+      "input": [
+        [
+          "pattern",
+          511
+        ],
+        [
+          "hex",
+          "80"
+        ]
+      ],
+      "output": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fa000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fa000102030405060708"
+    },
+    {
+      "name": "valid-with-zeros-before-marker",
+      "input": [
+        [
+          "hex",
+          "410000"
+        ],
+        [
+          "hex",
+          "80"
+        ],
+        [
+          "zeros",
+          508
+        ]
+      ],
+      "output": "410000"
+    },
+    {
+      "name": "valid-1024",
+      "input": [
+        [
+          "pattern",
+          700
+        ],
+        [
+          "hex",
+          "80"
+        ],
+        [
+          "zeros",
+          323
+        ]
+      ],
+      "output": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fa000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fa000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5"
+    },
+    {
+      "name": "all-zero",
+      "input": [
+        [
+          "zeros",
+          512
+        ]
+      ],
+      "error": "invalid"
+    },
+    {
+      "name": "wrong-marker",
+      "input": [
+        [
+          "hex",
+          "4101"
+        ],
+        [
+          "zeros",
+          510
+        ]
+      ],
+      "error": "invalid"
+    },
+    {
+      "name": "data-after-marker",
+      "input": [
+        [
+          "hex",
+          "418042"
+        ],
+        [
+          "zeros",
+          509
+        ]
+      ],
+      "error": "invalid"
+    },
+    {
+      "name": "not-a-bucket",
+      "input": [
+        [
+          "hex",
+          "4180"
+        ],
+        [
+          "zeros",
+          498
+        ]
+      ],
+      "error": "invalid"
+    },
+    {
+      "name": "empty-buffer",
+      "input": [],
+      "error": "invalid"
+    }
+  ]
+}

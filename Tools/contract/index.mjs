@@ -8,6 +8,7 @@ import { audit } from '../opencode-sandbox/isolation.mjs';
 import { stopAll, run } from '../opencode-sandbox/process.mjs';
 import { startMock } from '../mock-llm/server.mjs';
 import { runScenario } from '../fixture-recorder/scenarios.mjs';
+import { runPluginChecks } from '../push-e2e/plugin-checks.mjs';
 
 const { values } = parseArgs({ options: { version: { type: 'string' }, 'write-flows-only': { type: 'boolean' } } });
 const version = await resolveVersion(values.version);
@@ -60,6 +61,10 @@ await audit(auditDir, async () => {
     console.log(swift);
     assert.match(swift, /PASS M3a store projection equals snapshot: compact/, 'Swift write contracts must run through compact');
     console.log('PASS Swift networking, projection and M3a write contracts');
+    // The push plugin in its own sandboxes: installed by configuration and by `opencode plugin add`.
+    const push = await runPluginChecks({ version, mock });
+    await writeFile(path.join(auditDir, 'push-plugin.json'), JSON.stringify(push, null, 2) + '\n');
+    console.log('PASS push plugin live checks');
   } finally {
     try { await v1?.stop(); await server?.stop(); }
     finally { await stopAll(); await mock.close(); }

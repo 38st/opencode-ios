@@ -1,0 +1,31 @@
+{
+  "name": "@opencode-ios/opencode-mobile-push",
+  "version": "0.1.0",
+  "description": "opencode plugin that sends sealed push notifications to the opencode-ios app through its relay.",
+  "license": "MIT",
+  "type": "module",
+  "keywords": ["opencode", "opencode-plugin", "push", "ios"],
+  "exports": {
+    ".": "./server.ts",
+    "./server": "./server.ts"
+  },
+  "files": ["server.ts", "src", "contracts", "LICENSE", "README.md"],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsc --noEmit && vitest run",
+    "sync-contracts": "node scripts/sync-contracts.ts"
+  },
+  "dependencies": {
+    "@hpke/chacha20poly1305": "1.8.0",
+    "@hpke/core": "1.9.0",
+    "@hpke/dhkem-x25519": "1.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.4",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  }
+}

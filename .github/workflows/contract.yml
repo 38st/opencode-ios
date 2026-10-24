@@ -16,7 +16,7 @@ permissions:
 jobs:
   contract:
     runs-on: xcode-27
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
         with:
@@ -35,9 +35,13 @@ jobs:
           import { resolveVersion } from './Tools/opencode-sandbox/index.mjs';
           appendFileSync(process.env.GITHUB_ENV, `SERVER_VERSION=${await resolveVersion(process.env.REQUESTED_VERSION)}\n`);
           JS
+      - name: Install the push contracts and plugin
+        run: |
+          npm ci --prefix server/contracts
+          npm ci --prefix server/plugin
       - name: Offline Swift tests (live cases skipped)
         run: swift test --package-path Packages/OpencodeKit
-      - name: Live contract (Node and Swift, including stalled-stream recovery)
+      - name: Live contract (Node and Swift, stalled-stream recovery, push plugin)
         run: node Tools/contract/index.mjs --version "$SERVER_VERSION"
       - name: Refresh fixtures as an artifact
         run: node Tools/fixture-recorder/index.mjs --version "$SERVER_VERSION" --output .build/contract-fixtures

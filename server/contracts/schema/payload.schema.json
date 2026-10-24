@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opencode-ios.invalid/push/payload.schema.json",
+  "title": "Sealed push payload (the plaintext inside the envelope)",
+  "description": "Serialized as RFC 8785 JSON, padded to 512, 1024 or 2048 bytes. Readers ignore unknown keys and treat null as absent.",
+  "type": "object",
+  "required": ["v", "kind", "server", "exp", "pending"],
+  "properties": {
+    "v": { "const": 1 },
+    "kind": { "enum": ["permission", "question", "finished", "failed", "resolved", "test"] },
+    "server": { "description": "The app's own reference for the server, from registerDevice.", "type": "string", "maxLength": 128 },
+    "exp": { "description": "Unix seconds; equal to the envelope's exp.", "type": "integer" },
+    "pending": { "description": "Pending permission requests and forms on the server.", "type": "integer", "minimum": 0 },
+    "sessionID": { "type": "string" },
+    "rootSessionID": { "description": "The root of the session's family; equal to sessionID for a root session.", "type": "string" },
+    "title": { "description": "Session title, at most 100 code points.", "type": "string" },
+    "project": { "description": "Project folder name, at most 60 code points.", "type": "string" },
+    "requestID": { "description": "Permission request (per_) or form (frm_) ID.", "type": "string" },
+    "action": { "description": "Permission action, at most 64 code points.", "type": "string" },
+    "summary": { "description": "Command, path, question or error, at most 300 code points.", "type": "string" },
+    "options": { "description": "Option labels of the first question field: at most 8, each at most 40 code points.", "type": "array", "items": { "type": "string" } },
+    "risk": { "description": "Risk tier from risk-rules.json. Readers treat any other value as high.", "type": "string" },
+    "digest": { "description": "Lowercase hex SHA-256 digest of the request (README, \"Digest\").", "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "freeText": { "description": "The form has one field and it accepts typed text.", "type": "boolean" },
+    "reply": { "description": "resolved only: once, always or reject for a permission; answered or cancelled for a form; cancelled for a permission that ended without an answer.", "type": "string" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "permission" } } },
+      "then": { "required": ["sessionID", "rootSessionID", "requestID", "action", "risk", "digest"] }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "question" } } },
+      "then": { "required": ["sessionID", "rootSessionID", "requestID", "digest", "freeText"] }
+    },
+    {
+      "if": { "properties": { "kind": { "enum": ["finished", "failed"] } } },
+      "then": { "required": ["sessionID", "rootSessionID"] }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "resolved" } } },
+      "then": { "required": ["requestID", "reply"] }
+    }
+  ],
+  "additionalProperties": true
+}

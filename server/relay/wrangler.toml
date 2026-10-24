@@ -1,0 +1,47 @@
+# Placeholder deployment configuration. Before the first deploy, follow README.md, "Deploying":
+# create the D1 database, put its ID below, and set the three APNs secrets and variables.
+name = "opencode-push-relay"
+main = "src/worker.ts"
+compatibility_date = "2026-10-01"
+workers_dev = false
+
+[vars]
+# Placeholders: replace with the Apple Developer team ID, the APNs key ID and the app's bundle IDs.
+APNS_TEAM_ID = "TEAMID0000"
+APNS_KEY_ID = "KEYID00000"
+ALLOWED_BUNDLE_IDS = "com.example.opencode"
+APP_ATTEST = "off"
+# APNS_PRIVATE_KEY is a secret: `wrangler secret put APNS_PRIVATE_KEY` < AuthKey_KEYID.p8
+
+[[d1_databases]]
+binding = "DB"
+database_name = "opencode-push-relay"
+# Placeholder: the ID printed by `wrangler d1 create opencode-push-relay`.
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+[[durable_objects.bindings]]
+name = "LIMITER"
+class_name = "RateLimiter"
+
+[[durable_objects.bindings]]
+name = "TOKENS"
+class_name = "ApnsTokenCache"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RateLimiter", "ApnsTokenCache"]
+
+# Workers Logs keep the relay's own lines, which carry counts and outcomes only (src/log.ts).
+# Invocation logs and traces stay off: they record request URLs, with device and sender IDs and
+# activity references, and client IPs.
+[observability]
+enabled = true
+redact_query_string = true
+
+[observability.logs]
+enabled = true
+invocation_logs = false
+
+[observability.traces]
+enabled = false
