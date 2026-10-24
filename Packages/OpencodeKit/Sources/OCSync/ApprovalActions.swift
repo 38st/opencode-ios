@@ -2,6 +2,7 @@ import Foundation
 import OCFoundation
 import OCModels
 import OCNetworking
+import OCPushCore
 import OCSecurity
 
 extension ReadStore {

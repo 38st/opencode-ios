@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opencode-ios.invalid/push/envelope.schema.json",
+  "title": "Sealed push envelope (the APNs payload's \"oc\" object)",
+  "description": "Everything here except ct is visible to the relay and Apple. aad = \"oc1|\" + kind + \"|\" + exp + \"|\" + kid.",
+  "type": "object",
+  "required": ["v", "kid", "kind", "exp", "enc", "ct"],
+  "properties": {
+    "v": { "const": 1 },
+    "kid": {
+      "description": "The device key ID for one paired server, chosen by the app.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{16,64}$"
+    },
+    "kind": { "enum": ["permission", "question", "finished", "failed", "resolved", "test"] },
+    "exp": {
+      "description": "Expiry in Unix seconds. The envelope is expired once now >= exp.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4102444800
+    },
+    "enc": {
+      "description": "The 32-byte X25519 encapsulated key, base64url without padding.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "ct": {
+      "description": "ChaCha20-Poly1305 ciphertext and tag of the padded plaintext (528, 1040 or 2064 bytes), base64url without padding.",
+      "type": "string",
+      "maxLength": 3072,
+      "pattern": "^(?:[A-Za-z0-9_-]{704}|[A-Za-z0-9_-]{1387}|[A-Za-z0-9_-]{2752})$"
+    }
+  },
+  "additionalProperties": true
+}

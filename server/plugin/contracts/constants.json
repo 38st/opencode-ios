@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "names": {
+    "package": "@opencode-ios/opencode-mobile-push",
+    "plugin": "mobilepush",
+    "rpc": "mobilepush"
+  },
+  "relay": {
+    "defaultURL": "https://relay.example.invalid"
+  },
+  "hpke": {
+    "mode": "auth",
+    "kem": "DHKEM(X25519, HKDF-SHA256)",
+    "kdf": "HKDF-SHA256",
+    "aead": "ChaCha20-Poly1305",
+    "kemID": 32,
+    "kdfID": 1,
+    "aeadID": 3,
+    "info": "opencode-ios push v1"
+  },
+  "envelope": {
+    "version": 1,
+    "aadPrefix": "oc1",
+    "keyBytes": 32,
+    "tagBytes": 16,
+    "maxEncodedCiphertext": 3072
+  },
+  "padding": {
+    "buckets": [512, 1024, 2048],
+    "marker": 128
+  },
+  "payload": {
+    "version": 1,
+    "ellipsis": "…",
+    "limits": {
+      "server": 128,
+      "title": 100,
+      "project": 60,
+      "action": 64,
+      "summary": 300,
+      "options": 8,
+      "option": 40
+    }
+  },
+  "kinds": {
+    "permission": {
+      "alert": "opencode needs your approval",
+      "category": "PERMISSION",
+      "interruptionLevel": "time-sensitive",
+      "priority": 10,
+      "ttlSeconds": 600
+    },
+    "question": {
+      "alert": "opencode has a question",
+      "category": "QUESTION",
+      "interruptionLevel": "time-sensitive",
+      "priority": 10,
+      "ttlSeconds": 600
+    },
+    "finished": {
+      "alert": "A session finished",
+      "category": "FINISHED",
+      "interruptionLevel": "active",
+      "priority": 10,
+      "ttlSeconds": 3600
+    },
+    "failed": {
+      "alert": "A session failed",
+      "category": "FAILED",
+      "interruptionLevel": "active",
+      "priority": 10,
+      "ttlSeconds": 3600
+    },
+    "resolved": {
+      "alert": "Answered on another device",
+      "category": "OPEN_ONLY",
+      "interruptionLevel": "passive",
+      "priority": 5,
+      "ttlSeconds": 600
+    },
+    "test": {
+      "alert": "Test notification from opencode",
+      "category": "OPEN_ONLY",
+      "interruptionLevel": "active",
+      "priority": 10,
+      "ttlSeconds": 300
+    }
+  },
+  "categories": ["PERMISSION", "PERMISSION_HIGH_RISK", "QUESTION", "FINISHED", "FAILED", "OPEN_ONLY"],
+  "limits": {
+    "alertsPerMinute": 30,
+    "alertsPerDay": 500,
+    "activityUpdatesPerMinute": 30,
+    "activityUpdatesPerDay": 2000,
+    "registrationsPerHour": 20
+  },
+  "plugin": {
+    "graceMilliseconds": 3000,
+    "retries": 3,
+    "retryBaseMilliseconds": 1000
+  },
+  "presence": {
+    "heartbeatSeconds": 30,
+    "validSeconds": 45
+  },
+  "activity": {
+    "updateIntervalSeconds": 30,
+    "staleSeconds": 300,
+    "dismissSeconds": 900,
+    "maxLifetimeSeconds": 28800
+  },
+  "apns": {
+    "category": "OPEN_ONLY",
+    "maxPayloadBytes": 4096,
+    "maxCollapseIDBytes": 64,
+    "tokenCacheSeconds": 3000,
+    "hosts": {
+      "sandbox": "https://api.sandbox.push.apple.com",
+      "production": "https://api.push.apple.com"
+    }
+  }
+}

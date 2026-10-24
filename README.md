@@ -98,7 +98,9 @@ xcrun simctl launch booted dev.opencodeios.client
 | `swift test --package-path Packages/OpencodeKit` | Models, networking, sync, persistence and rendering against recorded server traffic in `Fixtures/`. No network. |
 | `xcodebuild … -only-testing:ServerSnapshots` (and the other snapshot targets) | Screens and components in light and dark, at phone and iPad sizes and large text. |
 | `node Tools/ui-smoke/index.mjs` | XCUITest flows on iPhone and iPad against a sandboxed opencode server and the scripted model. |
-| `node Tools/contract/index.mjs` | Live contract checks against the newest opencode V2 release and the V1 detection server. |
+| `node Tools/contract/index.mjs` | Live contract checks against the newest opencode V2 release and the V1 detection server, including the push plugin. |
+| `npm test` in `server/contracts`, `server/plugin` and `server/relay` | The push contracts and their vectors, the plugin against a fake opencode host, and the relay in the Workers runtime and on Node against a mock APNs. |
+| `node Tools/push-e2e/index.mjs` | Push end to end on this Mac: the sandboxed server with the plugin, the relay in `wrangler dev`, a mock APNs, and the envelopes opened in Swift. |
 
 CI builds and tests with both Xcode 27.0 and 27.1 on GitHub's arm64 [`xcode-27` preview runner](https://github.blog/changelog/2026-09-10-xcode-27-runner-image-now-runs-on-macos-27/), so code that only the newer compiler accepts is caught; the [runner inventory](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md) lists both. A nightly workflow runs the live contract checks. [`Tools/README.md`](Tools/README.md) covers the sandbox, the scripted model, the fixture recorder and their isolation guarantees.
 
@@ -107,9 +109,10 @@ CI builds and tests with both Xcode 27.0 and 27.1 on GitHub's arm64 [`xcode-27` 
 | Path | Contents |
 | --- | --- |
 | `App/` | The app target. It only wires things together. |
-| `Packages/OpencodeKit/` | All logic, as Swift 6 modules: `OCModels` (tolerant wire models), `OCNetworking` (API client, SSE, pairing), `OCSecurity` (Keychain), `OCPersistence` (GRDB cache, drafts, outbox), `OCSync` (stores and resync), `OCRender` (Markdown, highlighting, diffs), `OCDesign` (design system) and the `Feature*` screens. |
+| `Packages/OpencodeKit/` | All logic, as Swift 6 modules: `OCModels` (tolerant wire models), `OCNetworking` (API client, SSE, pairing), `OCSecurity` (Keychain), `OCPersistence` (GRDB cache, drafts, outbox), `OCSync` (stores and resync), `OCPushCore` (push envelopes, digests and risk rules), `OCRender` (Markdown, highlighting, diffs), `OCDesign` (design system) and the `Feature*` screens. |
+| `server/` | The push side, MIT-licensed: `contracts` (the payload, envelope, digest and risk rules shared with the app), `plugin` (the opencode plugin) and `relay` (the APNs relay for Cloudflare Workers, with a Node fallback). |
 | `Fixtures/` | Recorded opencode traffic that the tests replay. |
-| `Tools/` | The sandboxed server launcher, scripted model, fixture recorder, contract checks, UI smoke harness and design reference capture. |
+| `Tools/` | The sandboxed server launcher, scripted model, fixture recorder, contract checks, push end-to-end, UI smoke harness and design reference capture. |
 | `docs/`, `research/` | Design notes, milestone audits, the roadmap, the V2 protocol reference and the feature matrix. |
 
 ## Documentation
@@ -129,6 +132,6 @@ Issues are welcome: bug reports, problems with a particular opencode version, an
 
 Copyright © 2026 38st.
 
-The app is licensed under the [GNU General Public License v3.0 only](LICENSE) (GPL-3.0-only). The push plugin and relay, which arrive with milestone M5, will be MIT-licensed, each with its own LICENSE file.
+The app is licensed under the [GNU General Public License v3.0 only](LICENSE) (GPL-3.0-only). The push plugin ([`server/plugin`](server/plugin/LICENSE)), the relay ([`server/relay`](server/relay/LICENSE)) and their shared contracts ([`server/contracts`](server/contracts/LICENSE)) are MIT-licensed, each with its own LICENSE file.
 
 Third-party material keeps its own licence. The look follows the opencode desktop app: its design tokens and icons (MIT), Material Icon Theme file icons (MIT), and the Inter and JetBrains Mono fonts (SIL Open Font License 1.1). [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) lists these and the Swift packages with their licences.

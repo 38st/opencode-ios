@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "tiers": ["low", "elevated", "high"],
+  "limits": {
+    "maxLength": 8192,
+    "rule": { "id": "too-long", "tier": "high" }
+  },
+  "macros": {
+    "bow": "(?<![a-z0-9_])",
+    "eow": "(?![a-z0-9_])",
+    "ws": "[\\t\\n\\u000b\\f\\r \\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]",
+    "line": "[^\\n\\r\\u2028\\u2029]",
+    "cmd": "[^\\n\\r\\u2028\\u2029;&|]",
+    "tok": "[^\\t\\n\\u000b\\f\\r \\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff;&|]"
+  },
+  "actions": [
+    {
+      "id": "read-only",
+      "actions": ["read", "glob", "grep", "list"],
+      "tier": "low"
+    },
+    {
+      "id": "edit-or-web",
+      "actions": ["edit", "write", "patch", "apply_patch", "webfetch", "websearch"],
+      "tier": "elevated"
+    },
+    {
+      "id": "external-directory",
+      "actions": ["external_directory"],
+      "tier": "high"
+    },
+    {
+      "id": "shell",
+      "actions": ["shell", "bash"],
+      "tier": "elevated",
+      "escalate": [
+        { "id": "rm", "tier": "high", "pattern": "{bow}rm{eow}" },
+        { "id": "sudo", "tier": "high", "pattern": "{bow}sudo{eow}" },
+        { "id": "permissions-or-disk", "tier": "high", "pattern": "{bow}(chmod|chown|mkfs|dd){eow}" },
+        { "id": "force-push", "tier": "high", "pattern": "{bow}git({ws}+(?!push{eow}|git{eow}){tok}+)*{ws}+push{eow}({ws}+(?!git{eow}){tok}+)*{ws}+(--force|-[a-z]*f|\\+)" },
+        { "id": "git-history", "tier": "high", "pattern": "{bow}git{ws}+(push|reset|clean){eow}" },
+        { "id": "download-to-pipe", "tier": "high", "pattern": "(curl|wget)((?!curl|wget){line})*\\|" },
+        { "id": "shell-command-string", "tier": "high", "pattern": "{bow}(sh|bash|zsh){ws}+-c{eow}" },
+        { "id": "redirect-to-root", "tier": "high", "pattern": ">{ws}*/" }
+      ]
+    }
+  ],
+  "default": { "id": "unknown-action", "tier": "high" }
+}

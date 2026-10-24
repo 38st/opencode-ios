@@ -1,0 +1,27 @@
+{
+  "name": "@opencode-ios/push-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Push contracts shared by the opencode-ios app, plugin and relay: envelope, payload, digest, padding, risk rules and test vectors.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "generate": "node scripts/generate-vectors.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "tsc --noEmit && vitest run"
+  },
+  "dependencies": {
+    "@hpke/chacha20poly1305": "1.8.0",
+    "@hpke/core": "1.9.0",
+    "@hpke/dhkem-x25519": "1.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.4",
+    "ajv": "8.20.0",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  }
+}

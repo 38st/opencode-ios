@@ -137,3 +137,23 @@ serialization casts in the Python/YAML scanners for warning-free Apple builds.
 
 The model-output cleanup and session indicator implementations are original code,
 informed by the ideas documented in research/09. No grapeot source was copied.
+
+## Push plugin and relay dependencies — MIT
+
+The push plugin and relay under `server/` are MIT-licensed, each with its own `LICENSE`. They are
+distributed separately from the app, and none of the packages below ship in it: the app opens push
+envelopes with CryptoKit's HPKE.
+
+The plugin (`server/plugin`) installs these runtime packages from npm, all MIT-licensed, by
+Ajitomi Daisuke: `@hpke/core` 1.9.0 (Copyright (c) 2023), `@hpke/common` 1.10.1 (Copyright (c)
+2024), `@hpke/dhkem-x25519` 1.8.0 (Copyright (c) 2023) and `@hpke/chacha20poly1305` 1.8.0
+(Copyright (c) 2023). As their source headers state, they include code based on Paul Miller's
+noble-curves, noble-hashes and noble-ciphers, which are MIT-licensed. `server/contracts` uses the
+same three `@hpke` packages for its test vectors.
+
+The relay (`server/relay`) depends on Hono 4.13.13 (Copyright (c) 2021 - present, Yusuke Wada and
+Hono contributors), MIT-licensed.
+
+Development tools (TypeScript, Vitest, Wrangler, `@cloudflare/vitest-plugin`,
+`@cloudflare/workers-types`, `@types/node` and Ajv) are pinned in each package's lockfile and are
+not distributed.

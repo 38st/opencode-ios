@@ -1,0 +1,33 @@
+name: Push plugin
+
+on:
+  push:
+    paths: ['server/plugin/**', 'server/contracts/**', '.github/workflows/plugin.yml']
+  pull_request:
+    paths: ['server/plugin/**', 'server/contracts/**', '.github/workflows/plugin.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '26'
+      - name: Contracts
+        working-directory: server/contracts
+        run: |
+          npm ci
+          npm test
+          node scripts/generate-vectors.ts --check
+      - name: Plugin
+        working-directory: server/plugin
+        run: |
+          npm ci
+          npm test

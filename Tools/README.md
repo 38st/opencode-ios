@@ -44,7 +44,8 @@ node Tools/contract/index.mjs --version 2.0.32
 This starts the real npm V2 server and the V1 detection server, checks 401/200
 authentication, single-use pairing and token authentication, the first SSE event
 and a heartbeat within 20 seconds, a prompt and title round trip, PTY echo/resize/
-cursor resume/deletion, and V1 health detection. Failures exit nonzero. This is
+cursor resume/deletion, V1 health detection, and the push plugin live checks (see
+"Push (M5a)"). Failures exit nonzero. This is
 separate from ordinary `swift test`, which reads checked-in files and skips live cases.
 
 The contract also runs `OCNetworkingLiveTests` through `swift test --filter
@@ -75,6 +76,46 @@ and uploads refreshed fixtures and isolation audits as artifacts. It does not
 commit recordings. The minimum-supported V2 matrix described in ARCHITECTURE §6 remains future
 work; the networking and read-projection suites run against latest/pinned V2,
 with V1 detection checked separately.
+
+## Push (M5a)
+
+Install the three push packages first: `npm ci` in `server/contracts`, `server/plugin` and
+`server/relay`. Nothing here creates an account, deploys, or contacts APNs.
+
+```sh
+node Tools/sync-push-contracts.mjs --check   # OCPushCore's copies of constants.json and risk-rules.json
+node Tools/push-e2e/plugin-checks.mjs        # the plugin live checks; Tools/contract/index.mjs runs them too
+node Tools/push-e2e/index.mjs                # the local end-to-end
+```
+
+`plugin-checks.mjs` starts a sandbox whose configuration lists this checkout's `server/plugin`, and
+a loopback relay that records every call. With the scripted model it proves: the plugin loads and
+answers its RPC on two locations; storage is global and namespaced in opencode's `kv` table; a real
+permission request is pushed after the grace period, sealed, with the right fields and the digest
+of a fresh `GET`; the desktop answer replaces it; an answer inside the grace period and a valid
+presence heartbeat suppress it; a root's success and a failure are pushed (opencode publishes both
+without a location); a subagent's request carries its root, and its success is not pushed; Stop
+replaces a pushed request once; a Live Activity follows a run; a missing session answers
+`not_found`; a request in a second location is pushed once although every instance receives every
+location's events; `session.moved` sends nothing. A second sandbox installs the plugin with
+`opencode plugin add git+file://…` (a Git repository of the package made inside the run directory)
+and loads it from the global configuration that command writes. The CLI runs under the same
+`sandbox-exec` profile, with its own enforcement receipt. `push-plugin.json` in the audit directory
+records the answers.
+
+`index.mjs` adds the relay in the Workers local runtime (`wrangler dev --local`, with local D1 after
+`wrangler d1 migrations apply --local`, and both Durable Objects) and the relay's mock APNs server,
+with a test ES256 key made for the run. It registers a fake phone at the relay and through the
+plugin, drives a real permission request and a real question, and checks the generic alert, the
+headers and the envelope at the mock APNs, opens the envelopes with the TypeScript contracts and with
+`OCPushCore` (`swift test --filter pushesFromTheEndToEndRunOpenInSwift`, given the capture), refuses
+tampered copies, and covers the replacement, presence, an answer inside the grace period, the
+relay's rate limit (test mode, 8 alerts a minute) and the `gone` path. It prints the time from the
+request's event to the mock APNs. Results, the capture and the Swift log are under
+`.build/push-e2e/<run>/`; the run's env file with the test key is deleted at the end. wrangler runs
+with its `HOME`, XDG and log directories inside the run (`server/relay/scripts/isolated.mjs`),
+telemetry off and no Cloudflare credentials, and the run fails if the account's own wrangler state
+changed.
 
 ## Isolation and lifecycle
 

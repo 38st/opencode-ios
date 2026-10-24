@@ -1,0 +1,294 @@
+{
+  "description": "SHA-256 (lowercase hex) of the UTF-8 RFC 8785 form of the projected fields. input is the server's JSON.",
+  "permissions": [
+    {
+      "name": "shell",
+      "input": {
+        "id": "per_0193a5f2c1d8AbCdEfGhIjKlMn",
+        "sessionID": "ses_fe6c5a0d3e27AbCdEfGhIjKlMn",
+        "action": "shell",
+        "resources": [
+          "git push --force origin main"
+        ],
+        "save": [
+          "git push *"
+        ],
+        "metadata": {
+          "command": "git push --force origin main"
+        },
+        "source": {
+          "type": "tool",
+          "messageID": "msg_0193a5f2c0aaAbCdEfGhIjKlMn",
+          "id": "call_1"
+        }
+      },
+      "canonical": "{\"action\":\"shell\",\"requestID\":\"per_0193a5f2c1d8AbCdEfGhIjKlMn\",\"resources\":[\"git push --force origin main\"],\"save\":[\"git push *\"],\"sessionID\":\"ses_fe6c5a0d3e27AbCdEfGhIjKlMn\"}",
+      "digest": "81a3905901a20c9f0ad75f063820f4a7837ce5ae1d715807984cff6264128ace"
+    },
+    {
+      "name": "save-absent",
+      "input": {
+        "id": "per_1",
+        "sessionID": "ses_1",
+        "action": "edit",
+        "resources": [
+          "README.md"
+        ]
+      },
+      "canonical": "{\"action\":\"edit\",\"requestID\":\"per_1\",\"resources\":[\"README.md\"],\"save\":[],\"sessionID\":\"ses_1\"}",
+      "digest": "d6989a801ff20fdfd17aec9db24b68818c9d5a7a785abb0049ebc0bac3b70f40"
+    },
+    {
+      "name": "save-empty",
+      "input": {
+        "id": "per_1",
+        "sessionID": "ses_1",
+        "action": "edit",
+        "resources": [
+          "README.md"
+        ],
+        "save": []
+      },
+      "canonical": "{\"action\":\"edit\",\"requestID\":\"per_1\",\"resources\":[\"README.md\"],\"save\":[],\"sessionID\":\"ses_1\"}",
+      "digest": "d6989a801ff20fdfd17aec9db24b68818c9d5a7a785abb0049ebc0bac3b70f40"
+    },
+    {
+      "name": "save-null",
+      "input": {
+        "id": "per_1",
+        "sessionID": "ses_1",
+        "action": "edit",
+        "resources": [
+          "README.md"
+        ],
+        "save": null
+      },
+      "canonical": "{\"action\":\"edit\",\"requestID\":\"per_1\",\"resources\":[\"README.md\"],\"save\":[],\"sessionID\":\"ses_1\"}",
+      "digest": "d6989a801ff20fdfd17aec9db24b68818c9d5a7a785abb0049ebc0bac3b70f40"
+    },
+    {
+      "name": "empty-resources",
+      "input": {
+        "id": "per_2",
+        "sessionID": "ses_2",
+        "action": "question",
+        "resources": [],
+        "save": []
+      },
+      "canonical": "{\"action\":\"question\",\"requestID\":\"per_2\",\"resources\":[],\"save\":[],\"sessionID\":\"ses_2\"}",
+      "digest": "bead3e9a77674f05152643437b63df3b76a3c4de6ede87977a2e7ac46635c332"
+    },
+    {
+      "name": "key-order-and-extra-keys",
+      "input": {
+        "source": {
+          "id": "call_9",
+          "type": "tool",
+          "messageID": "msg_9"
+        },
+        "save": [
+          "*"
+        ],
+        "resources": [
+          "b",
+          "a"
+        ],
+        "metadata": {
+          "z": 1
+        },
+        "action": "read",
+        "sessionID": "ses_3",
+        "message": "ignored",
+        "id": "per_3"
+      },
+      "canonical": "{\"action\":\"read\",\"requestID\":\"per_3\",\"resources\":[\"b\",\"a\"],\"save\":[\"*\"],\"sessionID\":\"ses_3\"}",
+      "digest": "54dba630eabe87a0f45e081a3d55b00958755e7596646a766fa597206ffa173f"
+    },
+    {
+      "name": "unicode",
+      "input": {
+        "id": "per_4",
+        "sessionID": "ses_4",
+        "action": "edit",
+        "resources": [
+          "docs/日本語.md",
+          "café",
+          "café",
+          "🚀 launch.txt",
+          "שלום/מסמך.txt"
+        ],
+        "save": [
+          "docs/*"
+        ]
+      },
+      "canonical": "{\"action\":\"edit\",\"requestID\":\"per_4\",\"resources\":[\"docs/日本語.md\",\"café\",\"café\",\"🚀 launch.txt\",\"שלום/מסמך.txt\"],\"save\":[\"docs/*\"],\"sessionID\":\"ses_4\"}",
+      "digest": "086e86eb1b2d09a947cb72bc699fe3f8a94aaa91be53cb00089ebf6728e2adf4"
+    },
+    {
+      "name": "control-characters",
+      "input": {
+        "id": "per_5",
+        "sessionID": "ses_5",
+        "action": "shell",
+        "resources": [
+          "printf 'a\\tb\\n'\n\techo \"done\"",
+          "\u0007bell",
+          "line separator"
+        ],
+        "save": []
+      },
+      "canonical": "{\"action\":\"shell\",\"requestID\":\"per_5\",\"resources\":[\"printf 'a\\\\tb\\\\n'\\n\\techo \\\"done\\\"\",\"\\u0007bell\",\"line separator\"],\"save\":[],\"sessionID\":\"ses_5\"}",
+      "digest": "0d92918771dfafbe170947ad906f2f1dfd2c9cbdf649ec50529015b0ab39503a"
+    }
+  ],
+  "forms": [
+    {
+      "name": "question-tool",
+      "input": {
+        "id": "frm_0193a5f2c1d8AbCdEfGhIjKlMn",
+        "sessionID": "ses_fe6c5a0d3e27AbCdEfGhIjKlMn",
+        "title": "Questions",
+        "metadata": {
+          "kind": "question",
+          "tool": {
+            "messageID": "msg_1",
+            "id": "call_2"
+          }
+        },
+        "fields": [
+          {
+            "key": "q0",
+            "type": "string",
+            "title": "Color",
+            "description": "Which color?",
+            "custom": true,
+            "options": [
+              {
+                "value": "Blue",
+                "label": "Blue",
+                "description": "Use blue"
+              },
+              {
+                "value": "Green",
+                "label": "Green",
+                "description": "Use green"
+              }
+            ]
+          }
+        ]
+      },
+      "canonical": "{\"fields\":[{\"description\":\"Which color?\",\"key\":\"q0\",\"options\":[{\"label\":\"Blue\",\"value\":\"Blue\"},{\"label\":\"Green\",\"value\":\"Green\"}],\"title\":\"Color\",\"type\":\"string\"}],\"formID\":\"frm_0193a5f2c1d8AbCdEfGhIjKlMn\",\"sessionID\":\"ses_fe6c5a0d3e27AbCdEfGhIjKlMn\",\"title\":\"Questions\"}",
+      "digest": "b23c0160d5eb400a8ffab4c765082f687e105866427a83b8772bbeed3f5e6023"
+    },
+    {
+      "name": "minimal-field",
+      "input": {
+        "id": "frm_1",
+        "sessionID": "ses_1",
+        "title": "Name",
+        "fields": [
+          {
+            "key": "name",
+            "type": "string"
+          }
+        ]
+      },
+      "canonical": "{\"fields\":[{\"description\":\"\",\"key\":\"name\",\"options\":[],\"title\":\"\",\"type\":\"string\"}],\"formID\":\"frm_1\",\"sessionID\":\"ses_1\",\"title\":\"Name\"}",
+      "digest": "62901eb0ebf7567f2fcf445268d5b48038bda28dccc85c44251689357492957e"
+    },
+    {
+      "name": "global-owner",
+      "input": {
+        "id": "frm_2",
+        "sessionID": "global",
+        "title": "MCP sign-in",
+        "fields": [
+          {
+            "type": "external",
+            "key": "auth",
+            "url": "https://example.invalid/auth",
+            "title": "Sign in"
+          }
+        ]
+      },
+      "canonical": "{\"fields\":[{\"description\":\"\",\"key\":\"auth\",\"options\":[],\"title\":\"Sign in\",\"type\":\"external\"}],\"formID\":\"frm_2\",\"sessionID\":\"global\",\"title\":\"MCP sign-in\"}",
+      "digest": "e6be26bd92b3e9acf728d706f3b531cf7b676cf1ddadb00ba71e47ccfb58575a"
+    },
+    {
+      "name": "mixed-fields",
+      "input": {
+        "id": "frm_3",
+        "sessionID": "ses_3",
+        "title": "Deploy settings",
+        "fields": [
+          {
+            "key": "env",
+            "type": "multiselect",
+            "options": [
+              {
+                "value": "prod",
+                "label": "Production"
+              },
+              {
+                "value": "stage",
+                "label": "Staging"
+              }
+            ],
+            "minItems": 1
+          },
+          {
+            "key": "count",
+            "type": "integer",
+            "title": "Replicas",
+            "minimum": 1,
+            "maximum": 9,
+            "default": 3
+          },
+          {
+            "key": "confirm",
+            "type": "boolean",
+            "title": "Confirm",
+            "required": true,
+            "when": [
+              {
+                "key": "env",
+                "op": "eq",
+                "value": "prod"
+              }
+            ]
+          }
+        ]
+      },
+      "canonical": "{\"fields\":[{\"description\":\"\",\"key\":\"env\",\"options\":[{\"label\":\"Production\",\"value\":\"prod\"},{\"label\":\"Staging\",\"value\":\"stage\"}],\"title\":\"\",\"type\":\"multiselect\"},{\"description\":\"\",\"key\":\"count\",\"options\":[],\"title\":\"Replicas\",\"type\":\"integer\"},{\"description\":\"\",\"key\":\"confirm\",\"options\":[],\"title\":\"Confirm\",\"type\":\"boolean\"}],\"formID\":\"frm_3\",\"sessionID\":\"ses_3\",\"title\":\"Deploy settings\"}",
+      "digest": "230952f0b0a0ad503377789062b786ccaa98d992214e21bd0c41e8c18a96b8d7"
+    },
+    {
+      "name": "unicode",
+      "input": {
+        "id": "frm_4",
+        "sessionID": "ses_4",
+        "title": "質問 🤔",
+        "fields": [
+          {
+            "key": "q0",
+            "type": "string",
+            "title": "Ünïcödé",
+            "description": "Choose — or not",
+            "options": [
+              {
+                "value": "ja",
+                "label": "はい"
+              },
+              {
+                "value": "nein",
+                "label": "いいえ"
+              }
+            ]
+          }
+        ]
+      },
+      "canonical": "{\"fields\":[{\"description\":\"Choose — or not\",\"key\":\"q0\",\"options\":[{\"label\":\"はい\",\"value\":\"ja\"},{\"label\":\"いいえ\",\"value\":\"nein\"}],\"title\":\"Ünïcödé\",\"type\":\"string\"}],\"formID\":\"frm_4\",\"sessionID\":\"ses_4\",\"title\":\"質問 🤔\"}",
+      "digest": "2629e4cb6c9bf8e51f967b04cb386020be6802422cb1d79aeded057b30b93c53"
+    }
+  ]
+}
