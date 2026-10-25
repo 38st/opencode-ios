@@ -8,3 +8,6 @@ xcuserdata/
 # Local agent workflow files, never published
 CLAUDE.md
 AGENTS.md
+docs/roadmap.md
+docs/*-audit.md
+docs/ui-review/

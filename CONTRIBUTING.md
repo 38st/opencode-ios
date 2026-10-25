@@ -10,5 +10,4 @@ Outside pull requests can't be merged yet. The app is licensed under the GPL-3.0
 
 - [README.md](README.md): building, running and testing the app.
 - [Tools/README.md](Tools/README.md): the sandboxed opencode server, the scripted model, fixtures, contract checks and UI smoke tests.
-- [AGENTS.md](AGENTS.md): code rules.
 - [SPEC.md](SPEC.md) and [ARCHITECTURE.md](ARCHITECTURE.md): product decisions and design.

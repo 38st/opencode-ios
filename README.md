@@ -21,7 +21,7 @@ Follow every session live, answer approvals with the full diff in front of you, 
 > [!NOTE]
 > This is an unofficial client. It is not affiliated with or endorsed by the opencode project or Anomaly.
 
-**Status:** in development, not yet on TestFlight or the App Store. Connection, Home, the live transcript, approvals, the composer, and review and files have landed (milestones M0 to M4). Push notifications (M5) come next. See the [roadmap](docs/roadmap.md).
+**Status:** in development, not yet on TestFlight or the App Store. Connection, Home, the live transcript, approvals, the composer, and review and files have landed (milestones M0 to M4). Push notifications (M5) come next.
 
 ## Features
 
@@ -113,14 +113,13 @@ CI builds and tests with both Xcode 27.0 and 27.1 on GitHub's arm64 [`xcode-27` 
 | `server/` | The push side, MIT-licensed: `contracts` (the payload, envelope, digest and risk rules shared with the app), `plugin` (the opencode plugin) and `relay` (the APNs relay for Cloudflare Workers, with a Node fallback). |
 | `Fixtures/` | Recorded opencode traffic that the tests replay. |
 | `Tools/` | The sandboxed server launcher, scripted model, fixture recorder, contract checks, push end-to-end, UI smoke harness and design reference capture. |
-| `docs/`, `research/` | Design notes, milestone audits, the roadmap, the V2 protocol reference and the feature matrix. |
+| `docs/`, `research/` | Design notes, the V2 protocol reference and the feature matrix. |
 
 ## Documentation
 
 - [SPEC.md](SPEC.md): product goals, scope and open decisions.
 - [ARCHITECTURE.md](ARCHITECTURE.md): modules, sync engine, persistence, push, security, testing and milestones.
 - [docs/design.md](docs/design.md): how the opencode desktop design maps to native code.
-- [docs/roadmap.md](docs/roadmap.md): milestone status and what is blocked on the owner.
 - [research/01-opencode-server-api.md](research/01-opencode-server-api.md): the V2 protocol reference.
 - [research/08-feature-matrix.md](research/08-feature-matrix.md): 141 features with their priorities.
 
