@@ -25,7 +25,9 @@ struct CodeCollection: UIViewControllerRepresentable {
     let inlineEditor: AnyView?
     let onMove: ((Int) -> Void)?
     let onExpand: (String, Range<Int>, Bool, Bool) -> Void
-    let refresh: () -> Void
+    let refresh: (() -> Void)?
+    /// Inline previews size themselves to their content and leave vertical scrolling to the page.
+    let scrolls: Bool
     func makeCoordinator() -> Coordinator { Coordinator(self) }
     func makeUIViewController(context: Context) -> CodeCollectionController {
         OCFonts.register()
@@ -42,7 +44,6 @@ struct CodeCollection: UIViewControllerRepresentable {
         longPress.minimumPressDuration = 0.4; longPress.delegate = context.coordinator; view.addGestureRecognizer(longPress)
         let pan = UIPanGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.horizontal(_:)))
         pan.delegate = context.coordinator; view.addGestureRecognizer(pan)
-        let refresh = UIRefreshControl(); refresh.addTarget(context.coordinator, action: #selector(Coordinator.refresh(_:)), for: .valueChanged); view.refreshControl = refresh
         context.coordinator.view = view
         view.viewportChanged = { [weak coordinator = context.coordinator] in coordinator?.revealEditor() }
         #if DEBUG
@@ -65,6 +66,12 @@ struct CodeCollection: UIViewControllerRepresentable {
         #endif
         coordinator.parent = self
         if let code = view as? CodeCollectionView { code.move = onMove }
+        view.isScrollEnabled = scrolls
+        if (refresh != nil) != (view.refreshControl != nil) {
+            if refresh != nil {
+                let control = UIRefreshControl(); control.addTarget(coordinator, action: #selector(Coordinator.refresh(_:)), for: .valueChanged); view.refreshControl = control
+            } else { view.refreshControl = nil }
+        }
         guard let layout = view.collectionViewLayout as? CodeLayout else { return }
         let signature = sections.map { $0.revision.uuidString }.joined() + "\(split)\(wrap)\(fontSize)"
         if coordinator.signature != signature || layout.width != view.bounds.width {
@@ -239,7 +246,7 @@ struct CodeCollection: UIViewControllerRepresentable {
             #endif
         }
         func scrollViewDidScroll(_ scrollView: UIScrollView) {}
-        @objc func refresh(_ control: UIRefreshControl) { parent.refresh(); control.endRefreshing() }
+        @objc func refresh(_ control: UIRefreshControl) { parent.refresh?(); control.endRefreshing() }
         func point(_ recognizer: UILongPressGestureRecognizer) -> (String, Int, LineSelection.Side)? {
             guard let view, let index = view.indexPathForItem(at: recognizer.location(in: view)) else { return nil }
             let section = parent.sections[index.section], row = section.rows[index.item]

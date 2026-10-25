@@ -19,42 +19,48 @@ public struct OCToolChrome<Content: View>: View {
     let badge: String?
     let failed: Bool
     let inline: Bool
+    let onOpen: (() -> Void)?
     let content: Content
     let defaultExpanded: Bool
     @State private var expanded: Bool
     public init(_ title: String, subtitle: String = "", icon: String = "code", status: String = "completed",
-                badge: String? = nil, failed: Bool = false, expanded: Bool = false, inline: Bool = false, @ViewBuilder content: () -> Content) {
-        self.title = title; self.subtitle = subtitle; self.icon = icon; self.status = status
+                badge: String? = nil, failed: Bool = false, expanded: Bool = false, inline: Bool = false, onOpen: (() -> Void)? = nil,
+                @ViewBuilder content: () -> Content) {
+        self.title = title; self.subtitle = subtitle; self.icon = icon; self.status = status; self.onOpen = onOpen
         self.badge = badge; self.failed = failed; self.inline = inline; self.content = content(); defaultExpanded = expanded; _expanded = State(initialValue: expanded)
     }
     public var body: some View {
         VStack(alignment: .leading, spacing: OCSpacing.sm) {
-            Button { onDisclosureInteraction(); expanded.toggle() } label: {
-                HStack(alignment: .top, spacing: OCSpacing.sm) {
-                    OCIcon(icon).foregroundStyle(failed ? OCColor.danger : OCColor.iconMuted).padding(.top, OCSpacing.xs)
-                    VStack(alignment: .leading, spacing: OCSpacing.xs) {
-                        if inline {
-                            Text(title + (subtitle.isEmpty ? "" : " " + subtitle)).font(OCType.small).foregroundStyle(OCColor.textMuted)
-                        } else {
-                        Text(title).font(OCType.small.weight(.medium))
-                        if !subtitle.isEmpty { Text(subtitle).font(OCType.small).foregroundStyle(OCColor.textMuted).lineLimit(2) }
-                        }
-                        if status != "completed" || badge != nil {
-                            ViewThatFits(in: .horizontal) {
-                                HStack { OCBadge(badge ?? status.capitalized, tone: failed ? .danger : .neutral) }
-                                OCBadge(badge ?? status.capitalized, tone: failed ? .danger : .neutral)
-                            }
-                        }
-                    }
-                    Spacer(minLength: 0)
-                    OCIcon(expanded ? "chevron-down" : "chevron-right", size: 12).foregroundStyle(OCColor.iconMuted)
-                }.frame(minHeight: OCLayout.touchTarget, alignment: .center).contentShape(Rectangle())
-            }.buttonStyle(.plain)
-                .accessibilityLabel([title, subtitle, badge ?? (status == "completed" ? "" : status.capitalized)].filter { !$0.isEmpty }.joined(separator: ", "))
-                .accessibilityValue(expanded ? "Expanded" : "Collapsed")
+            HStack(alignment: .top, spacing: 0) { disclosure; if let onOpen { OCIconButton("Open file", icon: "open-file", action: onOpen) } }
             if expanded { content.padding(.leading, OCSpacing.xl) }
         }.frame(maxWidth: .infinity, alignment: .leading)
             .onChange(of: defaultExpanded) { _, value in expanded = value }
+    }
+    private var disclosure: some View {
+        Button { onDisclosureInteraction(); expanded.toggle() } label: {
+            HStack(alignment: .top, spacing: OCSpacing.sm) {
+                OCIcon(icon).foregroundStyle(failed ? OCColor.danger : OCColor.iconMuted).padding(.top, OCSpacing.xs)
+                VStack(alignment: .leading, spacing: OCSpacing.xs) {
+                    if inline {
+                        Text(title + (subtitle.isEmpty ? "" : " " + subtitle)).font(OCType.small).foregroundStyle(OCColor.textMuted)
+                    } else {
+                    Text(title).font(OCType.small.weight(.medium))
+                    if !subtitle.isEmpty { Text(subtitle).font(OCType.small).foregroundStyle(OCColor.textMuted).lineLimit(2) }
+                    }
+                    if status != "completed" || badge != nil {
+                        ViewThatFits(in: .horizontal) {
+                            HStack { OCBadge(badge ?? status.capitalized, tone: failed ? .danger : .neutral) }
+                            OCBadge(badge ?? status.capitalized, tone: failed ? .danger : .neutral)
+                        }
+                    }
+                }
+                Spacer(minLength: 0)
+                OCIcon(expanded ? "chevron-down" : "chevron-right", size: 12).foregroundStyle(OCColor.iconMuted)
+            }.frame(minHeight: OCLayout.touchTarget, alignment: .center).contentShape(Rectangle())
+        }.buttonStyle(.plain)
+            .accessibilityLabel([title, subtitle, badge ?? (status == "completed" ? "" : status.capitalized)].filter { !$0.isEmpty }.joined(separator: ", "))
+            .accessibilityValue(expanded ? "Expanded" : "Collapsed")
+            .accessibilityActions { if let onOpen { Button("Open file", action: onOpen) } }
     }
 }
 private struct OCDisclosureInteractionKey: EnvironmentKey {

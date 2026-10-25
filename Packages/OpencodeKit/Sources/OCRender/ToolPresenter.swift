@@ -6,6 +6,8 @@ public struct ToolPresentation: Equatable, Sendable {
     public enum Style: Sendable { case generic, explore, diff, addedFile, shell, subagent, question, compact, links, execute }
     public var title: String
     public var subtitle: String = ""
+    /// The file the tool acted on, which the row can open. Only Read (of a file), Edit and Write set it; never a search summary.
+    public var path: String?
     public var icon: String = "code"
     public var status: String
     public var style: Style = .generic
@@ -71,7 +73,10 @@ public struct ReadPresenter: ToolPresenter {
     public init() {}
     public func matches(_ name: String) -> Bool { name == "read" }
     public func detail(_ tool: ContentFields) -> ToolPresentation {
-        base(tool, title: "Read", style: .explore, icon: "glasses", subtitle: ReadInput(raw: tool.toolState.fields.input).filePath)
+        var value = base(tool, title: "Read", style: .explore, icon: "glasses", subtitle: ReadInput(raw: tool.toolState.fields.input).filePath)
+        // A read of a directory lists its entries; there is no file to open.
+        if !value.output.hasPrefix("Read directory") { value.path = ReadInput(raw: tool.toolState.fields.input).filePath }
+        return value
     }
 }
 public struct GlobPresenter: ToolPresenter {
@@ -92,7 +97,9 @@ public struct EditPresenter: ToolPresenter {
     public init() {}
     public func matches(_ name: String) -> Bool { name == "edit" }
     public func detail(_ tool: ContentFields) -> ToolPresentation {
-        var value = base(tool, title: "Edit", style: .diff, icon: "edit", subtitle: EditInput(raw: tool.toolState.fields.input).filePath)
+        let path = EditInput(raw: tool.toolState.fields.input).filePath
+        var value = base(tool, title: "Edit", style: .diff, icon: "edit", subtitle: path)
+        value.path = path
         value.files = tool.toolState.fields.metadata?["files"]?.lossy(FileDiff.self).values ?? []
         return value
     }
@@ -110,7 +117,7 @@ public struct WritePresenter: ToolPresenter {
     public func detail(_ tool: ContentFields) -> ToolPresentation {
         let input = WriteInput(raw: tool.toolState.fields.input)
         var value = base(tool, title: "Write", style: .addedFile, icon: "edit", subtitle: input.filePath)
-        value.output = input.content ?? ""; value.badge = "Added file"; return value
+        value.output = input.content ?? ""; value.badge = "Added file"; value.path = input.filePath; return value
     }
 }
 public struct ShellPresenter: ToolPresenter {

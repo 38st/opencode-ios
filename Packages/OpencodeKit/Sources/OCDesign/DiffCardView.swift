@@ -16,6 +16,8 @@ public struct DiffCardView: View {
     #if os(iOS)
     @State private var comment: OCDiffSelection?
     @State private var editing: LineComment?
+    /// The preview's content height as OCDiffView measured it, which replaces the row estimate.
+    @State private var measured: CGFloat?
     #endif
     @Environment(\.ocFileLinks) private var fileLinks
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -29,7 +31,7 @@ public struct DiffCardView: View {
             else { Button { expanded.toggle() } label: { header }.buttonStyle(.plain) }
             if expanded {
                 #if os(iOS)
-                diff(full: false).frame(height: min(4_800, max(48, CGFloat(patch.components(separatedBy: "\n").count) * 24)))
+                preview
                 Button("Show full diff") { selecting = true }.buttonStyle(OCButtonStyle()).padding(OCSpacing.sm)
                 #else
                 CodeBlockView(patch)
@@ -72,10 +74,23 @@ public struct DiffCardView: View {
             .fixedSize(horizontal: false, vertical: true)
     }
     #if os(iOS)
+    /// Sized to the rendered rows and capped; it does not scroll, so longer diffs fade out above Show full diff.
+    private var preview: some View {
+        let size = DiffPreview.height(measured: measured.map(Double.init), rows: DiffPreview.estimatedRows(patch, showAll: showAll),
+                                      font: Double(OCDiffView.fontSize(typeSize)))
+        return diff(full: false).frame(height: CGFloat(size.height))
+            .overlay(alignment: .bottom) {
+                if size.clipped {
+                    LinearGradient(colors: [OCColor.backgroundDeep.opacity(0), OCColor.backgroundDeep], startPoint: .top, endPoint: .bottom)
+                        .frame(height: OCSpacing.xl * 2).allowsHitTesting(false).accessibilityHidden(true)
+                }
+            }
+            .onChange(of: patch) { _, _ in measured = nil }
+    }
     private func diff(full: Bool) -> some View {
         OCDiffView([.init(path: file, text: patch)], split: full && split, showAll: showAll, wrap: wrap, comments: (fileLinks?.comments(file) ?? []).map { var value = $0; value.file = file; return value }, onComment: { comment = $0 }, onOpen: { _ in openFile() }, onEdit: { value in
             editing = fileLinks?.comments(file).first { $0.id == value.id }
-        }, onDelete: { fileLinks?.removeComment($0.id) })
+        }, onDelete: { fileLinks?.removeComment($0.id) }, scrolls: full, onContentHeight: full ? nil : { measured = $0 })
     }
     private var fullViewer: some View {
         NavigationStack {

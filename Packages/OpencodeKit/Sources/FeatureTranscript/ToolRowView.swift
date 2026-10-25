@@ -24,12 +24,9 @@ public struct ToolRowView: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: OCSpacing.xs) {
             OCToolChrome(presentation.title, subtitle: presentation.subtitle, icon: presentation.icon, status: presentation.status,
-                         badge: badge, failed: presentation.failed, expanded: expanded, inline: presentation.style == .explore) { details }
+                         badge: badge, failed: presentation.failed, expanded: expanded, inline: presentation.style == .explore, onOpen: openFile) { details }
             if let error = presentation.errorMessage {
                 Text(error).font(OCType.small).foregroundStyle(OCColor.danger).ocSelectableText(error)
-            }
-            if let fileLinks, [.explore, .diff, .addedFile].contains(presentation.style), !presentation.subtitle.isEmpty {
-                Button(presentation.subtitle) { fileLinks.open(presentation.subtitle) }.font(OCType.small).buttonStyle(OCButtonStyle(.ghost))
             }
             if let child = presentation.childID {
                 Button { openChild(child) } label: { OCLabel("Open agent", icon: "subagent") }
@@ -82,6 +79,11 @@ public struct ToolRowView: View {
     @ViewBuilder private var genericDetails: some View {
         if !presentation.input.isEmpty { CodeBlockView(presentation.input, language: "json") }
         if !presentation.output.isEmpty { CodeBlockView(presentation.output) }
+    }
+    /// Opens the file the tool acted on, when there is one and the host can show files.
+    private var openFile: (() -> Void)? {
+        guard let fileLinks, let path = presentation.path, !path.isEmpty else { return nil }
+        return { fileLinks.open(path) }
     }
     private var running: Bool { ["running", "streaming", "pending"].contains(presentation.status) }
     private var badge: String? {

@@ -106,3 +106,20 @@ import Testing
     let onlyDeletion = DiffParser.parse("@@ -1 +0,0 @@\n-deleted\n", fullFile: false)
     #expect(onlyDeletion.firstChangedLine == 1)
 }
+@Test func diffPreviewSizesFromRenderedRowsNotPatchLines() {
+    let body = "@@ -1,3 +1,3 @@\n a\n-b\n+c\n d\n"
+    let patch = "Index: main.swift\n===================================================================\n--- main.swift\n+++ main.swift\n" + body
+    // File headers are not rows, so they add no height.
+    #expect(DiffPreview.estimatedRows(patch) == DiffPreview.estimatedRows(body))
+    #expect(DiffPreview.estimatedRows(patch) < patch.components(separatedBy: "\n").count)
+    #expect(DiffPreview.estimatedRows("") == 1)
+    #expect(DiffPreview.lineHeight(font: 13) == 24)
+    #expect(DiffPreview.lineHeight(font: 22) == 37)
+    // A measurement replaces the estimate; content past the cap is clipped and flagged.
+    let estimated = DiffPreview.height(measured: nil, rows: 4, font: 22)
+    #expect(estimated.height == 4 * 37 && !estimated.clipped)
+    let measured = DiffPreview.height(measured: 300, rows: 4, font: 22)
+    #expect(measured.height == 300 && !measured.clipped)
+    let capped = DiffPreview.height(measured: 10_000, rows: 4, font: 13)
+    #expect(capped.height == Double(DiffPreview.maxRows) * 24 && capped.clipped)
+}

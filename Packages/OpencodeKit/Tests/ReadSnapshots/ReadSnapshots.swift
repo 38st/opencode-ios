@@ -43,6 +43,18 @@ extension ReadPerformanceTests {
         let blocks = try await StreamingMarkdown().update("# Result\n\nA **formatted** answer with [a link](https://example.com).\n\n| File | State |\n| --- | --- |\n| main.swift | Updated |\n\n```swift\nlet greeting = \"Hello\"\n```\n\n![Private image](https://example.com/private.png)", complete: true)
         await capture(VStack(alignment: .leading, spacing: OCSpacing.lg) { ForEach(blocks) { MarkdownBlockView($0) } }, name: "markdown", height: 1_700)
         await capture(DiffCardView(file: "Sources/main.swift", patch: "@@ -1 +1 @@\n-let old = 1\n+let updated = 2", additions: 1, deletions: 1, expanded: true), name: "diff", height: 600)
+        // An opencode edit patch: file headers render no rows, long lines wrap, and the preview stops at its row cap.
+        let lines = (1...30).map { "+let value\($0) = configuration.values[\($0)] ?? defaultValue" }.joined(separator: "\n")
+        let patch = "Index: Sources/main.swift\n===================================================================\n--- Sources/main.swift\n+++ Sources/main.swift\n@@ -1,1 +1,31 @@\n-let old = 1\n+let updated = 2\n" + lines
+        await capture(DiffCardView(file: "Sources/main.swift", patch: patch, additions: 31, deletions: 1, expanded: true), name: "diff-headers", height: 1_400)
+    }
+    /// With a host that opens files, file tools offer one Open file button and search tools offer none.
+    @Test func fileLinkedToolRows() async {
+        for name in ["read", "glob", "grep", "edit", "write"] {
+            let presentation = ToolPresenterRegistry().presentation(Self.tool(name, status: "completed"))
+            await capture(ToolRowView(presentation: presentation).environment(\.ocFileLinks, OCFileLinks(open: { _ in }, existing: { _ in [] })),
+                          name: "tool-\(name)-linked", height: 600)
+        }
     }
     func capture(_ view: some View, name: String, height: CGFloat) async {
         if let filter = ProcessInfo.processInfo.environment["OC_SNAPSHOT_FILTER"],
@@ -60,7 +72,7 @@ extension ReadPerformanceTests {
                 controller.overrideUserInterfaceStyle = dark ? .dark : .light
                 // Async diff preparation starts only after the view appears.
                 var window: UIWindow?
-                if name == "diff" || ["tool-edit-", "tool-patch-", "tool-apply_patch-"].contains(where: { name.hasPrefix($0) }) {
+                if name.hasPrefix("diff") || ["tool-edit-", "tool-patch-", "tool-apply_patch-"].contains(where: { name.hasPrefix($0) }) {
                     guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else {
                         Issue.record("Snapshots need a connected window scene"); return
                     }

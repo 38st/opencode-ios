@@ -23,3 +23,19 @@ import OCRender
     let execute = registry.presentation(.init(raw: tool("execute", metadata: .object(["toolCalls": .array([.object(["name": .string("read"), "status": .string("error")])])]))))
     #expect(execute.nested.count == 1); #expect(execute.failed)
 }
+@Test func onlyFileToolsCarryAnOpenablePath() {
+    let registry = ToolPresenterRegistry()
+    func presentation(_ name: String, _ input: JSONValue, output: String? = nil) -> ToolPresentation {
+        var raw = tool(name, input: input)
+        if let output { raw.set(["state", "content"], .array([.object(["type": .string("text"), "text": .string(output)])])) }
+        return registry.presentation(.init(raw: raw))
+    }
+    #expect(presentation("read", .object(["path": .string("Sources/main.swift")])).path == "Sources/main.swift")
+    #expect(presentation("edit", .object(["path": .string("main.swift")])).path == "main.swift")
+    #expect(presentation("write", .object(["path": .string("new.swift"), "content": .string("x")])).path == "new.swift")
+    // A directory read lists entries, and search summaries are not paths.
+    #expect(presentation("read", .object(["path": .string("Sources")]), output: "Read directory Sources\nmain.swift").path == nil)
+    let glob = presentation("glob", .object(["pattern": .string("*.txt")]))
+    #expect(glob.path == nil && !glob.subtitle.isEmpty)
+    #expect(presentation("grep", .object(["pattern": .string("original")])).path == nil)
+}

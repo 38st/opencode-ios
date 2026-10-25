@@ -46,7 +46,9 @@ public struct OCDiffView: View {
     let onOpen: (String) -> Void
     let onEdit: (LineComment) -> Void
     let onDelete: (LineComment) -> Void
-    let refresh: () -> Void
+    let refresh: (() -> Void)?
+    let scrolls: Bool
+    let onContentHeight: ((CGFloat) -> Void)?
     let inlineComment: LineComment?
     let inlineEditor: AnyView?
     @Binding var scrollOffset: Double
@@ -60,13 +62,15 @@ public struct OCDiffView: View {
                 comments: [LineComment] = [], selected: LineSelection? = nil, selectedFile: String? = nil, search: CodeSearchResult = .init(), currentMatch: CodeSearchMatch? = nil, scrollOffset: Binding<Double> = .constant(0),
                 onComment: @escaping (OCDiffSelection) -> Void = { _ in }, onToggle: @escaping (String) -> Void = { _ in },
                 onOpen: @escaping (String) -> Void = { _ in }, onEdit: @escaping (LineComment) -> Void = { _ in },
-                onDelete: @escaping (LineComment) -> Void = { _ in }, inlineComment: LineComment? = nil, inlineEditor: AnyView? = nil, onMove: ((Int) -> Void)? = nil, refresh: @escaping () -> Void = {}) {
+                onDelete: @escaping (LineComment) -> Void = { _ in }, inlineComment: LineComment? = nil, inlineEditor: AnyView? = nil, onMove: ((Int) -> Void)? = nil, refresh: (() -> Void)? = nil,
+                scrolls: Bool = true, onContentHeight: ((CGFloat) -> Void)? = nil) {
         self.inputs = inputs; self.split = split; self.showAll = showAll; self.wrap = wrap; self.headers = headers
         self.inlineComment = inlineComment; self.inlineEditor = inlineEditor
         self.comments = comments; self.selected = selected; self.selectedFile = selectedFile; _scrollOffset = scrollOffset; self.onComment = onComment
         self.search = search; self.currentMatch = currentMatch
         self.onMove = onMove
         self.onToggle = onToggle; self.onOpen = onOpen; self.onEdit = onEdit; self.onDelete = onDelete; self.refresh = refresh
+        self.scrolls = scrolls; self.onContentHeight = onContentHeight
     }
     public var body: some View {
         GeometryReader { geometry in
@@ -79,7 +83,7 @@ public struct OCDiffView: View {
                            onToggle: onToggle, onOpen: onOpen, onEdit: onEdit, onDelete: onDelete,
                            inlineEditor: inlineEditor, onMove: onMove, onExpand: { path, range, end, all in
                                expansion[path, default: .init()].expand(range, fromEnd: end, all: all)
-                           }, refresh: refresh)
+                           }, refresh: refresh, scrolls: scrolls)
                 .task(id: PreparationKey(inputs: inputs, split: split, all: showAll, expansion: expansion, comments: comments + (inlineComment.map { [$0] } ?? []), width: geometry.size.width, wrap: wrap, font: fontSize)) {
                     generation += 1; let revision = generation
                     #if DEBUG
@@ -95,6 +99,7 @@ public struct OCDiffView: View {
                     documents = plain
                     sections = await prepareSections(plain, split: split, width: geometry.size.width, wrap: wrap)
                     preparedKey = measurementKey
+                    reportHeight()
                     for input in inputs where input.expanded {
                         guard let doc = plain[input.id] else { continue }
                         plain[input.id] = await DiffHighlighter.shared.highlight(doc, path: input.path, hash: MarkdownBlock.hash(input.text))
@@ -102,10 +107,17 @@ public struct OCDiffView: View {
                     guard !Task.isCancelled, generation == revision else { return }
                     documents = plain
                     sections = await prepareSections(plain, split: split, width: geometry.size.width, wrap: wrap)
+                    reportHeight()
                 }
         }
     }
-    private var fontSize: CGFloat { typeSize.isAccessibilitySize ? 22 : typeSize >= .xxxLarge ? 19 : typeSize >= .xLarge ? 16 : 13 }
+    private var fontSize: CGFloat { Self.fontSize(typeSize) }
+    static func fontSize(_ typeSize: DynamicTypeSize) -> CGFloat { typeSize.isAccessibilitySize ? 22 : typeSize >= .xxxLarge ? 19 : typeSize >= .xLarge ? 16 : 13 }
+    /// The content height CodeLayout lays out: every measured row plus the section headers.
+    private func reportHeight() {
+        guard let onContentHeight else { return }
+        onContentHeight(sections.reduce(0) { $0 + $1.heights.reduce(0, +) + (headers ? ($1.expanded ? 88 : 44) : 0) })
+    }
     private func prepareSections(_ docs: [String: DiffDocument], split: Bool, width: CGFloat, wrap: Bool) async -> [CodeSection] {
         var result: [CodeSection] = []
         for input in inputs {
@@ -225,7 +237,7 @@ nonisolated enum CodeMetrics {
         let key = hash.finalize()
         if let cached = await Cache.shared.get(key) { return cached }
         let columnWidth = max(1, (split ? width / 2 : width) - gutter)
-        let lineHeight = max(24, ceil(font * 1.65))
+        let lineHeight = CGFloat(DiffPreview.lineHeight(font: Double(font)))
         let ctFont = CTFontCreateWithName("JetBrainsMonoNFM-Regular" as CFString, font, nil)
         let heights = rows.map { row -> CGFloat in
             if let label = row.label {
