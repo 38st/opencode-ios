@@ -26,6 +26,11 @@ public struct ServerRootView: View {
     @State private var recoveredDirectory: String?
     @State private var selectedServer: ServerID?
     @State private var selectedProject: String?
+    /// The session New session was started from, and a server picked in New session itself.
+    @State private var newSessionOrigin: SessionRef?
+    @State private var newSessionServer: ServerID?
+    @State private var homeDismissal: UUID?
+    @State private var announcedConnections: [ServerID: String] = [:]
     @State private var localExplanation = false
     @State private var phaseTask: Task<Void, Never>?
     public init(registry: ServerRegistry, incomingURL: Binding<URL?> = .constant(nil)) {
@@ -44,7 +49,8 @@ public struct ServerRootView: View {
                 }
             } else if sizeClass == .regular {
                 OCWorkspaceShell(homeInitiallyOpen: true, selectionID: sessionPath.last?.id,
-                                 allowsPresentation: settingsDestination == nil && !localExplanation, reviewRequest: panelRequest) {
+                                 allowsPresentation: settingsDestination == nil && !localExplanation, reviewRequest: panelRequest,
+                                 homeDismissal: homeDismissal) {
                     home
                 } tabs: {
                     OCProjectTabs(projects: projectTabs, selection: $selectedProject)
@@ -81,6 +87,7 @@ public struct ServerRootView: View {
         .onChange(of: registry.isLoaded) { _, _ in routeLink() }
         .onChange(of: failedCreationDirectory) { _, directory in
             guard let directory else { return }
+            if let ref = sessionPath.last { newSessionOrigin = ref; newSessionServer = ref.serverID }
             recoveredDirectory = directory; sessionPath = []
             if sizeClass != .regular { creatingSession = true }
         }
@@ -123,6 +130,7 @@ public struct ServerRootView: View {
             await registry.setScenePhase(scenePhase == .active ? .active : .inactive)
         }
         .onDisappear { phaseTask?.cancel() }
+        .onChange(of: connectionNotices) { _, notices in announceConnection(notices) }
         .onChange(of: scenePhase) { _, phase in
             phaseTask?.cancel()
             phaseTask = Task { await registry.setScenePhase(phase == .active ? .active : phase == .background ? .background : .inactive) }
@@ -130,7 +138,8 @@ public struct ServerRootView: View {
     }
     @ViewBuilder private func sessionView(_ ref: SessionRef) -> some View {
         if let server = registry.servers.first(where: { $0.id == ref.serverID }) {
-            SessionScreen(server: server, sessionID: ref.sessionID, requestID: ref.requestID, newSession: beginSession, deleted: { sessionPath = [] }, openRoot: { root in
+            SessionScreen(server: server, sessionID: ref.sessionID, requestID: ref.requestID, newSession: beginSession, deleted: { sessionPath = [] },
+                          openSettings: { settingsDestination = .settings }, openRoot: { root in
                 sessionPath = [.init(serverID: server.id, sessionID: root)]
             }) { child in
                 sessionPath.append(.init(serverID: server.id, sessionID: child))
@@ -144,20 +153,51 @@ public struct ServerRootView: View {
         guard registry.servers.contains(where: { $0.id == id }) else {
             routingError = "This server is not saved. Add it in Settings first."; return
         }
-        selectedServer = id; selectedProject = nil
+        // Home's filters stay as the user left them; a server-only link starts New session on that server.
+        newSessionOrigin = nil; newSessionServer = id
         sessionPath = link.sessionID.map { [.init(serverID: id, sessionID: $0, requestID: link.requestID)] } ?? []
     }
 
     private func beginSession() {
         recoveredDirectory = nil
-        if let ref = sessionPath.last { selectedServer = ref.serverID }
+        newSessionOrigin = sessionPath.last; newSessionServer = nil
+        homeDismissal = UUID()
         if sizeClass == .regular { sessionPath = [] } else { creatingSession = true }
     }
+    private var newSessionTarget: NewSessionTarget? {
+        let origin = newSessionOrigin.map { ref in
+            NewSessionTarget(serverID: ref.serverID, projectID: registry.servers.first { $0.id == ref.serverID }?.sessions[ref.sessionID]?.info.projectID)
+        }
+        return NewSessionTarget.resolve(servers: registry.servers.map(\.id), chosenServer: newSessionServer, homeServer: selectedServer,
+                                        homeProject: selectedProject, origin: origin)
+    }
     @ViewBuilder private var newSessionView: some View {
-        if let server = registry.servers.first(where: { $0.id == selectedServer }) ?? registry.servers.first {
-            NewSessionView(server: server, directory: recoveredDirectory) { id in
+        if let target = newSessionTarget, let server = registry.servers.first(where: { $0.id == target.serverID }) {
+            NewSessionView(server: server, directory: recoveredDirectory, project: target.projectID, servers: registry.servers,
+                           selectServer: { newSessionServer = $0.id; recoveredDirectory = nil }) { id in
                 creatingSession = false; sessionPath = [.init(serverID: server.id, sessionID: id)]
-            }.id(server.id)
+            }
+            // A new target (Home's project, a project tab, or another server) starts a fresh New session.
+            .id(server.id.rawValue.uuidString + ":" + (target.projectID ?? ""))
+        }
+    }
+    /// Each server's connection problem, or "connected"; the brief connecting states between retries are left out
+    /// so VoiceOver hears one announcement per change, not one per retry.
+    private var connectionNotices: [ServerID: String] {
+        var values: [ServerID: String] = [:]
+        for server in registry.servers {
+            if let notice = server.connectionNotice { values[server.id] = notice.identifier }
+            else if case .connected = server.state { values[server.id] = "connected" }
+        }
+        return values
+    }
+    private func announceConnection(_ new: [ServerID: String]) {
+        for server in registry.servers {
+            guard let next = new[server.id], next != announcedConnections[server.id] else { continue }
+            let previous = announcedConnections.updateValue(next, forKey: server.id)
+            if previous == nil && next == "connected" { continue }
+            let text = server.record.name + ": " + (server.connectionNotice?.title ?? "Connected")
+            AccessibilityNotification.Announcement(text).post()
         }
     }
     private var panelRequest: UUID? {
@@ -178,7 +218,10 @@ public struct ServerRootView: View {
     }
     private var home: some View {
         WorkspaceSidebar(registry: registry, selectedServer: $selectedServer, selectedProject: $selectedProject,
-                         openSettings: { settingsDestination = .settings }, newSession: beginSession, selectSession: { sessionPath = [$0] })
+                         openSettings: { settingsDestination = .settings }, newSession: beginSession,
+                         selectedSession: sizeClass == .regular ? sessionPath.first : nil, selectSession: { ref in
+            sessionPath = [ref]; newSessionOrigin = nil; homeDismissal = UUID()
+        })
             .uiTestConnectionDiagnostics(registry)
     }
 }

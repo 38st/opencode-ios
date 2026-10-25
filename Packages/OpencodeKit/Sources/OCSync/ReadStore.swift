@@ -15,6 +15,8 @@ import OCSecurity
     public var localMeta: [String: SessionLocalMeta] = [:]
     public var rootCursor: String?
     public private(set) var lastStatusSync: Date?
+    /// True while the server is unreachable, so running and sending states are only last known.
+    public internal(set) var offline = false
     public var shells: [String: [String: ShellInfo]] = [:]
     public var permissions: [String: [PermissionRequest]] = [:]
     public var forms: [FormOwner: [FormInfo]] = [:]

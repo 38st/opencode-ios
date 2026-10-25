@@ -8,6 +8,7 @@ struct ServerSettingsView: View {
     let registry: ServerRegistry
     var addOnOpen = false
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
     @AppStorage("followUpBehavior") private var followUp = "steer"
     @AppStorage("wrapLines") private var wrapLines = true
     @AppStorage("changedFiles") private var changedFiles = true
@@ -20,18 +21,9 @@ struct ServerSettingsView: View {
         NavigationStack {
             OCForm {
                 VStack(alignment: .leading, spacing: OCSpacing.sm) {
-                    Text("Servers").font(OCType.title)
+                    Text("Servers").font(OCType.title).accessibilityAddTraits(.isHeader)
                     Text("Manage server connections").foregroundStyle(OCColor.textMuted)
                 }
-                Text("App").font(OCType.heading)
-                Picker("Follow-up behavior", selection: $followUp) {
-                    Text("Steer").tag("steer")
-                    Text("Queue").tag("queue")
-                }.font(OCType.body).accessibilityIdentifier("followUpBehavior")
-                Toggle("Wrap lines", isOn: $wrapLines).font(OCType.body)
-                Toggle("Changed files", isOn: $changedFiles).font(OCType.body)
-                Text("List the files each turn changed when it finishes").font(OCType.small).foregroundStyle(OCColor.textMuted)
-                Toggle("Show agent", isOn: $showAgent).font(OCType.body).accessibilityIdentifier("showAgent")
                 ForEach(registry.servers) { server in
                     Button { selection = server.id } label: {
                         OCCard {
@@ -46,6 +38,13 @@ struct ServerSettingsView: View {
                 Button { adding = true } label: { OCLabel("Add server", icon: "plus") }
                     .buttonStyle(OCButtonStyle()).accessibilityIdentifier("addServer")
                 Text("Your credentials stay in this device’s Keychain.").font(OCType.small).foregroundStyle(OCColor.textMuted)
+                OCSection("App") {
+                    followUpRow
+                    OCToggleRow("Wrap lines", detail: "Wrap long lines in diffs and files.", isOn: $wrapLines)
+                    OCToggleRow("Changed files", detail: "List the files each turn changed when it finishes.", isOn: $changedFiles)
+                    OCToggleRow("Show agent", detail: "Switch between agents in the composer. When hidden, defaults to Build agent.", isOn: $showAgent)
+                        .accessibilityIdentifier("showAgent")
+                }
             }
             .ocNavigationTitle("Settings")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() }.accessibilityIdentifier("closeSettings") } }
@@ -67,6 +66,25 @@ struct ServerSettingsView: View {
             }
             .onChange(of: registry.servers.filter { $0.needsRepair }.map { $0.id }) { _, _ in presentRepair() }
             .task { if addOnOpen { adding = true } else { presentRepair() } }
+    }
+    /// A menu Picker outside a Form draws no label, so the title and explanation sit beside it.
+    private var followUpRow: some View {
+        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: OCSpacing.sm))
+            : AnyLayout(HStackLayout(spacing: OCSpacing.sm))
+        return layout {
+            VStack(alignment: .leading, spacing: OCSpacing.xs) {
+                Text("Follow-up behavior").font(OCType.body)
+                Text("While the agent is working, Steer adds your message to the current run; Queue sends it after the run finishes.")
+                    .font(OCType.small).foregroundStyle(OCColor.textMuted)
+            }.frame(maxWidth: .infinity, alignment: .leading).accessibilityHidden(true)
+            Picker("Follow-up behavior", selection: $followUp) {
+                Text("Steer").tag("steer")
+                Text("Queue").tag("queue")
+            }.pickerStyle(.menu).labelsHidden().font(OCType.body).frame(minHeight: OCLayout.touchTarget)
+                .accessibilityLabel("Follow-up behavior")
+                .accessibilityHint("While the agent is working, Steer adds your message to the current run; Queue sends it after the run finishes.")
+                .accessibilityIdentifier("followUpBehavior")
+        }
     }
     private func presentRepair() {
         guard !adding, repairing == nil,

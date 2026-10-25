@@ -272,7 +272,8 @@ private struct TimelineHostedRow: View {
                 TimelineRowView(row: row, transcript: parent.transcript, store: parent.store, sessionID: parent.session.id,
                     directory: parent.session.info.location.directory, detail: parent.detail, openChild: parent.openChild, openRoot: parent.openRoot)
             } else {
-                OCLabel("Working…", icon: "status-active").font(OCType.small).foregroundStyle(OCColor.textMuted)
+                // While offline the session's last known state may be stale, so don't claim it is working.
+                OCLabel(parent.store.offline ? "Waiting for server…" : "Working…", icon: "status-active").font(OCType.small).foregroundStyle(OCColor.textMuted)
                     .accessibilityIdentifier("sessionWorking")
             }
         }.environment(\.timelineCellVisible, visibility.visible)

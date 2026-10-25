@@ -10,6 +10,9 @@ public struct NewSessionView: View {
     let server: ServerStore
     let opened: (String) -> Void
     let initialDirectory: String?
+    let initialProject: String?
+    let servers: [ServerStore]
+    let selectServer: (ServerStore) -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var directory = ""
     @State private var projectID = ""
@@ -27,7 +30,15 @@ public struct NewSessionView: View {
     @State private var pendingSelection: Destination?
     @State private var draftConflict = false
     private struct Destination { let directory: String; let projectID: String; let worktree: String }
-    public init(server: ServerStore, directory: String? = nil, opened: @escaping (String) -> Void) { self.server = server; self.initialDirectory = directory; self.opened = opened }
+    /// - Parameters:
+    ///   - directory: restores a failed creation's directory, and says so.
+    ///   - project: the project to start on, such as the one picked in Home; else the most recently active one.
+    ///   - servers: shown as a server selector when there is more than one.
+    public init(server: ServerStore, directory: String? = nil, project: String? = nil, servers: [ServerStore] = [],
+                selectServer: @escaping (ServerStore) -> Void = { _ in }, opened: @escaping (String) -> Void) {
+        self.server = server; self.initialDirectory = directory; self.initialProject = project; self.opened = opened
+        self.servers = servers; self.selectServer = selectServer
+    }
     private var project: Project? { server.projects.first { $0.id == projectID } }
     private var draftDirectory: String { worktree.isEmpty || worktree == "new" ? directory : worktree }
     public var body: some View {
@@ -41,8 +52,8 @@ public struct NewSessionView: View {
                     } else { ProgressView("Loading projects…") }
                     if creatingWorktree { ProgressView("Creating worktree").font(OCType.small) }
                     ViewThatFits(in: .horizontal) {
-                        HStack { projectSelector; worktreeSelector }
-                        VStack { projectSelector; worktreeSelector }
+                        HStack { serverSelector; projectSelector; worktreeSelector }
+                        VStack { serverSelector; projectSelector; worktreeSelector }
                     }
                     if let error = error ?? choicesError { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).ocAnnounce(error, initial: true) }
                 }.padding(.horizontal, OCSpacing.lg).padding(.bottom, OCSpacing.lg)
@@ -58,7 +69,9 @@ public struct NewSessionView: View {
                         let location = try await server.readPath.resolveDirectory(initialDirectory)
                         directory = location.directory; projectID = location.project?.id ?? ""
                         error = "Failed to create session. Your prompt has been restored."
-                    } else if let project = server.projects.first { directory = project.canonical; projectID = project.id }
+                    } else if let project = server.projects.first(where: { $0.id == initialProject }) ?? server.projects.first {
+                        directory = project.canonical; projectID = project.id
+                    }
                     else {
                         let location = try await server.readPath.resolveDirectory("")
                         directory = location.directory; projectID = location.project?.id ?? ""
@@ -90,6 +103,18 @@ public struct NewSessionView: View {
                 Button("Cancel", role: .cancel) { pendingSelection = nil }
             } message: { Text("This project already has a draft. Keeping your current draft replaces it. Using the saved draft keeps your current draft in its original project.") }
             .onDisappear { selectionTask?.cancel() }
+    }
+    /// Names the server the session starts on, so a same-named project on another computer can't be mistaken for it.
+    @ViewBuilder private var serverSelector: some View {
+        if servers.count > 1 {
+            Menu {
+                ForEach(servers) { value in
+                    Button(value.record.name) { if value.id != server.id { selectServer(value) } }
+                }
+            } label: { OCLabel(server.record.name, icon: "server").font(OCType.small).frame(minHeight: OCLayout.touchTarget) }
+                .accessibilityLabel("Server").accessibilityValue(server.record.name)
+                .accessibilityIdentifier("newSessionServer").disabled(selectionDisabled)
+        }
     }
     private var projectSelector: some View {
         Menu {

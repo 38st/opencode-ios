@@ -148,6 +148,7 @@ import OCPersistence
             else { readPath.setWritesConnected(false) }
             if state == .unauthorized { needsRepair = true }
             setState(needsRepair ? .unauthorized : state)
+            readPath.offline = ConnectionNotice.isOffline(self.state)
             switch state {
             case .idle, .suspended, .resolving: return
             default: break

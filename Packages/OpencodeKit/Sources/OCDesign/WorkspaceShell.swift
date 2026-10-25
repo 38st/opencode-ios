@@ -11,16 +11,18 @@ public struct OCWorkspaceShell<Sidebar: View, Tabs: View, Main: View, Panel: Vie
     let selectionID: String?
     let allowsPresentation: Bool
     let reviewRequest: UUID?
+    let homeDismissal: UUID?
     @State private var homeOpen: Bool
     @State private var reviewOpen = false
     @State private var reviewSheet = false
     @Environment(\.dynamicTypeSize) private var typeSize
-    public init(homeInitiallyOpen: Bool = false, selectionID: String? = nil, allowsPresentation: Bool = true, reviewRequest: UUID? = nil, @ViewBuilder sidebar: () -> Sidebar, @ViewBuilder tabs: () -> Tabs,
+    public init(homeInitiallyOpen: Bool = false, selectionID: String? = nil, allowsPresentation: Bool = true, reviewRequest: UUID? = nil, homeDismissal: UUID? = nil, @ViewBuilder sidebar: () -> Sidebar, @ViewBuilder tabs: () -> Tabs,
                 @ViewBuilder main: () -> Main, @ViewBuilder panel: () -> Panel) {
         _homeOpen = State(initialValue: homeInitiallyOpen)
         self.selectionID = selectionID
         self.allowsPresentation = allowsPresentation
         self.reviewRequest = reviewRequest
+        self.homeDismissal = homeDismissal
         self.sidebar = sidebar(); self.tabs = tabs(); self.main = main(); self.panel = panel()
     }
     public var body: some View {
@@ -55,10 +57,14 @@ public struct OCWorkspaceShell<Sidebar: View, Tabs: View, Main: View, Panel: Vie
                     sidebar.ocSheet()
                 }
                 .onChange(of: reviewRequest) { _, request in if request != nil { if beside { reviewOpen = true } else { reviewSheet = true } } }
+                // Home only reopens by itself when it is the sidebar; at narrow widths the sheet would cover
+                // the New session composer that a cleared selection shows.
                 .onChange(of: selectionID) { _, next in
-                    if next == nil { homeOpen = true }
+                    if next == nil { homeOpen = wide }
                     else if !wide { homeOpen = false }
                 }
+                // Every navigation from Home closes the sheet, even when the selection doesn't change.
+                .onChange(of: homeDismissal) { _, request in if request != nil && !wide { homeOpen = false } }
                 .onChange(of: wide) { _, isWide in
                     if !isWide && selectionID != nil { homeOpen = false }
                 }

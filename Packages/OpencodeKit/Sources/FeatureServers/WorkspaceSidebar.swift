@@ -10,10 +10,11 @@ struct WorkspaceSidebar: View {
     @Binding var selectedProject: String?
     let openSettings: () -> Void
     let newSession: () -> Void
+    var selectedSession: SessionRef? = nil
     let selectSession: (SessionRef) -> Void
     var body: some View {
         HomeView(registry: registry, selectedServer: $selectedServer, selectedProject: $selectedProject,
-                 openSettings: openSettings, newSession: newSession, selectSession: selectSession)
+                 openSettings: openSettings, newSession: newSession, selectedSession: selectedSession, selectSession: selectSession)
     }
 }
 #endif

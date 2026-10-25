@@ -48,7 +48,7 @@ public struct PendingInputPanel: View {
         row {
             Text(item.text.isEmpty ? "New session" : item.text).font(OCType.small).lineLimit(typeSize.isAccessibilitySize ? 2 : 1)
         } controls: {
-            if item.state == "pending" { Text("Sending").font(OCType.micro).foregroundStyle(OCColor.textMuted) }
+            if item.state == "pending" { Text(store.offline ? "Waiting for connection" : "Sending").font(OCType.micro).foregroundStyle(OCColor.textMuted) }
             else if item.state == "failed" {
                 Button("Edit and resend") { run { try await store.restoreFailedPrompt(item.id) } }.buttonStyle(OCButtonStyle(.ghost))
             } else {

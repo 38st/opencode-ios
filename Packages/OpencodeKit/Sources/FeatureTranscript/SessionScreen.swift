@@ -17,6 +17,7 @@ public struct SessionScreen: View {
     let openRoot: (String) -> Void
     let newSession: () -> Void
     let deleted: () -> Void
+    let openSettings: () -> Void
     @AppStorage("timelineDetail") private var detail = TimelineDetail.compact.rawValue
     @State private var error: String?
     @State private var review = false
@@ -25,8 +26,9 @@ public struct SessionScreen: View {
     @Environment(\.scenePhase) private var phase
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dynamicTypeSize) private var typeSize
-    public init(server: ServerStore, sessionID: String, requestID: String? = nil, newSession: @escaping () -> Void = {}, deleted: @escaping () -> Void = {}, openRoot: @escaping (String) -> Void = { _ in }, openChild: @escaping (String) -> Void) {
+    public init(server: ServerStore, sessionID: String, requestID: String? = nil, newSession: @escaping () -> Void = {}, deleted: @escaping () -> Void = {}, openSettings: @escaping () -> Void = {}, openRoot: @escaping (String) -> Void = { _ in }, openChild: @escaping (String) -> Void) {
         self.server = server; self.sessionID = sessionID; self.requestID = requestID; self.openChild = openChild; self.newSession = newSession; self.deleted = deleted; self.openRoot = openRoot
+        self.openSettings = openSettings
     }
     public var body: some View {
         GeometryReader { geometry in
@@ -63,6 +65,7 @@ public struct SessionScreen: View {
                             OCIconButton("Review panel", icon: "sidebar-right") { review = true }.accessibilityIdentifier("sessionReview")
                         }
                     }.padding(.horizontal, OCSpacing.lg)
+                    if server.connectionNotice != nil { connectionBanner.padding(.horizontal, OCSpacing.md) }
                     if let transcript = session.transcript {
                         SessionTimeline(store: server.readPath, session: session, transcript: transcript,
                                         detail: TimelineDetail(rawValue: detail) ?? .compact, requestID: requestID, openChild: openChild, openRoot: openRoot)
@@ -124,6 +127,20 @@ public struct SessionScreen: View {
                 catch is CancellationError {} catch { self.error = "Could not mark this session read." }
             }
             .onDisappear { server.readPath.close(sessionID) }
+    }
+    /// The cached transcript stays readable while the server is unreachable; say so, with a way back.
+    private var connectionBanner: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { _ in
+            if let notice = server.notice(now: .now) {
+                OCConnectionBanner(notice.title, detail: notice.detail, actionTitle: notice.actionTitle) {
+                    switch notice.action {
+                    case .repair, .details: openSettings()
+                    case let action?: Task { await server.perform(action) }
+                    case nil: break
+                    }
+                }
+            }
+        }
     }
     private var fileLinks: OCFileLinks? {
         guard let session = server.sessions[sessionID] else { return nil }

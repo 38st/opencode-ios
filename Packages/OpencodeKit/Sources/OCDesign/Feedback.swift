@@ -29,6 +29,37 @@ public struct OCBanner: View {
             .background(tone.background, in: RoundedRectangle(cornerRadius: OCRadius.md))
     }
 }
+/// A connection problem with one recovery action, shown above content that may be out of date.
+public struct OCConnectionBanner: View {
+    let title: String
+    let detail: String?
+    let actionTitle: String?
+    let action: () -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
+    public init(_ title: String, detail: String? = nil, actionTitle: String? = nil, action: @escaping () -> Void = {}) {
+        self.title = title; self.detail = detail; self.actionTitle = actionTitle; self.action = action
+    }
+    public var body: some View {
+        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: OCSpacing.sm))
+            : AnyLayout(HStackLayout(alignment: .center, spacing: OCSpacing.sm))
+        layout {
+            HStack(alignment: .top, spacing: OCSpacing.sm) {
+                OCIcon("warning").foregroundStyle(OCTone.warning.foreground)
+                VStack(alignment: .leading, spacing: OCSpacing.xs) {
+                    Text(title).font(OCType.small.weight(.medium)).foregroundStyle(OCColor.text)
+                    if let detail { Text(detail).font(OCType.micro).foregroundStyle(OCColor.textMuted) }
+                }.fixedSize(horizontal: false, vertical: true)
+            }.frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
+            if let actionTitle {
+                Button(actionTitle, action: action).buttonStyle(OCButtonStyle(.ghost)).accessibilityIdentifier("connectionAction")
+            }
+        }.padding(.horizontal, OCSpacing.md).padding(.vertical, OCSpacing.xs)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(OCTone.warning.background, in: RoundedRectangle(cornerRadius: OCRadius.md))
+            .accessibilityElement(children: .contain).accessibilityIdentifier("connectionBanner")
+    }
+}
 public struct OCToast<Content: View>: View {
     let announcement: String?
     let content: Content

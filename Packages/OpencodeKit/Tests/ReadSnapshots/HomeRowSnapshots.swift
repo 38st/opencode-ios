@@ -11,13 +11,14 @@ import FeatureInbox
 
 extension ReadPerformanceTests.Snapshots {
     @Test func homeRows() async throws {
-        for state in ["needs-you", "failed", "running", "unread", "syncing", "idle"] {
+        for state in ["needs-you", "failed", "running", "unread", "syncing", "idle", "offline", "offline-running"] {
             let connection = SnapshotConnection()
             let endpoint = EndpointRecord(url: try #require(URL(string: "https://studio.example.com")), kind: .https)
             let server = ServerStore(record: .init(name: "Studio Mac", endpoints: [endpoint]), connection: connection,
                 credentials: CredentialStore(secrets: InMemorySecretStore()), fetchInfo: { _, _, _ in .init(version: "2.0.32") })
             server.readPath.client = nil
-            await connection.emit(.state(.connected(endpoint.id, since: .now)))
+            let offline = state.hasPrefix("offline")
+            await connection.emit(.state(offline ? .waiting(attempt: 2, retryAt: .now, failure: .transport) : .connected(endpoint.id, since: .now)))
             for _ in 0..<20 { await Task.yield() }
             if state != "syncing" { server.readPath.confirmStatus() }
             let unread = ["failed", "unread"].contains(state)
@@ -31,7 +32,7 @@ extension ReadPerformanceTests.Snapshots {
             if state == "needs-you" {
                 server.readPath.permissions[info.id] = [.init(raw: .object(["id": .string("permission"), "sessionID": .string(info.id)]))]
             }
-            if state == "running" { server.readPath.running.insert(info.id) }
+            if state.hasSuffix("running") { server.readPath.running.insert(info.id) }
             if state == "unread" { try await server.readPath.setLocalMeta(.init(pinned: true), sessionID: info.id) }
             let session = try #require(server.sessions[info.id])
             await capture(HomeSessionRow(item: .init(server: server, session: session))

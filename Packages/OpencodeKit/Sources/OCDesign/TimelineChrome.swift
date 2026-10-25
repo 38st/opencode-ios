@@ -67,13 +67,21 @@ extension EnvironmentValues {
     }
 }
 public struct OCSessionIndicator: View {
-    public enum State: String, Sendable { case needsYou, failed, running, unread, syncing, idle }
+    /// `staleRunning` and `offline` are shown while the server is unreachable: the state is only last known.
+    public enum State: String, Sendable { case needsYou, failed, running, staleRunning, unread, syncing, offline, idle }
     let state: State
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var breathing = false
     public init(_ state: State) { self.state = state }
     private var tone: OCTone {
         switch state { case .needsYou: .warning; case .failed: .danger; case .running: .success; case .unread: .info; default: .neutral }
+    }
+    private var accessibilityTitle: String {
+        switch state {
+        case .needsYou: "Needs you"
+        case .staleRunning: "Last seen running"
+        default: state.rawValue.capitalized
+        }
     }
     public var body: some View {
         Group {
@@ -82,13 +90,15 @@ public struct OCSessionIndicator: View {
             case .failed: OCIcon("circle-x", size: 12)
             case .syncing: OCIcon("refresh", size: 12)
             case .idle: OCIcon("check", size: 12)
+            case .offline: OCIcon("circle-ban-sign", size: 12)
             case .running, .unread: Circle().frame(width: 6, height: 6)
+            case .staleRunning: Circle().strokeBorder(lineWidth: 1.5).frame(width: 6, height: 6)
             }
         }.foregroundStyle(tone.foreground)
             .opacity(state == .running && !reduceMotion && breathing ? 0.45 : 1)
             .animation(state == .running && !reduceMotion ? .easeInOut(duration: 1.2).repeatForever(autoreverses: true) : nil, value: breathing)
             .onAppear { breathing = true }.onChange(of: reduceMotion) { _, _ in breathing = !reduceMotion }
-            .accessibilityLabel(state == .needsYou ? "Needs you" : state.rawValue.capitalized)
+            .accessibilityLabel(accessibilityTitle)
     }
 }
 

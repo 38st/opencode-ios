@@ -42,7 +42,7 @@ public struct TimelineRowView: View {
                 VStack(alignment: .leading, spacing: OCSpacing.sm) {
                     if let badge = row.badge { OCBadge(badge) }
                     if let saved = store?.savedPrompts.first(where: { $0.id == row.id }) {
-                        OCBadge(saved.state == "pending" ? "Sending" : saved.state == "failed" ? "Edit and resend" : "Waiting for confirmation", tone: saved.state == "failed" ? .danger : .neutral)
+                        OCBadge(saved.state == "pending" ? (store?.offline == true ? "Waiting for connection" : "Sending") : saved.state == "failed" ? "Edit and resend" : "Waiting for confirmation", tone: saved.state == "failed" ? .danger : .neutral)
                     }
                     if let fields = transcript.messages[row.id]?.fields {
                         SentPrompt(fields, references: store?.sessions[sessionID].flatMap { store?.catalogs[$0.info.location.key]?.references.value },
