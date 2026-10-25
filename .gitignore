@@ -4,3 +4,7 @@ DerivedData/
 .DS_Store
 xcuserdata/
 .swiftpm/
+
+# Local agent workflow files, never published
+CLAUDE.md
+AGENTS.md
