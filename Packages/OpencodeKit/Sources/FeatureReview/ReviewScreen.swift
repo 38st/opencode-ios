@@ -28,7 +28,7 @@ public struct ReviewScreen: View {
         GeometryReader { geometry in
             let regular = geometry.size.width >= 480 && !typeSize.isAccessibilitySize
             VStack(spacing: 0) {
-                if let error = model.error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding(OCSpacing.sm) }
+                if let error = model.error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding(OCSpacing.sm).ocAnnounce(error, initial: true) }
                 if (model.loading || model.awaitingProvider) && !model.loaded { ProgressView("Loading changes…").font(OCType.small).frame(maxWidth: .infinity, maxHeight: .infinity) }
                 else if model.error != nil && !model.providerKnown {
                     OCEmptyState("Request failed", detail: "", icon: "warning", presentation: .panel) {

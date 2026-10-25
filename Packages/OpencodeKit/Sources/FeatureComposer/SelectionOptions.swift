@@ -3,23 +3,29 @@ import SwiftUI
 import OCModels
 import OCDesign
 
+// Inline pickers give the menus the system checkmark and the selected trait for the current choice.
 struct AgentOptions: View {
     let agents: [AgentInfo]
+    let selected: String
     let select: (String) -> Void
     var body: some View {
-        ForEach(ComposerPickers.agents(agents)) { agent in
-            Button { select(ComposerPickers.agentID(agent)) } label: {
-                Text(agent.name).foregroundStyle(OCMentionStyle.agentAccent(agent.color))
+        Picker("Agent", selection: Binding(get: { selected }, set: select)) {
+            ForEach(ComposerPickers.agents(agents)) { agent in
+                Text(agent.name).foregroundStyle(OCMentionStyle.agentAccent(agent.color)).tag(ComposerPickers.agentID(agent))
             }
-        }
+        }.pickerStyle(.inline).labelsHidden()
     }
 }
 struct VariantOptions: View {
     let variants: [ModelVariant]
+    /// `nil` and "default" both mean the model's default variant.
+    let selected: String?
     let select: (String?) -> Void
     var body: some View {
-        Button("Default") { select(nil) }
-        ForEach(variants.filter { $0.id != "default" }) { variant in Button(variant.id) { select(variant.id) } }
+        Picker("Variant", selection: Binding(get: { selected == "default" ? nil : selected }, set: select)) {
+            Text("Default").tag(String?.none)
+            ForEach(variants.filter { $0.id != "default" }) { variant in Text(variant.id).tag(Optional(variant.id)) }
+        }.pickerStyle(.inline).labelsHidden()
     }
 }
 struct SendOptions: View {

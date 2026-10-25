@@ -81,7 +81,9 @@ private extension HighlightSpan.Kind {
     }
 }
 public enum OCCopy {
+    /// Copies silently on screen, so VoiceOver hears the confirmation instead.
     public static func text(_ text: String) {
+        OCAnnouncer.post("Copied")
         #if os(iOS)
         UIPasteboard.general.string = text
         #elseif os(macOS)

@@ -141,7 +141,7 @@ struct UpdateServerView: View {
                 } else if case .unsupportedV2 = outcome { command("opencode upgrade") }
                 Button { task?.cancel(); task = Task { await server.reconnect() } } label: { OCLabel("Check again", icon: "refresh") }
                     .buttonStyle(OCButtonStyle(.contrast)).accessibilityIdentifier("checkAgain")
-                if let copied { Text("Copied \(copied)").font(OCType.small).accessibilityAddTraits(.updatesFrequently) }
+                if let copied { Text("Copied \(copied)").font(OCType.small) }
             }.padding(OCSpacing.xl).frame(maxWidth: OCLayout.readable, alignment: .leading)
                 .frame(maxWidth: .infinity, alignment: .top)
         }.ocTheme().onDisappear { task?.cancel() }
@@ -160,7 +160,7 @@ struct UpdateServerView: View {
         OCCodeFrame("Terminal") {
             VStack(alignment: .leading, spacing: OCSpacing.sm) {
             Text(text).font(OCType.code).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
-            Button { UIPasteboard.general.string = text; copied = text } label: { OCLabel("Copy command", icon: "copy") }
+            Button { OCCopy.text(text); copied = text } label: { OCLabel("Copy command", icon: "copy") }
                 .buttonStyle(OCButtonStyle(.ghost))
                 .accessibilityLabel("Copy \(text)")
             }

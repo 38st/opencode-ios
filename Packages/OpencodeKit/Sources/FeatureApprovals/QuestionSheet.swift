@@ -62,6 +62,7 @@ public struct QuestionSheet: View {
     @State private var state = FormSheetState.editing
     @State private var answers: [String: JSONValue]
     @State private var reason = ""
+    @State private var replied = false
     @Environment(\.dismiss) private var dismiss
     public init(store: ReadStore, form: FormInfo, directory: String? = nil) {
         self.store = store; self.form = form; self.directory = directory
@@ -79,10 +80,14 @@ public struct QuestionSheet: View {
             .onAppear { if store.approvalErrors[form.id] != nil { state = .failed } }
             .onChange(of: answers) { _, value in store.formDrafts[form.id] = value }
             .onChange(of: store.forms.values.flatMap { $0.map(\.id) }) { _, ids in
-                if !ids.contains(form.id) { state = .settled }
+                guard !ids.contains(form.id) else { return }
+                // Our own answer removes the form too; only another client's answer is news.
+                if !replied && state != .settled { OCAnnouncer.post("Already handled") }
+                state = .settled
             }
     }
     private func send(answer: [String: JSONValue]?) {
+        replied = true
         store.formDrafts[form.id] = answers
         store.respondToForm(form, answer: answer, reason: reason, directory: directory)
         dismiss()

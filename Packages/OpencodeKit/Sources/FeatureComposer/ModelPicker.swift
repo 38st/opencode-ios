@@ -18,8 +18,8 @@ struct ModelPicker: View {
     var body: some View {
         NavigationStack {
             List {
-                Toggle("Show all models", isOn: $showAll).font(OCType.small)
-                if groups.isEmpty { Text("No model results").font(OCType.small).foregroundStyle(OCColor.textMuted) }
+                Toggle("Show all models", isOn: $showAll).font(OCType.small).listRowBackground(OCColor.background)
+                if groups.isEmpty { Text("No model results").font(OCType.small).foregroundStyle(OCColor.textMuted).listRowBackground(OCColor.background) }
                 ForEach(groups) { group in
                     Section(group.name) {
                         ForEach(group.models) { value in

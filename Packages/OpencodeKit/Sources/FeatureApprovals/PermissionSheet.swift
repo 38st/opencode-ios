@@ -111,6 +111,7 @@ public struct PermissionSheet: View {
     @State private var showingFile = false
     @State private var authentication = DeviceAuthenticationMethod.faceID
     @State private var failure: String?
+    @State private var replied = false
     @Environment(\.dismiss) private var dismiss
     public init(store: ReadStore, request: PermissionRequest, directory: String) {
         self.store = store; self.request = request; self.directory = directory
@@ -140,11 +141,15 @@ public struct PermissionSheet: View {
             updateComment: { composer.updateComment($0) }, removeComment: { composer.removeComment($0) }))
             .sheet(isPresented: $showingFile) { FilesScreen(model: files, composer: composer).ocSheet() }
             .onChange(of: store.permissions[request.sessionID]?.map(\.id)) { _, ids in
-                if !(ids ?? []).contains(request.id) { state = .settled }
+                guard !(ids ?? []).contains(request.id) else { return }
+                // Our own reply removes the request too; only another client's answer is news.
+                if !replied && state != .settled { OCAnnouncer.post("Already handled") }
+                state = .settled
             }
     }
     private func send(_ decision: PermissionDecision, _ note: String?) {
         guard store.permissionNeedsAuthentication(request, decision: decision) else {
+            replied = true
             store.respondToPermission(request, decision: decision, message: note); dismiss(); return
         }
         // Stay open while the device confirms the owner; only a confirmed reply dismisses.
@@ -152,6 +157,7 @@ public struct PermissionSheet: View {
         store.authenticatePermission(request, decision: decision) { result in
             switch result {
             case .success:
+                replied = true
                 store.respondToPermission(request, decision: decision, message: note, authenticated: true); dismiss()
             case .failure(let error):
                 guard state == .authenticating else { return }

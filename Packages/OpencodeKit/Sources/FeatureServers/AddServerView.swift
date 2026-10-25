@@ -73,7 +73,7 @@ struct AddServerView: View {
                                 }
                             }
                         }
-                        if let error { OCBanner(error, tone: .danger).accessibilityIdentifier("setupError") }
+                        if let error { OCBanner(error, tone: .danger).accessibilityIdentifier("setupError").ocAnnounce(error, initial: true) }
                         if working {
                             OCSpinner(method == 0 ? "Pairing with server…" : "Connecting to server…").accessibilityIdentifier("pairingProgress")
                         } else {
@@ -93,7 +93,7 @@ struct AddServerView: View {
                             VStack(spacing: OCSpacing.md) {
                                 Text("Run this command on the server’s computer to get a pairing link and QR code.")
                                     .font(OCType.small).foregroundStyle(OCColor.textMuted).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
-                                Button { UIPasteboard.general.string = "opencode pair"; copiedPairCommand = true } label: {
+                                Button { OCCopy.text("opencode pair"); copiedPairCommand = true } label: {
                                     Text(copiedPairCommand ? "Copied" : "opencode pair").font(OCType.code)
                                 }.buttonStyle(OCButtonStyle()).accessibilityLabel("Copy opencode pair")
                                     .accessibilityIdentifier("copyPairCommand")

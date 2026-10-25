@@ -24,11 +24,13 @@ struct SessionTimeline: View {
     @State private var pendingScrollDone = false
     @State private var pageTask: Task<Void, Never>?
     @State private var error: String?
+    private struct RunStamp: Equatable { let sessionID: String; let working: Bool }
+    private var working: Bool { session.status.isRunning || store.running.contains(session.id) }
     var body: some View {
         VStack(spacing: 0) {
-            if let error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger) }
+            if let error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).ocAnnounce(error, initial: true) }
             TimelineCollection(rows: rows, store: store, session: session, transcript: transcript, detail: detail,
-                working: session.status.isRunning || store.running.contains(session.id), control: control,
+                working: working, control: control,
                 openChild: openChild, openRoot: openRoot, atBottom: { value in
                     nearBottom = value
                     if value { unseen = 0 }
@@ -52,6 +54,10 @@ struct SessionTimeline: View {
                     scrollToRequest()
                 }
                 .onChange(of: requestID) { _, _ in pendingScrollDone = false; scrollToRequest() }
+                .onChange(of: RunStamp(sessionID: session.id, working: working)) { old, next in
+                    // The Working… row disappears silently, so say how the run ended.
+                    if old.sessionID == next.sessionID && old.working && !next.working { OCAnnouncer.post(TimelineAnnouncement.runEnded(rows: rows)) }
+                }
                 .onDisappear { pageTask?.cancel(); control.cancel() }
         }
     }

@@ -34,7 +34,7 @@ public struct NewSessionView: View {
         GeometryReader { geometry in
             ScrollView {
                 VStack(spacing: OCSpacing.xxl) {
-                    Text("New session").font(OCType.title)
+                    Text("New session").font(OCType.title).accessibilityAddTraits(.isHeader)
                     if !draftDirectory.isEmpty {
                         ComposerDock(store: server.readPath, model: server.readPath.composer(directory: draftDirectory), start: start, opened: opened)
                             .id(draftDirectory)
@@ -44,7 +44,7 @@ public struct NewSessionView: View {
                         HStack { projectSelector; worktreeSelector }
                         VStack { projectSelector; worktreeSelector }
                     }
-                    if let error = error ?? choicesError { Text(error).font(OCType.small).foregroundStyle(OCColor.danger) }
+                    if let error = error ?? choicesError { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).ocAnnounce(error, initial: true) }
                 }.padding(.horizontal, OCSpacing.lg).padding(.bottom, OCSpacing.lg)
                     .padding(.top, typeSize.isAccessibilitySize || geometry.size.height < OCComposerMetrics.compactHeight
                         ? OCSpacing.lg : geometry.size.height * OCComposerMetrics.newSessionTopFraction)
@@ -93,31 +93,38 @@ public struct NewSessionView: View {
     }
     private var projectSelector: some View {
         Menu {
-            ForEach(server.projects) { value in
-                Button(value.name ?? URL(fileURLWithPath: value.canonical).lastPathComponent) {
-                    select(.init(directory: value.canonical, projectID: value.id, worktree: ""))
-                }
-            }
+            // Inline pickers mark the current project and worktree with the system checkmark and selected trait.
+            Picker("Project", selection: Binding(get: { projectID }, set: { id in
+                if let value = server.projects.first(where: { $0.id == id }) { select(.init(directory: value.canonical, projectID: value.id, worktree: "")) }
+            })) {
+                ForEach(server.projects) { value in Text(value.name ?? URL(fileURLWithPath: value.canonical).lastPathComponent).tag(value.id) }
+            }.pickerStyle(.inline).labelsHidden()
             Divider()
             Button("Open project…") { browser = true }
-        } label: { OCLabel(project?.name ?? URL(fileURLWithPath: directory).lastPathComponent, icon: "folder").font(OCType.small).frame(minHeight: OCLayout.touchTarget) }
-            .accessibilityLabel("Project").accessibilityIdentifier("newSessionProject").disabled(selectionDisabled)
+        } label: { OCLabel(projectTitle, icon: "folder").font(OCType.small).frame(minHeight: OCLayout.touchTarget) }
+            .accessibilityLabel("Project").accessibilityValue(projectTitle).accessibilityIdentifier("newSessionProject").disabled(selectionDisabled)
     }
     private var worktreeSelector: some View {
         HStack {
             Menu {
-                Button("Local repository") { selectWorktree("") }
-                Button("New worktree") { selectWorktree("new") }.disabled(project?.vcs == nil)
-                ForEach(worktrees) { value in Button(value.branch ?? URL(fileURLWithPath: value.directory).lastPathComponent) { selectWorktree(value.directory) } }
+                Picker("Worktree", selection: Binding(get: { worktree }, set: selectWorktree)) {
+                    Text("Local repository").tag("")
+                    Text("New worktree").tag("new").disabled(project?.vcs == nil)
+                    ForEach(worktrees) { value in Text(value.branch ?? URL(fileURLWithPath: value.directory).lastPathComponent).tag(value.directory) }
+                }.pickerStyle(.inline).labelsHidden()
             } label: {
-                OCLabel(worktree == "new" ? "New worktree" : worktree.isEmpty ? "Local repository" : URL(fileURLWithPath: worktree).lastPathComponent, icon: "branch")
-                    .font(OCType.small).frame(minHeight: OCLayout.touchTarget)
-            }.accessibilityLabel("Worktree").accessibilityIdentifier("newSessionWorktree").disabled(selectionDisabled)
+                OCLabel(worktreeTitle, icon: "branch").font(OCType.small).frame(minHeight: OCLayout.touchTarget)
+            }.accessibilityLabel("Worktree").accessibilityValue(worktreeTitle).accessibilityHint("Where the agent runs")
+                .accessibilityIdentifier("newSessionWorktree").disabled(selectionDisabled)
             if project?.vcs == nil { OCBadge("No Git") }
             else if worktree == "new" {
                 Button("from \(branch ?? currentBranch ?? "default")") { choosingBranch = true }.buttonStyle(OCButtonStyle(.ghost))
             }
         }
+    }
+    private var projectTitle: String { project?.name ?? URL(fileURLWithPath: directory).lastPathComponent }
+    private var worktreeTitle: String {
+        worktree == "new" ? "New worktree" : worktree.isEmpty ? "Local repository" : URL(fileURLWithPath: worktree).lastPathComponent
     }
     private var selectionDisabled: Bool {
         changingSelection || creatingWorktree || (!draftDirectory.isEmpty && server.readPath.composer(directory: draftDirectory).busy)

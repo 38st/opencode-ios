@@ -30,11 +30,29 @@ public struct OCBanner: View {
     }
 }
 public struct OCToast<Content: View>: View {
+    let announcement: String?
     let content: Content
-    public init(@ViewBuilder content: () -> Content) { self.content = content() }
+    /// `announcement` is spoken when the toast appears or its text changes; VoiceOver focus stays put.
+    public init(announcement: String? = nil, @ViewBuilder content: () -> Content) { self.announcement = announcement; self.content = content() }
     public var body: some View {
         OCCard { content }.ocElevation(.floating).padding(OCSpacing.lg)
-            .accessibilityAddTraits(.updatesFrequently)
+            .ocAnnounce(announcement, initial: true)
+    }
+}
+public enum OCAnnouncementPriority: Sendable { case normal, high }
+/// Posts VoiceOver announcements for changes that do not move focus: errors, copies, run state and approvals.
+public enum OCAnnouncer {
+    public static func post(_ text: String, priority: OCAnnouncementPriority = .normal) {
+        guard !text.isEmpty else { return }
+        var message = AttributedString(text)
+        message.accessibilitySpeechAnnouncementPriority = priority == .high ? .high : .default
+        AccessibilityNotification.Announcement(message).post()
+    }
+}
+extension View {
+    /// Announces `text` whenever it changes to a non-empty value, for inline errors and status lines.
+    public func ocAnnounce(_ text: String?, priority: OCAnnouncementPriority = .normal, initial: Bool = false) -> some View {
+        onChange(of: text, initial: initial) { _, value in if let value { OCAnnouncer.post(value, priority: priority) } }
     }
 }
 public enum OCEmptyStatePresentation: Sendable { case page, panel }

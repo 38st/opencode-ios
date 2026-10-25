@@ -181,7 +181,7 @@ public struct FilesScreen: View {
                     OCIconButton("Close search", icon: "close") { finding = false }
                 }.padding(.horizontal, OCSpacing.sm)
             }
-            if let error = model.error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding() }
+            if let error = model.error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding().ocAnnounce(error, initial: true) }
             if let content = model.content, let path = model.selectedPath {
                 if !content.complete {
                     if FileContent.image(path.path) || FileContent.quickLook(path.path) {

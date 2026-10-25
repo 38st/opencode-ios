@@ -161,7 +161,7 @@ public struct ComposerDock: View {
                          focusRequest: model.focusRequest,
                          pasteAttachment: { provider in run { try await importProvider(provider) } }, key: handleKey)
                 .fixedSize(horizontal: false, vertical: true)
-            if let error = model.error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding(OCSpacing.sm).accessibilityIdentifier("composerError") }
+            if let error = model.error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding(OCSpacing.sm).accessibilityIdentifier("composerError").ocAnnounce(error, initial: true) }
         }.fixedSize(horizontal: false, vertical: true)
     }
     private var toolbar: some View {
@@ -171,9 +171,9 @@ public struct ComposerDock: View {
                     attachmentMenu
                     Menu {
                         Button("Choose model") { showModels = true }
-                        if showAgent { Menu("Choose agent") { AgentOptions(agents: model.catalog.agents.value ?? [], select: model.selectAgent) } }
+                        if showAgent { Menu("Choose agent") { AgentOptions(agents: model.catalog.agents.value ?? [], selected: model.effectiveAgent, select: model.selectAgent) } }
                         if let selected = model.selectedModel {
-                            Menu("Choose variant") { VariantOptions(variants: selected.variants, select: selectVariant) }
+                            Menu("Choose variant") { VariantOptions(variants: selected.variants, selected: model.effectiveModel?.variant, select: selectVariant) }
                         }
                     } label: { OCIcon("sliders").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
                         .accessibilityLabel("Agent and model").disabled(model.options.shell || model.busy)
@@ -203,19 +203,19 @@ public struct ComposerDock: View {
                 HStack(spacing: typeSize.isAccessibilitySize ? OCSpacing.lg : OCSpacing.sm) {
                     if showAgent {
                         Menu {
-                            AgentOptions(agents: model.catalog.agents.value ?? [], select: model.selectAgent)
+                            AgentOptions(agents: model.catalog.agents.value ?? [], selected: model.effectiveAgent, select: model.selectAgent)
                         } label: { OCComposerChoice(model.effectiveAgent.capitalized)
                             .foregroundStyle(OCMentionStyle.agentAccent(model.catalog.agents.value?.first { ComposerPickers.agentID($0) == model.effectiveAgent }?.color)) }
-                            .accessibilityLabel("Choose agent").accessibilityIdentifier("composerAgent")
+                            .accessibilityLabel("Choose agent").accessibilityValue(model.effectiveAgent.capitalized).accessibilityIdentifier("composerAgent")
                     }
                     Button { showModels = true } label: {
                         OCComposerChoice(model.selectedModel.map { ComposerPickers.displayName($0) } ?? model.effectiveModel?.id ?? "Choose model")
                     }.accessibilityIdentifier("composerModel").accessibilityLabel("Choose model").accessibilityValue(model.selectedModel.map { ComposerPickers.displayName($0) } ?? model.effectiveModel?.id ?? "")
                     if let modelInfo = model.selectedModel, modelInfo.variants.contains(where: { $0.id != "default" }) {
                         Menu {
-                            VariantOptions(variants: modelInfo.variants, select: selectVariant)
-                        } label: { OCComposerChoice(model.effectiveModel?.variant == "default" ? "Default" : model.effectiveModel?.variant ?? "Default") }
-                            .accessibilityLabel("Choose variant").accessibilityIdentifier("composerVariant")
+                            VariantOptions(variants: modelInfo.variants, selected: model.effectiveModel?.variant, select: selectVariant)
+                        } label: { OCComposerChoice(variantTitle) }
+                            .accessibilityLabel("Choose variant").accessibilityValue(variantTitle).accessibilityIdentifier("composerVariant")
                     }
                     if model.pendingSelection { OCBadge("Pending") }
                 }.foregroundStyle(OCColor.textMuted)
@@ -312,6 +312,7 @@ public struct ComposerDock: View {
         records[store.serverID] = Array(([key] + recent.filter { $0 != key }).prefix(5))
         if let data = try? JSONEncoder().encode(records), let string = String(data: data, encoding: .utf8) { history = string }
     }
+    private var variantTitle: String { model.effectiveModel?.variant == "default" ? "Default" : model.effectiveModel?.variant ?? "Default" }
     private func selectVariant(_ value: String?) {
         guard var selection = model.effectiveModel else { return }
         selection["variant"] = value.map(JSONValue.string); model.selectModel(selection)

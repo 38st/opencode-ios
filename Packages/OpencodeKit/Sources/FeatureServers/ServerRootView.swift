@@ -109,7 +109,7 @@ public struct ServerRootView: View {
         }
         .overlay(alignment: .bottom) {
             if let error = registry.error {
-                OCToast {
+                OCToast(announcement: error) {
                     Text(error).font(OCType.body)
                     if !registry.isLoaded {
                         Button("Try again") { phaseTask?.cancel(); phaseTask = Task { await registry.load() } }

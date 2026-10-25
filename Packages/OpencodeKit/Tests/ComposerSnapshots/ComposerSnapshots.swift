@@ -72,8 +72,9 @@ import FeatureTranscript
             }, name: "dock-" + state)
             if state == "idle" {
                 await capture(ModelPicker(model: composer, history: ["mock:mock-1"], select: { _ in }), name: "model-picker", fixedHeight: 700)
-                await capture(VStack { AgentOptions(agents: catalog.agents.value ?? [], select: { _ in }) }, name: "agent-picker")
-                await capture(VStack { VariantOptions(variants: model.variants, select: { _ in }) }, name: "variant-picker")
+                // The options are inline pickers, so a list stands in for the menu that shows their checkmark.
+                await capture(menuOptions { AgentOptions(agents: catalog.agents.value ?? [], selected: composer.effectiveAgent, select: { _ in }) }, name: "agent-picker", fixedHeight: 360)
+                await capture(menuOptions { VariantOptions(variants: model.variants, selected: composer.effectiveModel?.variant, select: { _ in }) }, name: "variant-picker", fixedHeight: 360)
                 await capture(VStack { SendOptions(alternate: "Queue", sendAlternate: {}, interrupt: {}) }, name: "send-menu")
             }
             await store.stop()
@@ -160,6 +161,9 @@ import FeatureTranscript
         .init(raw: .object(["id": .string("mock-1"), "providerID": .string("mock"), "name": .string("Mock 1"), "enabled": .bool(true),
             "capabilities": .object(["input": .array([.string("text")])]), "variants": .array([.object(["id": .string("careful")])]),
             "cost": .array([.object(["input": .integer(1), "output": .integer(2)])])]))
+    }
+    private func menuOptions(@ViewBuilder _ content: () -> some View) -> some View {
+        List { content().listRowBackground(OCColor.background) }.listStyle(.plain).scrollContentBackground(.hidden).background(OCColor.background)
     }
     private func capture(_ view: some View, name: String, fixedHeight: CGFloat? = nil) async {
         if let filter = ProcessInfo.processInfo.environment["OC_COMPOSER_SNAPSHOT_FILTER"],

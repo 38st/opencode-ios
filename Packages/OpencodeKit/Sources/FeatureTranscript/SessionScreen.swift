@@ -68,8 +68,8 @@ public struct SessionScreen: View {
                                         detail: TimelineDetail(rawValue: detail) ?? .compact, requestID: requestID, openChild: openChild, openRoot: openRoot)
                             .frame(minHeight: OCLayout.timelineMinimumHeight)
                     } else { Spacer(); ProgressView("Loading conversation…").font(OCType.small); Spacer() }
-                    if let error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding(OCSpacing.md) }
-                    if let error = server.readPath.writeError { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding(OCSpacing.md) }
+                    if let error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding(OCSpacing.md).ocAnnounce(error, initial: true) }
+                    if let error = server.readPath.writeError { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding(OCSpacing.md).ocAnnounce(error, initial: true) }
                     if hasPendingInput(session) {
                         VStack(spacing: 0) {
                             PendingInputPanel(store: server.readPath, session: session)
@@ -103,6 +103,12 @@ public struct SessionScreen: View {
                     .safeAreaInset(edge: .top) { HStack { Spacer(); OCIconButton("Close review", icon: "close") { review = false }.accessibilityIdentifier("closeReview") }.padding(.horizontal, OCSpacing.sm) }.ocSheet()
             }
             .onChange(of: panelRequest) { _, request in if request != nil && sizeClass != .regular { review = true } }
+            .onChange(of: pendingInputStamp) { old, next in
+                // A request arriving while focus is in the composer or earlier output would otherwise be silent.
+                guard old.sessionID == next.sessionID, let text = TimelineAnnouncement.pendingInput(previous: Set(old.ids),
+                    permissions: server.readPath.familyPermissions(sessionID), forms: server.readPath.familyForms(sessionID)) else { return }
+                OCAnnouncer.post(text, priority: .high)
+            }
             .sheet(item: $selection) { OCTextSelectionSheet(text: $0.text).ocSheet() }
             .task(id: sessionID) {
                 do {
@@ -137,6 +143,10 @@ public struct SessionScreen: View {
         }, removeComment: { id in
             server.readPath.composer(sessionID: sessionID, directory: session.info.location.directory).removeComment(id)
         })
+    }
+    private struct PendingInputStamp: Equatable { let sessionID: String; let ids: [String] }
+    private var pendingInputStamp: PendingInputStamp {
+        .init(sessionID: sessionID, ids: server.readPath.familyPermissions(sessionID).map(\.id) + server.readPath.familyForms(sessionID).map(\.id))
     }
     private func hasPendingInput(_ session: SessionModel) -> Bool {
         session.pending.contains { $0.type == "user" && $0.delivery == .queue } ||
