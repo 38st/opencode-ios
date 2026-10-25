@@ -24,6 +24,8 @@ import OCSecurity
     public private(set) var cacheLoaded = false
     public internal(set) var outboxEntries: [String: OutboxEntry] = [:]
     public internal(set) var writeError: String?
+    /// Reply failures keyed by permission or form id, shown on that request instead of server-wide.
+    public internal(set) var approvalErrors: [String: String] = [:]
     public internal(set) var failedCreationDirectories: [String: String] = [:]
     public var formDrafts: [String: [String: JSONValue]] = [:]
     public internal(set) var lastApprovalRoundTrip: Double?

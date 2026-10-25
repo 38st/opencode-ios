@@ -32,7 +32,7 @@ public struct QuestionContent: View {
                 ForEach(Array(FormValidation.visibleFields(form, answers: answers).enumerated()), id: \.offset) { _, field in
                     VStack(alignment: .leading, spacing: OCSpacing.xs) {
                         Text(field.fields.title ?? field.fields.key).font(OCType.small).foregroundStyle(OCColor.textMuted)
-                        Text(answerText(field.fields.key)).font(OCType.body).fixedSize(horizontal: false, vertical: true)
+                        Text(answerText(field)).font(OCType.body).fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 Button("Submit answers", action: submit).buttonStyle(OCButtonStyle(.submit)).accessibilityIdentifier("submitAnswers")
@@ -49,12 +49,9 @@ public struct QuestionContent: View {
             }
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
-    private func answerText(_ key: String) -> String {
-        guard let value = FormValidation.activeAnswers(form, answers: answers)[key] else { return "(not answered)" }
-        if let values = value.arrayValue { return values.compactMap(\.stringValue).joined(separator: ", ") }
-        if let text = value.stringValue { return text }
-        if let flag = value.boolValue { return flag ? "Yes" : "No" }
-        return value.doubleValue?.formatted() ?? "(not answered)"
+    private func answerText(_ field: FormField) -> String {
+        guard let value = FormValidation.activeAnswers(form, answers: answers)[field.fields.key] else { return "(not answered)" }
+        return FormValidation.displayText(field, value: value)
     }
 }
 
@@ -78,6 +75,8 @@ public struct QuestionSheet: View {
             }.ocNavigationTitle("Question")
                 .toolbar { ToolbarItem(placement: .cancellationAction) { OCIconButton("Close", icon: "close") { dismiss() } } }
         }
+            // A reply that failed after an earlier dismissal reopens in its failed state.
+            .onAppear { if store.approvalErrors[form.id] != nil { state = .failed } }
             .onChange(of: answers) { _, value in store.formDrafts[form.id] = value }
             .onChange(of: store.forms.values.flatMap { $0.map(\.id) }) { _, ids in
                 if !ids.contains(form.id) { state = .settled }

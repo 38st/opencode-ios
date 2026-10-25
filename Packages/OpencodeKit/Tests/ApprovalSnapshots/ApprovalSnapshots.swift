@@ -7,6 +7,7 @@ import SnapshotTesting
 import OCFoundation
 import OCModels
 import OCDesign
+import OCSecurity
 import FeatureApprovals
 
 @MainActor @Suite(.serialized) struct ApprovalSnapshots {
@@ -17,6 +18,14 @@ import FeatureApprovals
             await capture(PermissionContent(request: request, directory: "/workspace/web-app", otherRequests: 2, state: .constant(state),
                                       note: .constant(state == .reject ? "Keep the existing timeout and add a regression test." : ""), reply: { _, _ in }), name: "permission-" + state.rawValue)
         }
+        for count in [0, 1] {
+            await capture(PermissionContent(request: request, directory: "/workspace/web-app", otherRequests: count, state: .constant(.reject),
+                                            note: .constant(""), reply: { _, _ in }), name: "permission-reject-\(count)-others")
+        }
+        await capture(PermissionContent(request: request, directory: "/workspace/web-app", authentication: .touchID, state: .constant(.authenticating),
+                                        note: .constant(""), reply: { _, _ in }), name: "permission-authenticating-touch-id")
+        await capture(PermissionContent(request: request, directory: "/workspace/web-app", authentication: .unavailable, state: .constant(.review),
+                                        note: .constant(""), reply: { _, _ in }), name: "permission-no-passcode")
         var high = request; high["action"] = .string("shell"); high["resources"] = .array([.string("git reset --hard HEAD~1")]); high["metadata"] = nil
         await capture(PermissionContent(request: high, directory: "/workspace/web-app", state: .constant(.review), note: .constant(""), reply: { _, _ in }), name: "permission-high-risk")
     }

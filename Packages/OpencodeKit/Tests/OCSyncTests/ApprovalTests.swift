@@ -77,3 +77,75 @@ private func permission(_ id: String, session: String = "s") -> PermissionReques
     #expect(store.permissions["s"]?.isEmpty == true && store.forms[.session("s")]?.isEmpty == true)
     await store.stop()
 }
+
+private actor ScriptedGate: BiometricAuthenticating {
+    let failure: DeviceAuthenticationError?
+    var reasons: [String] = []
+    init(failure: DeviceAuthenticationError?) { self.failure = failure }
+    func authenticate(reason: String) throws {
+        reasons.append(reason)
+        if let failure { throw failure }
+    }
+}
+@MainActor private func settle(_ store: ReadStore, until done: () -> Bool) async {
+    for _ in 0..<500 where !done() { try? await Task.sleep(for: .milliseconds(2)) }
+}
+@Test @MainActor func cancelledAuthenticationIsSilentAndOtherFailuresStayOnTheRequest() async throws {
+    let store = ReadStore(serverID: "server"), request = permission("p1")
+    store.seed(info: readInfo(), permissions: [request])
+    store.client = { readAPI { _ in .object([:]) } }
+    let cancelled = ScriptedGate(failure: .cancelled); store.biometricGate = cancelled
+    store.respondToPermission(request, decision: .always)
+    for _ in 0..<500 {
+        if await cancelled.reasons.count == 1 && store.replyingPermissions.isEmpty { break }
+        try await Task.sleep(for: .milliseconds(2))
+    }
+    #expect(await cancelled.reasons == ["Always allow read in this project: /p/file"])
+    #expect(store.approvalErrors.isEmpty && store.writeError == nil)
+    #expect(store.permissions["s"]?.map(\.id) == ["p1"])
+    store.biometricGate = ScriptedGate(failure: .passcodeNotSet)
+    store.respondToPermission(request, decision: .always)
+    await settle(store) { store.approvalErrors["p1"] != nil }
+    #expect(store.approvalErrors["p1"] == DeviceAuthenticationError.passcodeNotSet.message)
+    #expect(store.writeError == nil)
+    await store.stop()
+}
+@Test @MainActor func sheetAuthenticationRunsOnceThenRepliesWithoutAskingAgain() async throws {
+    let store = ReadStore(serverID: "server"), request = permission("p1")
+    store.seed(info: readInfo(), permissions: [request])
+    store.client = { readAPI { _ in .object([:]) } }
+    let gate = ScriptedGate(failure: nil); store.biometricGate = gate
+    #expect(store.permissionNeedsAuthentication(request, decision: .always))
+    #expect(!store.permissionNeedsAuthentication(request, decision: .once))
+    var outcome: Result<Void, DeviceAuthenticationError>?
+    store.authenticatePermission(request, decision: .always) { outcome = $0 }
+    await settle(store) { outcome != nil }
+    guard case .success = outcome else { Issue.record("Authentication should succeed"); return }
+    store.respondToPermission(request, decision: .always, authenticated: true)
+    await settle(store) { store.permissions["s"]?.isEmpty == true }
+    #expect(await gate.reasons.count == 1)
+    #expect(store.approvalErrors.isEmpty)
+    await store.stop()
+}
+@Test @MainActor func failedRepliesAreScopedToTheirRequest() async throws {
+    let store = ReadStore(serverID: "server"), request = permission("p1")
+    let form = FormInfo(raw: .object(["id": .string("f"), "sessionID": .string("s"), "fields": .array([])]))
+    store.seed(info: readInfo(), permissions: [request], forms: [form])
+    store.client = { readAPI { _ in throw URLError(.timedOut) } }
+    store.respondToPermission(request, decision: .once)
+    store.respondToForm(form, answer: [:])
+    await settle(store) { store.approvalErrors.count == 2 }
+    #expect(store.approvalErrors["p1"] == "Reply could not be sent. Try again.")
+    #expect(store.approvalErrors["f"] == "Answers could not be sent. Review and try again.")
+    #expect(store.writeError == nil)
+    #expect(store.permissions["s"]?.map(\.id) == ["p1"])
+    await store.stop()
+}
+@Test @MainActor func authenticationReasonNamesTheActionAndTruncatesTheResource() {
+    let store = ReadStore(serverID: "server")
+    var request = permission("p1"); request["action"] = .string("shell"); request["resources"] = .array([.string(String(repeating: "a", count: 80))])
+    let reason = store.authenticationReason(request, decision: .once)
+    #expect(reason.hasPrefix("Allow high-risk shell: ") && reason.hasSuffix("…") && reason.count == "Allow high-risk shell: ".count + 60)
+    request["resources"] = .array([])
+    #expect(store.authenticationReason(request, decision: .always) == "Always allow shell in this project")
+}

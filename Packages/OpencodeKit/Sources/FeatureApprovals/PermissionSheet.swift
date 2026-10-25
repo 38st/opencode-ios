@@ -4,24 +4,29 @@ import SwiftUI
 import OCFoundation
 import OCModels
 import OCPushCore
+import OCSecurity
 import OCDesign
 import OCSync
 import FeatureFiles
 
-public enum PermissionSheetState: String, CaseIterable { case review, reject, authenticating, sending, failed, settled }
+/// Replies are sent optimistically once any authentication passes, so there is no sending state.
+public enum PermissionSheetState: String, CaseIterable { case review, reject, authenticating, failed, settled }
 
 /// Shared sheet content is also used by snapshots without invoking authentication.
 public struct PermissionContent: View {
     let request: PermissionRequest
     let directory: String
     let otherRequests: Int
+    let authentication: DeviceAuthenticationMethod
+    let failure: String?
     @Binding var state: PermissionSheetState
     @Binding var note: String
     @Environment(\.dynamicTypeSize) private var typeSize
     let reply: (PermissionDecision, String?) -> Void
-    public init(request: PermissionRequest, directory: String, otherRequests: Int = 0,
-                state: Binding<PermissionSheetState>, note: Binding<String>, reply: @escaping (PermissionDecision, String?) -> Void) {
+    public init(request: PermissionRequest, directory: String, otherRequests: Int = 0, authentication: DeviceAuthenticationMethod = .faceID,
+                failure: String? = nil, state: Binding<PermissionSheetState>, note: Binding<String>, reply: @escaping (PermissionDecision, String?) -> Void) {
         self.request = request; self.directory = directory; self.otherRequests = otherRequests
+        self.authentication = authentication; self.failure = failure
         _state = state; _note = note; self.reply = reply
     }
     public var body: some View {
@@ -44,18 +49,30 @@ public struct PermissionContent: View {
                 copyable("Allow always saves these patterns in this project", values: request.save)
             }
             if state == .reject {
-                Text("Rejecting also rejects this session’s \(otherRequests) other pending requests. Without a note, it ends the turn.")
-                    .font(OCType.small).foregroundStyle(OCColor.textMuted)
+                Group {
+                    if otherRequests == 1 { Text("Rejecting also rejects 1 other pending request in this session.") }
+                    else if otherRequests > 1 { Text("Rejecting also rejects \(otherRequests) other pending requests in this session.") }
+                    Text("Without a note, rejecting ends the turn.")
+                }.font(OCType.small).foregroundStyle(OCColor.textMuted).fixedSize(horizontal: false, vertical: true)
                 TextField("Tell the agent what to do instead (optional)", text: $note, axis: .vertical)
                     .textFieldStyle(OCTextFieldStyle()).accessibilityIdentifier("permissionNote")
                 Button("Reject") { reply(.reject, note) }.buttonStyle(OCButtonStyle(.danger)).accessibilityIdentifier("confirmReject")
                 Button("Back") { state = .review }.buttonStyle(OCButtonStyle(.ghost))
             } else if state == .settled {
                 OCBadge("Already handled", tone: .success)
-            } else if state == .authenticating || state == .sending {
-                OCLabel(state == .authenticating ? "Confirm with Face ID or passcode…" : "Sending reply…", icon: "status").font(OCType.small)
+            } else if state == .authenticating {
+                OCLabel(authentication.prompt, icon: "status").font(OCType.small)
             } else {
-                if state == .failed { Text("Reply could not be sent. Try again.").font(OCType.small).foregroundStyle(OCColor.danger) }
+                if state == .failed {
+                    Text(failure ?? "Reply could not be sent. Try again.").font(OCType.small).foregroundStyle(OCColor.danger)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                if authentication == .unavailable {
+                    Text(PermissionRisk.assess(request) == .high
+                         ? "Allow always and Allow once on high-risk requests need a device passcode. Set one in Settings."
+                         : "Allow always needs a device passcode. Set one in Settings.")
+                        .font(OCType.small).foregroundStyle(OCColor.textMuted).fixedSize(horizontal: false, vertical: true)
+                }
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: OCSpacing.sm) { actions }
                     VStack(alignment: .leading, spacing: OCSpacing.sm) { actions }
@@ -66,7 +83,9 @@ public struct PermissionContent: View {
     @ViewBuilder private var actions: some View {
         Button("Reject") { state = .reject }.buttonStyle(OCButtonStyle(.ghost)).accessibilityIdentifier("rejectPermission")
         Button("Allow always") { reply(.always, nil) }.buttonStyle(OCButtonStyle(.neutral)).accessibilityIdentifier("allowAlways")
+            .disabled(authentication == .unavailable)
         Button("Allow once") { reply(.once, nil) }.buttonStyle(OCButtonStyle(.submit)).accessibilityIdentifier("allowOnce")
+            .disabled(authentication == .unavailable && PermissionRisk.assess(request) == .high)
     }
     private func copyable(_ title: String, values: [String]) -> some View {
         VStack(alignment: .leading, spacing: OCSpacing.sm) {
@@ -90,6 +109,8 @@ public struct PermissionSheet: View {
     @State private var state = PermissionSheetState.review
     @State private var note = ""
     @State private var showingFile = false
+    @State private var authentication = DeviceAuthenticationMethod.faceID
+    @State private var failure: String?
     @Environment(\.dismiss) private var dismiss
     public init(store: ReadStore, request: PermissionRequest, directory: String) {
         self.store = store; self.request = request; self.directory = directory
@@ -100,11 +121,17 @@ public struct PermissionSheet: View {
         NavigationStack {
             OCForm {
                 PermissionContent(request: request, directory: directory, otherRequests: max(0, (store.permissions[request.sessionID]?.count ?? 1) - 1),
-                                  state: $state, note: $note, reply: send)
+                                  authentication: authentication, failure: failure, state: $state, note: $note, reply: send)
             }.ocNavigationTitle("Permission required")
                 .toolbar { ToolbarItem(placement: .cancellationAction) { OCIconButton("Close", icon: "close") { dismiss() } } }
         }
+            .interactiveDismissDisabled(state == .authenticating)
             .task { await composer.load() }
+            .task {
+                authentication = await store.biometricGate.method()
+                // A reply that failed after an earlier dismissal reopens in its failed state.
+                if let error = store.approvalErrors[request.id], state == .review { failure = error; state = .failed }
+            }
             .environment(\.ocFileLinks, OCFileLinks(open: { link in
                 store.performWrite { await files.openLink(link) } completion: { _ in }; showingFile = true
             }, existing: { await files.existingLinks($0) }, known: { files.knownLinks($0) }, comment: { value in
@@ -117,8 +144,20 @@ public struct PermissionSheet: View {
             }
     }
     private func send(_ decision: PermissionDecision, _ note: String?) {
-        store.respondToPermission(request, decision: decision, message: note)
-        dismiss()
+        guard store.permissionNeedsAuthentication(request, decision: decision) else {
+            store.respondToPermission(request, decision: decision, message: note); dismiss(); return
+        }
+        // Stay open while the device confirms the owner; only a confirmed reply dismisses.
+        state = .authenticating
+        store.authenticatePermission(request, decision: decision) { result in
+            switch result {
+            case .success:
+                store.respondToPermission(request, decision: decision, message: note, authenticated: true); dismiss()
+            case .failure(let error):
+                guard state == .authenticating else { return }
+                if let message = error.message { failure = message; state = .failed } else { state = .review }
+            }
+        }
     }
 }
 #endif

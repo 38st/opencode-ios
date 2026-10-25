@@ -169,6 +169,8 @@ targets:
         product: OCDesign
       - package: OpencodeKit
         product: FeatureApprovals
+      - package: OpencodeKit
+        product: OCSecurity
       - package: SnapshotTesting
         product: SnapshotTesting
 

@@ -26,6 +26,18 @@ public enum FormValidation {
         let active = activeAnswers(form, answers: answers)
         return form.fields.filter { $0.type == "external" || (!$0.fields.hidden && isActive($0, answers: active)) }
     }
+    /// Review text for an answer: chosen options read as their labels, custom
+    /// values as typed, and numbers as the field displays them.
+    public static func displayText(_ field: FormField, value: JSONValue) -> String {
+        let options = field.fields.options
+        func label(_ text: String) -> String { options.first { $0.value == text && !$0.label.isEmpty }?.label ?? text }
+        if let values = value.arrayValue { return values.compactMap(\.stringValue).map(label).joined(separator: ", ") }
+        if let text = value.stringValue { return label(text) }
+        if let flag = value.boolValue { return flag ? "Yes" : "No" }
+        guard let number = value.doubleValue else { return "(not answered)" }
+        let text = String(number)
+        return text.hasSuffix(".0") ? String(text.dropLast(2)) : text
+    }
     public static func errors(_ form: FormInfo, answers: [String: JSONValue]) -> [String: String] {
         let active = activeAnswers(form, answers: answers)
         var errors: [String: String] = [:]

@@ -46,6 +46,9 @@ public struct PermissionCard: View {
                 ForEach(Array(request.resources.enumerated()), id: \.offset) { _, resource in
                     Text(resource).font(OCType.code).fixedSize(horizontal: false, vertical: true)
                 }
+                if let error = store.approvalErrors[request.id] {
+                    Text(error).font(OCType.small).foregroundStyle(OCColor.danger).fixedSize(horizontal: false, vertical: true)
+                }
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: OCSpacing.sm) { actions }
                     VStack(alignment: .leading, spacing: OCSpacing.sm) { actions }
@@ -73,6 +76,9 @@ public struct QuestionCard: View {
                 OCLabel("Question", icon: "bubble-5").font(OCType.button)
                 if child { OCBadge("Subagent") }
                 Text(form.title).font(OCType.body)
+                if let error = store.approvalErrors[form.id] {
+                    Text(error).font(OCType.small).foregroundStyle(OCColor.danger).fixedSize(horizontal: false, vertical: true)
+                }
                 Button("Answer question") { show = true }.buttonStyle(OCButtonStyle(.submit)).accessibilityIdentifier("answerQuestion")
             }
         }.sheet(isPresented: $show) { QuestionSheet(store: store, form: form).ocSheet() }

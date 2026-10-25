@@ -35,3 +35,13 @@ private func form(_ fields: String) throws -> FormInfo {
     #expect(FormValidation.visibleFields(f, answers: [:]).count == 1)
     #expect(FormValidation.errors(f, answers: [:])["future"] != nil)
 }
+@Test func reviewTextShowsOptionLabelsCustomValuesAndFieldNumbers() throws {
+    let f = try form(#"[{"type":"string","key":"s","options":[{"value":"light","label":"Light"}],"custom":true},{"type":"multiselect","key":"m","options":[{"value":"unit","label":"Unit tests"},{"value":"ui","label":"UI tests"}],"custom":true},{"type":"number","key":"n"},{"type":"boolean","key":"b"}]"#)
+    let field = { (key: String) in try #require(f.fields.first { $0.fields.key == key }) }
+    #expect(FormValidation.displayText(try field("s"), value: .string("light")) == "Light")
+    #expect(FormValidation.displayText(try field("s"), value: .string("Sepia")) == "Sepia")
+    #expect(FormValidation.displayText(try field("m"), value: .array([.string("unit"), .string("e2e")])) == "Unit tests, e2e")
+    #expect(FormValidation.displayText(try field("n"), value: .double(1.5)) == "1.5")
+    #expect(FormValidation.displayText(try field("n"), value: .integer(2)) == "2")
+    #expect(FormValidation.displayText(try field("b"), value: .bool(false)) == "No")
+}

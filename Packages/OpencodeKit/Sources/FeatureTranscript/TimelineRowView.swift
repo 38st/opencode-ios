@@ -106,11 +106,8 @@ public struct TimelineRowView: View {
                 }.padding(.vertical, OCSpacing.md)
             }
         case .error, .retry, .pendingInput, .compaction:
-            if row.kind == .pendingInput, let store, let request = store.permissions.values.joined().first(where: { $0.id == row.id }) {
-                PermissionCard(store: store, request: request, directory: directory)
-            } else if row.kind == .pendingInput, let store, let form = store.forms.values.joined().first(where: { $0.id == row.id }) {
-                QuestionCard(store: store, form: form)
-            } else {
+            // Pending permissions and questions stay a plain marker (and Review's scroll
+            // target); the approval dock is their single actionable surface.
             VStack(alignment: .leading, spacing: OCSpacing.sm) {
                 HStack {
                     OCLabel(label, icon: row.kind == .error ? "warning" : row.kind == .retry ? "refresh" : "status").font(OCType.button)
@@ -119,7 +116,6 @@ public struct TimelineRowView: View {
                 Text(row.text).font(OCType.small).ocSelectableText(row.text)
             }.padding(OCSpacing.md).frame(maxWidth: .infinity, alignment: .leading)
                 .background(row.kind == .error ? OCColor.dangerBackground : OCColor.layer1, in: RoundedRectangle(cornerRadius: OCRadius.md))
-            }
         case .notice:
             VStack(alignment: .leading, spacing: OCSpacing.xs) {
                 Text(row.text).font(OCType.small).foregroundStyle(OCColor.textMuted).ocSelectableText(row.text)
