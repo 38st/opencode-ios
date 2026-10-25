@@ -58,9 +58,10 @@ extension ReadStore {
             model.info = overlay.apply(to: info); sessions[info.id] = model; dirty.insert(info.id)
                     if let title = pendingTitles[info.id] { model.info["title"] = .string(title) }
         }
-        if search == nil && project == nil { rootCursor = page.cursor.next }
+        let next = page.nextCursor(limit: 200)
+        if search == nil && project == nil { rootCursor = next }
         updateAttention(); schedulePersistence()
-        return page.cursor.next
+        return next
     }
     public func family(_ root: String) -> [SessionModel] {
         var result: [SessionModel] = [], ids: Set<String> = [], queue = [root]

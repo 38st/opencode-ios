@@ -151,3 +151,94 @@ private actor ReviewRequests {
     #expect(WriteErrorMessage.isCancellation(APIError.cancelled))
     #expect(!WriteErrorMessage.message(NSError(domain: "unknown", code: 1)).contains("error 1"))
 }
+
+@Test @MainActor func restoredFailedPromptCanBeDiscardedThenSent() async throws {
+    let writer = try PersistenceWriter(), store = ReadStore(serverID: "server", cache: CacheStore(writer: writer))
+    store.seed(info: readInfo(), messages: [])
+    let composer = store.composer(sessionID: "s", directory: "/p"); await composer.load()
+    let id = try await store.sendPrompt("s", input: .init(text: "Failed prompt"))
+    store.outboxEntries[id]?.state = "failed"
+    try await store.restoreFailedPrompt(id)
+    #expect(composer.options.editingOutboxID == id)
+    try await store.discardOutbox(id)
+    #expect(composer.options.editingOutboxID == nil)
+    #expect(String(composer.text.characters) == "Failed prompt")
+    try await composer.flush()
+    let restored = ComposerModel(store: store, sessionID: "s", directory: "/p"); await restored.load()
+    #expect(restored.options.editingOutboxID == nil)
+    restored.submit(preference: .steer)
+    while restored.busy { await Task.yield() }
+    #expect(restored.error == nil && restored.blank)
+    let entries = try await OutboxStore(writer: writer).entries(serverID: "server")
+    #expect(entries.count == 1 && entries.first?.id != id)
+    #expect(try entries.first.map { try JSONDecoder().decode(PromptInput.self, from: $0.body).text } == "Failed prompt")
+    await store.stop()
+}
+
+@Test @MainActor func staleEditingReferenceFallsBackToNewAdmission() async throws {
+    for state in ["missing", "pending", "needsConfirmation"] {
+        let store = ReadStore(serverID: "server", cache: CacheStore(writer: try PersistenceWriter()))
+        store.seed(info: readInfo(), messages: [])
+        let composer = store.composer(sessionID: "s", directory: "/p"); await composer.load()
+        let id = try await store.sendPrompt("s", input: .init(text: "Old prompt"))
+        if state == "missing" { store.outboxEntries.removeValue(forKey: id) }
+        else { store.outboxEntries[id]?.state = state }
+        composer.setOptions(.init(editingOutboxID: id))
+        composer.setText(AttributedString("Edited prompt"))
+        composer.submit(preference: .steer)
+        while composer.busy { await Task.yield() }
+        #expect(composer.error == nil && composer.blank)
+        #expect(store.outboxEntries.values.contains { $0.id != id && String(decoding: $0.body, as: UTF8.self).contains("Edited prompt") })
+        await store.stop()
+    }
+}
+
+@Test @MainActor func acknowledgementsAndCancelClearOnlyTheEditingReference() async throws {
+    for action in ["cancel", "event", "response", "reload"] {
+        let writer = try PersistenceWriter(), store = ReadStore(serverID: "server", cache: CacheStore(writer: writer))
+        store.seed(info: readInfo(), messages: [])
+        let composer = store.composer(sessionID: "s", directory: "/p"); await composer.load()
+        let id = try await store.sendPrompt("s", input: .init(text: "Original"))
+        store.outboxEntries[id]?.state = "failed"
+        try await store.restoreFailedPrompt(id)
+        composer.setText(AttributedString("Keep these edits"))
+        switch action {
+        case "cancel": composer.cancelEditingOutbox()
+        case "event": store.acknowledgeEvent(id)
+        case "response": store.acknowledgeResponse(id, result: .prompt(.init(raw: .object(["id": .string(id), "sessionID": .string("s")]))))
+        default: try await store.reloadOutbox()
+        }
+        #expect(composer.options.editingOutboxID == nil)
+        #expect(String(composer.text.characters) == "Keep these edits")
+        try await composer.flush()
+        #expect(try await store.drafts?.load(serverID: "server", sessionID: "s")?.options.editingOutboxID == nil)
+        if action == "cancel" { #expect(store.outboxEntries[id]?.state == "failed") }
+        await store.stop()
+    }
+}
+
+@Test @MainActor func relaunchClearsAStalePersistedEditingReference() async throws {
+    let writer = try PersistenceWriter(), store = ReadStore(serverID: "server", cache: CacheStore(writer: writer))
+    let draft = try Draft(serverID: "server", sessionID: "s", attributedText: AttributedString("Recovered edits"),
+                          options: .init(editingOutboxID: "discarded"))
+    await store.drafts?.save(draft); try await store.drafts?.flush()
+    try await store.loadCache()
+    store.seed(info: readInfo(), messages: [])
+    let composer = store.composer(sessionID: "s", directory: "/p"); await composer.load()
+    #expect(composer.options.editingOutboxID == nil && String(composer.text.characters) == "Recovered edits")
+    try await composer.flush()
+    #expect(try await store.drafts?.load(serverID: "server", sessionID: "s")?.options.editingOutboxID == nil)
+    await store.stop()
+}
+
+@Test @MainActor func discardingAFailedCreationClearsEditingForItsPrompts() async throws {
+    let store = ReadStore(serverID: "server", cache: CacheStore(writer: try PersistenceWriter()))
+    let session = try await store.createSession(location: .init(directory: "/p"))
+    let prompt = try await store.sendPrompt(session, input: .init(text: "First prompt"))
+    store.outboxEntries[session]?.state = "failed"; store.outboxEntries[prompt]?.state = "failed"
+    let composer = store.composer(sessionID: session, directory: "/p"); await composer.load()
+    composer.setOptions(.init(editingOutboxID: prompt))
+    try await store.discardOutbox(session)
+    #expect(composer.options.editingOutboxID == nil)
+    await store.stop()
+}

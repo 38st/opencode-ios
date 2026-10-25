@@ -39,6 +39,9 @@ public enum OCLayout {
     // session/session-panel-width.ts: the chat pane's initial/minimum width is 450.
     public static let timelineWithReview: CGFloat = 450
     public static let approvalDockHeight: CGFloat = 240
+    public static let timelineMinimumHeight: CGFloat = 120
+    public static let sessionCompactHeight: CGFloat = 600
+    public static let sessionPendingFraction: CGFloat = 0.2
     // session-review-v2.css: centered empty panels leave room below their message.
     public static let panelEmptyBottom: CGFloat = 160
     public static let panelEmptyDescription: CGFloat = 360

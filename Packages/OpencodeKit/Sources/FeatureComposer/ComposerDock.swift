@@ -32,6 +32,7 @@ public struct ComposerDock: View {
     @State private var photos: [PhotosPickerItem] = []
     @State private var action: Task<Void, Never>?
     @Environment(\.dynamicTypeSize) private var typeSize
+    @ScaledMetric(relativeTo: .body) private var editorLineHeight = OCType.lineHeight
     public init(store: ReadStore, model: ComposerModel, newSession: @escaping () -> Void = {},
                 clientCommand: @escaping (ComposerCommand) -> Void = { _ in },
                 start: (@MainActor (String, ModelRef?) async throws -> String)? = nil, opened: @escaping (String) -> Void = { _ in }) {
@@ -46,6 +47,7 @@ public struct ComposerDock: View {
         return running || model.session?.pending.isEmpty == false ? "Add follow-up, / for commands, @ for context…" : "Ask anything, / for commands, @ for context…"
     }
     private var preference: Delivery { followUp == "queue" ? .queue : .steer }
+    private var minimumEditorHeight: CGFloat { max(OCComposerMetrics.editorMinimum, editorLineHeight + OCSpacing.lg + OCSpacing.sm) }
     public var body: some View {
         VStack(spacing: OCSpacing.xs) {
             if model.session?.info.parentID != nil {
@@ -58,7 +60,8 @@ public struct ComposerDock: View {
                 OCComposerSurface {
                     ScrollView {
                         editorContent.onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
-                    }.scrollBounceBehavior(.basedOnSize).frame(idealHeight: contentHeight, maxHeight: contentHeight)
+                    }.scrollBounceBehavior(.basedOnSize).scrollDismissesKeyboard(.interactively)
+                        .frame(minHeight: minimumEditorHeight, idealHeight: max(minimumEditorHeight, contentHeight), maxHeight: max(minimumEditorHeight, contentHeight))
                     toolbar.fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -108,7 +111,13 @@ public struct ComposerDock: View {
     private var editorContent: some View {
         VStack(spacing: 0) {
             if model.session?.info.revert != nil { revertNotice }
-            if model.options.editingOutboxID != nil { Text("Edit and resend").font(OCType.small).padding(OCSpacing.sm) }
+            if model.options.editingOutboxID != nil {
+                HStack {
+                    Text("Edit and resend").font(OCType.small)
+                    Spacer(minLength: 0)
+                    Button("Cancel") { model.cancelEditingOutbox() }.buttonStyle(OCButtonStyle(.ghost))
+                }.padding(.horizontal, OCSpacing.sm).accessibilityIdentifier("editingOutbox")
+            }
             if !model.options.shell && !model.comments.isEmpty {
                 ScrollView(.horizontal) {
                     HStack(spacing: OCSpacing.sm) {
@@ -145,26 +154,32 @@ public struct ComposerDock: View {
                     Text(warning).font(OCType.small).foregroundStyle(OCColor.warning).padding(.horizontal, OCSpacing.lg)
                 }
             }
-            ZStack(alignment: .topLeading) {
-                if model.text.characters.isEmpty {
-                    Text(placeholder).font(model.options.shell ? OCType.code : OCType.small).foregroundStyle(OCColor.textMuted)
-                        .padding(.horizontal, OCSpacing.lg).padding(.top, OCSpacing.lg).allowsHitTesting(false)
-                }
-                PromptEditor(text: Binding(get: { model.text }, set: { model.setText($0) }), caret: $caret,
-                             shell: model.options.shell, enabled: model.loaded && !model.busy,
-                             suggestionsActive: trigger != nil && trigger != closedTrigger,
-                             focusRequest: model.focusRequest,
-                             pasteAttachment: { provider in run { try await importProvider(provider) } }, key: handleKey)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            PromptEditor(text: Binding(get: { model.text }, set: { model.setText($0) }), caret: $caret,
+                         shell: model.options.shell, enabled: model.loaded && !model.busy,
+                         placeholder: placeholder,
+                         suggestionsActive: trigger != nil && trigger != closedTrigger,
+                         focusRequest: model.focusRequest,
+                         pasteAttachment: { provider in run { try await importProvider(provider) } }, key: handleKey)
+                .fixedSize(horizontal: false, vertical: true)
             if let error = model.error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding(OCSpacing.sm).accessibilityIdentifier("composerError") }
         }.fixedSize(horizontal: false, vertical: true)
     }
     private var toolbar: some View {
         VStack(spacing: OCSpacing.xs) {
             if typeSize.isAccessibilitySize {
-                selectionControls
-                HStack { attachmentMenu; Spacer(minLength: 0); deliveryControls }
+                HStack {
+                    attachmentMenu
+                    Menu {
+                        Button("Choose model") { showModels = true }
+                        if showAgent { Menu("Choose agent") { AgentOptions(agents: model.catalog.agents.value ?? [], select: model.selectAgent) } }
+                        if let selected = model.selectedModel {
+                            Menu("Choose variant") { VariantOptions(variants: selected.variants, select: selectVariant) }
+                        }
+                    } label: { OCIcon("sliders").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
+                        .accessibilityLabel("Agent and model").disabled(model.options.shell || model.busy)
+                    Spacer(minLength: 0)
+                    deliveryControls
+                }
             } else {
                 HStack(spacing: OCSpacing.xxs) { attachmentMenu; selectionControls; Spacer(minLength: 0); deliveryControls }
             }
@@ -213,10 +228,7 @@ public struct ComposerDock: View {
             }
             Button { send() } label: {
                 OCIcon(running && model.blank ? "stop" : "arrow-up")
-                    .frame(width: OCComposerMetrics.submit, height: OCComposerMetrics.submit)
-                    .foregroundStyle(OCColor.textInverse).background(OCColor.contrast, in: RoundedRectangle(cornerRadius: OCRadius.md))
-                    .frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget).contentShape(Rectangle())
-            }.buttonStyle(.plain).accessibilityLabel(running && model.blank ? "Stop" : "Send")
+            }.buttonStyle(OCSubmitIconButtonStyle()).accessibilityLabel(running && model.blank ? "Stop" : "Send")
                 .accessibilityIdentifier("composerSend").disabled(model.busy || !model.loaded || model.blank && !running)
                 .contextMenu {
                     if running && !model.blank {
@@ -276,6 +288,12 @@ public struct ComposerDock: View {
     }
     private var recent: [String] { (try? JSONDecoder().decode([String: [String]].self, from: Data(history.utf8)))?[store.serverID] ?? [] }
     private func send(alternate: Bool = false, interrupt: Bool = false) {
+        guard model.loaded, !model.busy else { return }
+        if !model.options.shell, let command = ComposerSuggestions.submittedCommand(String(model.text.characters),
+            server: model.catalog.commands.value, session: model.sessionID != nil, showAgent: showAgent,
+            hasPrompts: hasVisiblePrompts, reverted: model.session?.info.revert != nil) {
+            select(command); return
+        }
         let usedModel = model.options.shell ? nil : model.effectiveModel
         model.submit(preference: preference, alternate: alternate, interrupt: interrupt, start: start) { id in
             if let usedModel { remember(usedModel) }

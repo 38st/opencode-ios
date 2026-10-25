@@ -24,55 +24,76 @@ public struct SessionScreen: View {
     @State private var selection: Selection?
     @Environment(\.scenePhase) private var phase
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dynamicTypeSize) private var typeSize
     public init(server: ServerStore, sessionID: String, requestID: String? = nil, newSession: @escaping () -> Void = {}, deleted: @escaping () -> Void = {}, openRoot: @escaping (String) -> Void = { _ in }, openChild: @escaping (String) -> Void) {
         self.server = server; self.sessionID = sessionID; self.requestID = requestID; self.openChild = openChild; self.newSession = newSession; self.deleted = deleted; self.openRoot = openRoot
     }
     public var body: some View {
-        VStack(spacing: 0) {
-            if let session = server.sessions[sessionID] {
-                SessionHeader(server: server, session: session, composer: server.readPath.composer(sessionID: sessionID, directory: session.info.location.directory), showsTitle: sizeClass == .regular)
-                HStack {
-                    Menu {
-                        Picker("Timeline detail", selection: $detail) {
-                            ForEach(TimelineDetail.allCases, id: \.rawValue) { Text($0.title).tag($0.rawValue) }
-                        }
-                        Button("Copy session link") {
-                            OCCopy.text("opencodeios://server/" + server.id.rawValue.uuidString + "/session/" + sessionID)
-                        }
-                        Button("Select text") { selection = Selection(text: selectionText(session)) }
-                    } label: { OCLabel(TimelineDetail(rawValue: detail)?.title ?? "Compact", icon: "sliders").font(OCType.small) }
-                        .buttonStyle(OCButtonStyle(.ghost)).accessibilityIdentifier("timelineDetail")
-                    Spacer(minLength: 0)
-                    SessionActions(store: server.readPath, session: session, command: $composerCommand, opened: openRoot, deleted: deleted)
-                    if session.info.parentID != nil { OCBadge("Subagent · read only") }
-                    if sizeClass != .regular {
-                        OCIconButton("Review panel", icon: "sidebar-right") { review = true }.accessibilityIdentifier("sessionReview")
+        GeometryReader { geometry in
+            let compactChrome = typeSize.isAccessibilitySize || geometry.size.height < OCLayout.sessionCompactHeight
+            VStack(spacing: 0) {
+                if let session = server.sessions[sessionID] {
+                    if !compactChrome {
+                        SessionHeader(server: server, session: session, composer: server.readPath.composer(sessionID: sessionID, directory: session.info.location.directory), showsTitle: sizeClass == .regular)
                     }
-                }.padding(.horizontal, OCSpacing.lg)
-                if let transcript = session.transcript {
-                    SessionTimeline(store: server.readPath, session: session, transcript: transcript,
-                                    detail: TimelineDetail(rawValue: detail) ?? .compact, requestID: requestID, openChild: openChild, openRoot: openRoot)
-                } else { Spacer(); ProgressView("Loading conversation…").font(OCType.small); Spacer() }
-                if let error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding(OCSpacing.md) }
-                if let error = server.readPath.writeError { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding(OCSpacing.md) }
-                PendingInputPanel(store: server.readPath, session: session).padding(.horizontal, OCSpacing.md)
-                ApprovalDock(store: server.readPath, sessionID: sessionID).padding(.horizontal, OCSpacing.md)
-                ComposerDock(store: server.readPath, model: server.readPath.composer(sessionID: sessionID, directory: session.info.location.directory),
-                             newSession: newSession, clientCommand: { composerCommand = $0 }).padding(OCSpacing.md).layoutPriority(1)
-                #if DEBUG
-                if ProcessInfo.processInfo.environment["OPENCODE_UI_TEST_ID"] != nil, let elapsed = server.readPath.lastApprovalRoundTrip {
-                    Color.clear.frame(height: 1).accessibilityElement().accessibilityLabel("Approval round trip")
-                        .accessibilityValue(String(elapsed)).accessibilityIdentifier("approvalTiming")
+                    HStack {
+                        if compactChrome {
+                            Menu {
+                                SessionHeader(server: server, session: session, composer: server.readPath.composer(sessionID: sessionID, directory: session.info.location.directory), showsTitle: false).metadata
+                            } label: { OCIcon("info").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
+                                .accessibilityLabel("Session information").accessibilityIdentifier("sessionInformation")
+                        }
+                        Menu {
+                            Picker("Timeline detail", selection: $detail) {
+                                ForEach(TimelineDetail.allCases, id: \.rawValue) { Text($0.title).tag($0.rawValue) }
+                            }
+                            Button("Copy session link") {
+                                OCCopy.text("opencodeios://server/" + server.id.rawValue.uuidString + "/session/" + sessionID)
+                            }
+                            Button("Select text") { selection = Selection(text: selectionText(session)) }
+                        } label: {
+                            if compactChrome { OCIcon("sliders").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
+                            else { OCLabel(TimelineDetail(rawValue: detail)?.title ?? "Compact", icon: "sliders").font(OCType.small).padding(.horizontal, OCSpacing.md).frame(minHeight: OCLayout.touchTarget) }
+                        }.buttonStyle(.plain).accessibilityLabel("Timeline detail").accessibilityValue(TimelineDetail(rawValue: detail)?.title ?? "Compact")
+                            .accessibilityIdentifier("timelineDetail")
+                        Spacer(minLength: 0)
+                        SessionActions(store: server.readPath, session: session, command: $composerCommand, opened: openRoot, deleted: deleted)
+                        if session.info.parentID != nil && !compactChrome { OCBadge("Subagent · read only") }
+                        if sizeClass != .regular {
+                            OCIconButton("Review panel", icon: "sidebar-right") { review = true }.accessibilityIdentifier("sessionReview")
+                        }
+                    }.padding(.horizontal, OCSpacing.lg)
+                    if let transcript = session.transcript {
+                        SessionTimeline(store: server.readPath, session: session, transcript: transcript,
+                                        detail: TimelineDetail(rawValue: detail) ?? .compact, requestID: requestID, openChild: openChild, openRoot: openRoot)
+                            .frame(minHeight: OCLayout.timelineMinimumHeight)
+                    } else { Spacer(); ProgressView("Loading conversation…").font(OCType.small); Spacer() }
+                    if let error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding(OCSpacing.md) }
+                    if let error = server.readPath.writeError { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding(OCSpacing.md) }
+                    if hasPendingInput(session) {
+                        VStack(spacing: 0) {
+                            PendingInputPanel(store: server.readPath, session: session)
+                            ApprovalDock(store: server.readPath, sessionID: sessionID)
+                        }.frame(maxHeight: compactChrome ? geometry.size.height * OCLayout.sessionPendingFraction : nil)
+                            .padding(.horizontal, OCSpacing.md)
+                    }
+                    ComposerDock(store: server.readPath, model: server.readPath.composer(sessionID: sessionID, directory: session.info.location.directory),
+                                 newSession: newSession, clientCommand: { composerCommand = $0 }).padding(OCSpacing.md)
+                    #if DEBUG
+                    if ProcessInfo.processInfo.environment["OPENCODE_UI_TEST_ID"] != nil, let elapsed = server.readPath.lastApprovalRoundTrip {
+                        Color.clear.frame(height: 1).accessibilityElement().accessibilityLabel("Approval round trip")
+                            .accessibilityValue(String(elapsed)).accessibilityIdentifier("approvalTiming")
+                    }
+                    if ProcessInfo.processInfo.environment["OPENCODE_UI_TEST_ID"] != nil, let elapsed = server.readPath.lastAnswerRoundTrip {
+                        Color.clear.frame(height: 1).accessibilityElement().accessibilityLabel("Answer round trip")
+                            .accessibilityValue(String(elapsed)).accessibilityIdentifier("answerTiming")
+                    }
+                    #endif
+                } else {
+                    Spacer()
+                    OCEmptyState(error == nil ? "Opening session…" : "Session unavailable", detail: error ?? "Loading the conversation from your server.", icon: "bubble-5") { EmptyView() }
+                    Spacer()
                 }
-                if ProcessInfo.processInfo.environment["OPENCODE_UI_TEST_ID"] != nil, let elapsed = server.readPath.lastAnswerRoundTrip {
-                    Color.clear.frame(height: 1).accessibilityElement().accessibilityLabel("Answer round trip")
-                        .accessibilityValue(String(elapsed)).accessibilityIdentifier("answerTiming")
-                }
-                #endif
-            } else {
-                Spacer()
-                OCEmptyState(error == nil ? "Opening session…" : "Session unavailable", detail: error ?? "Loading the conversation from your server.", icon: "bubble-5") { EmptyView() }
-                Spacer()
             }
         }.environment(\.ocFileLinks, fileLinks)
             .background(OCColor.background).clipShape(RoundedRectangle(cornerRadius: OCRadius.xl))
@@ -116,6 +137,11 @@ public struct SessionScreen: View {
         }, removeComment: { id in
             server.readPath.composer(sessionID: sessionID, directory: session.info.location.directory).removeComment(id)
         })
+    }
+    private func hasPendingInput(_ session: SessionModel) -> Bool {
+        session.pending.contains { $0.type == "user" && $0.delivery == .queue } ||
+            server.readPath.savedPrompts.contains { $0.sessionID == sessionID } ||
+            !server.readPath.familyPermissions(sessionID).isEmpty || !server.readPath.familyForms(sessionID).isEmpty
     }
     private var panelRequest: UUID? {
         guard let session = server.sessions[sessionID] else { return nil }
@@ -168,6 +194,15 @@ private struct SessionHeader: View {
             .overlay(alignment: .bottom) { Rectangle().fill(OCColor.borderMuted).frame(height: OCBorder.hairline) }
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("sessionHeader-" + server.id.rawValue.uuidString)
+    }
+    @ViewBuilder var metadata: some View {
+        Text("Agent: " + ((session.info.agent ?? lastAssistant?.agent)?.capitalized ?? "Agent"))
+        Text("Model: " + (session.info.model?.id ?? lastAssistant?.model?.id ?? "—"))
+        if let variant = session.info.model?.variant, variant != "default" { Text("Variant: " + variant) }
+        if composer.pendingSelection { Text("Agent or model choice pending") }
+        Text(usage)
+        Text("Family cost: " + server.readPath.family(session.id).reduce(0) { $0 + $1.info.cost }.formatted(.currency(code: "USD")))
+        if session.info.parentID != nil { Text("Subagent · read only") }
     }
     @ViewBuilder private var labels: some View {
         Text((session.info.agent ?? lastAssistant?.agent)?.capitalized ?? "Agent").font(OCType.small).foregroundStyle(OCColor.textMuted)

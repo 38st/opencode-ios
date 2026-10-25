@@ -68,6 +68,9 @@ public enum ComposerError: Error, LocalizedError, Equatable {
             text = next; attachments = files; comments = draft.comments; options = draft.options; draftID = draft.id
         } else { resetInput() }
         loaded = true
+        if store.cacheLoaded, let id = options.editingOutboxID, store.outboxEntries[id]?.state != "failed" {
+            cancelEditingOutbox()
+        }
     }
     public func setText(_ value: AttributedString) {
         guard !busy, value != text else { return }
@@ -78,6 +81,10 @@ public enum ComposerError: Error, LocalizedError, Equatable {
     }
     public func setOptions(_ value: ComposerOptions) { guard !busy, options != value else { return }; editRevision += 1; options = value; save() }
     public func shellMode(_ value: Bool) { var next = options; next.shell = value; setOptions(next) }
+    public func cancelEditingOutbox() {
+        guard options.editingOutboxID != nil else { return }
+        options.editingOutboxID = nil; save()
+    }
     public func selectAgent(_ agent: String) { var next = options; next.agent = agent; setOptions(next) }
     public func selectModel(_ model: ModelRef) { var next = options; next.model = model; setOptions(next) }
     public func requestFocus() { focusRequest = UUID() }
@@ -192,7 +199,10 @@ public enum ComposerError: Error, LocalizedError, Equatable {
                     try await store.command(id, name: command.name, input: input)
                 } else {
                     let admitted: String
-                    if let failed = self.options.editingOutboxID { admitted = try await store.editAndResend(failed, input: input, prelude: prelude) }
+                    if let failed = self.options.editingOutboxID, store.outboxEntries[failed]?.state == "failed",
+                       store.outboxEntries[failed]?.sessionID == id {
+                        admitted = try await store.editAndResend(failed, input: input, prelude: prelude)
+                    }
                     else { admitted = try await store.sendPrompt(id, input: input, prelude: prelude) }
                     if interrupt { store.interruptAfterAdmission(admitted, sessionID: id, executionID: activeRun) }
                 }

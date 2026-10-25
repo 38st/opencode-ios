@@ -9,6 +9,11 @@ public struct Page<Value: Decodable & Sendable>: Decodable, Sendable {
     public let entries: LossyArray<Value>
     public let cursor: Cursor
     public var data: [Value] { entries.values }
+    public func nextCursor(limit: Int) -> String? {
+        // Count wire entries, including undecodable rows, so tolerant decoding
+        // cannot turn a full page into a false end of history.
+        entries.entries.count < limit ? nil : cursor.next
+    }
     public struct Cursor: Codable, Sendable, Equatable {
         public var previous: String?
         public var next: String?

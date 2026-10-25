@@ -116,3 +116,66 @@ private struct MentionFormatting: AttributedTextFormattingDefinition {
 
 }
 #endif
+
+#if os(iOS)
+extension EditorBehaviorTests {
+    @Test func shellTraitsPreserveCommandsAndRestorePromptTyping() {
+        let view = EditorView(usingTextLayoutManager: true)
+        view.updateStyle(shell: true)
+        #expect(view.autocapitalizationType == .none)
+        #expect(view.autocorrectionType == .no && view.spellCheckingType == .no)
+        #expect(view.smartQuotesType == .no && view.smartDashesType == .no)
+        #expect(view.smartInsertDeleteType == .no && view.inlinePredictionType == .no)
+        #expect(view.writingToolsBehavior == .none)
+        view.updateStyle(shell: false)
+        #expect(view.autocapitalizationType == .sentences)
+        #expect(view.autocorrectionType == .default && view.spellCheckingType == .default)
+        #expect(view.smartQuotesType == .no && view.smartDashesType == .no)
+        #expect(view.inlinePredictionType == .default && view.writingToolsBehavior == .default)
+    }
+
+    @Test func compactEditorOffersKeyboardDismissalWithoutSending() async throws {
+        let view = EditorView(usingTextLayoutManager: true)
+        view.traitOverrides.horizontalSizeClass = .compact
+        view.updateStyle(shell: false)
+        let toolbar = try #require(view.inputAccessoryView as? UIToolbar)
+        let hide = try #require(toolbar.items?.last)
+        #expect(hide.title == "Hide keyboard")
+        let host = UIViewController(); host.view.addSubview(view); view.frame = host.view.bounds
+        let scene = try #require(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let window = UIWindow(windowScene: scene); window.rootViewController = host; window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        view.text = "Keep my prompt"
+        var sent = false; view.key = { _ in sent = true; return true }
+        view.becomeFirstResponder()
+        #expect(view.isFirstResponder)
+        UIApplication.shared.sendAction(try #require(hide.action), to: hide.target, from: hide, for: nil)
+        #expect(!view.isFirstResponder && !sent && view.text == "Keep my prompt")
+    }
+
+    @Test func placeholderUsesTheEditorsTextLayoutAtEverySize() throws {
+        for category in [UIContentSizeCategory.large, .accessibilityExtraExtraExtraLarge] {
+            for shell in [false, true] {
+                let view = EditorView(usingTextLayoutManager: true)
+                view.traitOverrides.preferredContentSizeCategory = category
+                view.frame = CGRect(x: 0, y: 0, width: 393, height: 180)
+                view.textContainerInset = .init(top: OCSpacing.lg, left: OCSpacing.md, bottom: OCSpacing.sm, right: OCSpacing.md)
+                view.updateStyle(shell: shell); view.placeholder = "Ask anything"
+                view.layoutIfNeeded()
+                let placeholder = view.placeholderView
+                #expect(!placeholder.isHidden && !placeholder.isAccessibilityElement)
+                let sample = PromptEditor.native(AttributedString("Ask anything"), shell: shell, traits: view.traitCollection)
+                view.apply(sample, selection: NSRange(location: 0, length: 0)); view.layoutIfNeeded()
+                #expect(placeholder.isHidden)
+                #expect(placeholder.textContainerInset == view.textContainerInset)
+                #expect(placeholder.textContainer.lineFragmentPadding == view.textContainer.lineFragmentPadding)
+                #expect(placeholder.attributedText.attribute(.font, at: 0, effectiveRange: nil) as? UIFont == sample.attribute(.font, at: 0, effectiveRange: nil) as? UIFont)
+                #expect(placeholder.attributedText.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle == sample.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle)
+                let expected = view.caretRect(for: view.beginningOfDocument)
+                let actual = placeholder.caretRect(for: placeholder.beginningOfDocument)
+                #expect(abs(expected.minX - actual.minX) < 0.5 && abs(expected.minY - actual.minY) < 0.5)
+            }
+        }
+    }
+}
+#endif

@@ -29,7 +29,7 @@ import FeatureTranscript
         #expect(PromptEditor.attributed(editor.attributedText).runs.count == 1)
     }
     @Test func dockStates() async throws {
-        for state in ["idle", "typing", "context", "commands", "shell", "attachment", "stop", "alternate", "revert", "queue", "outbox", "failed", "confirmation"] {
+        for state in ["idle", "typing", "context", "commands", "shell", "attachment", "stop", "alternate", "revert", "queue", "outbox", "failed", "editing", "confirmation"] {
             let writer = try PersistenceWriter(), store = ReadStore(serverID: "snapshot", cache: CacheStore(writer: writer), client: { try snapshotAPI() })
             let info = SessionInfo(raw: .object(["id": .string("s"), "agent": .string("build"), "title": .string("Composer"),
                 "model": .object(["id": .string("mock-1"), "providerID": .string("mock")]), "location": .object(["directory": .string("/workspace")])]))
@@ -60,9 +60,10 @@ import FeatureTranscript
             case "queue":
                 store.sessions["s"]?.pending = (1...5).map { .init(raw: .object(["id": .string("q\($0)"), "type": .string("user"), "delivery": .string("queue"), "payload": .object(["text": .string("Queued follow-up \($0)")])])) }
             case "outbox": _ = try await store.sendPrompt("s", input: .init(text: "Saved until connected"))
-            case "failed", "confirmation":
+            case "failed", "editing", "confirmation":
                 let id = try await store.sendPrompt("s", input: .init(text: "Review the saved prompt before sending"))
-                store.outboxEntries[id]?.state = state == "failed" ? "failed" : "needsConfirmation"
+                store.outboxEntries[id]?.state = state == "confirmation" ? "needsConfirmation" : "failed"
+                if state == "editing" { try await store.restoreFailedPrompt(id) }
             default: break
             }
             await capture(VStack(spacing: OCSpacing.xs) {

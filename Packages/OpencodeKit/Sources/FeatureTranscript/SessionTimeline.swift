@@ -26,17 +26,14 @@ struct SessionTimeline: View {
     @State private var error: String?
     var body: some View {
         VStack(spacing: 0) {
-            if transcript.olderCursor != nil {
-                Button(transcript.loadingOlder ? "Loading earlier messages…" : "Load earlier messages", action: loadOlder)
-                    .buttonStyle(OCButtonStyle(.ghost)).disabled(transcript.loadingOlder)
-            }
             if let error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger) }
             TimelineCollection(rows: rows, store: store, session: session, transcript: transcript, detail: detail,
                 working: session.status.isRunning || store.running.contains(session.id), control: control,
                 openChild: openChild, openRoot: openRoot, atBottom: { value in
                     nearBottom = value
                     if value { unseen = 0 }
-                }, reachedTop: loadOlder, scheme: scheme, typeSize: typeSize, phase: phase)
+                }, reachedTop: loadOlder, scheme: scheme, typeSize: typeSize, phase: phase,
+                hasHistory: transcript.olderCursor != nil, loadingHistory: transcript.loadingOlder)
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     if !nearBottom {
                         OCJumpToLatest(count: unseen) { control.jumpToLatest(); nearBottom = true; unseen = 0 }

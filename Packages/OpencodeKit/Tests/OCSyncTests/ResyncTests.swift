@@ -17,11 +17,11 @@ private actor Pages {
     }
 }
 @Test @MainActor func gapSplicesOverlapAndDisconnectedRevert() async throws {
-    let pages = Pages([[readRow("d"), readRow("e")], [readRow("b"), readRow("c")]])
+    let pages = Pages([[readRow("d"), readRow("e")], [readRow("b"), readRow("c")], [readRow("a")]])
     let api = readAPI { try await pages.response($0) }
     let store = ReadStore(serverID: "server")
     let transcript = TranscriptModel(messages: [readRow("a"), readRow("b"), readRow("doomed")], olderCursor: "cached-older")
-    let splice = try await store.fetchSplice("s", transcript: transcript, api: api)
+    let splice = try await store.fetchSplice("s", transcript: transcript, api: api, limit: 2)
     #expect(splice.rows.map(\.id) == ["a", "b", "c", "d", "e"])
     #expect(splice.cursor == "cached-older")
     let queries = await pages.queries
@@ -33,14 +33,14 @@ private actor Pages {
     let api = readAPI { try await pages.response($0) }
     let store = ReadStore(serverID: "server")
     let transcript = TranscriptModel(messages: [readRow("old")])
-    let splice = try await store.fetchSplice("s", transcript: transcript, api: api)
+    let splice = try await store.fetchSplice("s", transcript: transcript, api: api, limit: 1)
     #expect(splice.rows.map(\.id) == ["0"]); #expect(splice.cursor == "page-1")
     #expect(await pages.queries.count == 5)
 }
 @Test @MainActor func initialOpenFetchesOnlyTheNewestPage() async throws {
     let pages = Pages([[readRow("newest")], [readRow("older")]])
     let store = ReadStore(serverID: "server")
-    let splice = try await store.fetchSplice("s", transcript: TranscriptModel(), api: readAPI { try await pages.response($0) })
+    let splice = try await store.fetchSplice("s", transcript: TranscriptModel(), api: readAPI { try await pages.response($0) }, limit: 1)
     #expect(splice.rows.map(\.id) == ["newest"] && splice.cursor == "page-1")
     #expect(await pages.queries.count == 1)
 }
@@ -208,4 +208,59 @@ private actor Counter {
     await settle { store.sessions["root"]?.attention == 1 }
     #expect(store.sessions["root"]?.attention == 1)
     await store.stop()
+}
+
+@Test @MainActor func shortNewestPageWithCursorEndsHistory() async throws {
+    let pages = Pages([[readRow("a"), readRow("b"), readRow("c")], []])
+    let store = ReadStore(serverID: "server")
+    let splice = try await store.fetchSplice("s", transcript: TranscriptModel(), api: readAPI { try await pages.response($0) })
+    #expect(splice.rows.map(\.id) == ["a", "b", "c"] && splice.cursor == nil)
+    #expect(await pages.queries.count == 1)
+}
+
+@Test @MainActor func shortOlderPageEndsSpliceAndLoadOlder() async throws {
+    let pages = Pages([[readRow("d"), readRow("e")], [readRow("b")], []])
+    let store = ReadStore(serverID: "server")
+    let transcript = TranscriptModel(messages: [readRow("b"), readRow("c")], olderCursor: "stale")
+    let splice = try await store.fetchSplice("s", transcript: transcript, api: readAPI { try await pages.response($0) }, limit: 2)
+    #expect(splice.cursor == nil && splice.rows.map(\.id) == ["b", "d", "e"])
+    #expect(await pages.queries.count == 2)
+    let older = Pages([[readRow("a")], []])
+    store.client = { readAPI { try await older.response($0) } }
+    store.seed(info: readInfo(), messages: [readRow("b")])
+    store.sessions["s"]?.transcript?.olderCursor = "cursor"
+    try await store.loadOlder("s")
+    #expect(store.sessions["s"]?.transcript?.olderCursor == nil)
+    #expect(store.sessions["s"]?.transcript?.isAtStart == true)
+    #expect(store.sessions["s"]?.transcript?.order == ["a", "b"])
+    try await store.loadOlder("s")
+    #expect(await older.queries.count == 1)
+    await store.stop()
+}
+
+@Test func fullPageWithMalformedRowsRetainsItsCursor() throws {
+    let raw: JSONValue = .object(["data": .array([.string("valid"), .object(["malformed": .bool(true)])]),
+                                  "cursor": .object(["next": .string("older")])])
+    let page = try JSONDecoder().decode(Page<String>.self, from: JSONEncoder().encode(raw))
+    #expect(page.data.count == 1)
+    #expect(page.nextCursor(limit: 2) == "older")
+    #expect(page.nextCursor(limit: 3) == nil)
+}
+
+@Test @MainActor func shortSessionListDoesNotOfferAnotherPage() async throws {
+    let store = ReadStore(serverID: "server", client: { readAPI { _ in
+        .object(["data": .array([readInfo().raw]), "cursor": .object(["next": .string("unused")])])
+    } })
+    #expect(try await store.listSessions() == nil)
+    #expect(store.rootCursor == nil)
+    await store.stop()
+}
+
+@Test @MainActor func completeHistoryKeepsTheFetchedPrefixBeforeAnOverlap() async throws {
+    let pages = Pages([[readRow("a"), readRow("b"), readRow("c"), readRow("d")], []])
+    let store = ReadStore(serverID: "server")
+    let transcript = TranscriptModel(messages: [readRow("c"), readRow("removed")], olderCursor: "old")
+    let splice = try await store.fetchSplice("s", transcript: transcript, api: readAPI { try await pages.response($0) })
+    #expect(splice.rows.map(\.id) == ["a", "b", "c", "d"])
+    #expect(splice.cursor == nil)
 }

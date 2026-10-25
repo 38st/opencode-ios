@@ -149,10 +149,12 @@ extension ReadStore {
             materialize(item, session: session)
         }
         outboxEntries.removeValue(forKey: id)
+        clearOutboxEditing(id)
         schedulePersistence()
     }
     func acknowledgeEvent(_ id: String) {
         outboxEntries.removeValue(forKey: id)
+        clearOutboxEditing(id)
         if let outboxDrain { owned { try await outboxDrain.acknowledge(id) } }
     }
     func reloadOutbox() async throws {
@@ -167,6 +169,9 @@ extension ReadStore {
             try Task.checkCancellation()
         }
         outboxEntries = Dictionary(entries.filter { !admittedInputs.contains($0.id) && !acknowledgedSessions.contains($0.id) }.map { ($0.id, $0) }, uniquingKeysWith: { _, new in new })
+        for composer in composers.values {
+            if let id = composer.options.editingOutboxID, outboxEntries[id]?.state != "failed" { composer.cancelEditingOutbox() }
+        }
         for entry in entries {
             if entry.operation == "create", entry.state == "failed", !acknowledgedSessions.contains(entry.id) {
                 try await recoverFailedCreation(entry, entries: entries)
@@ -187,12 +192,13 @@ extension ReadStore {
     public func confirmOutbox(_ id: String) async throws {
         guard let cache, outboxEntries[id]?.state == "needsConfirmation" else { return }
         try await OutboxStore(writer: cache.writer).update(id: id, state: "pending")
-        outboxEntries[id]?.state = "pending"; startWrites()
+        outboxEntries[id]?.state = "pending"; clearOutboxEditing(id); startWrites()
     }
     public func discardOutbox(_ id: String) async throws {
         guard let cache, let entry = outboxEntries[id], entry.state != "pending" else { return }
         if entry.operation == "create" {
             try await OutboxStore(writer: cache.writer).removeSession(serverID: serverID, sessionID: entry.sessionID)
+            for other in outboxEntries.values where other.sessionID == entry.sessionID { clearOutboxEditing(other.id) }
             outboxEntries = outboxEntries.filter { $0.value.sessionID != entry.sessionID }
             sessions.removeValue(forKey: entry.sessionID)
             failedCreationDirectories.removeValue(forKey: entry.sessionID)
@@ -201,6 +207,7 @@ extension ReadStore {
         }
         try await OutboxStore(writer: cache.writer).remove(id: id)
         outboxEntries.removeValue(forKey: id)
+        clearOutboxEditing(id)
         sessions[entry.sessionID]?.pending.removeAll { $0.id == id }
         if sessions[entry.sessionID]?.transcript?.messages[id]?.acknowledged == false { sessions[entry.sessionID]?.transcript?.remove(id) }
         startWrites()
@@ -210,6 +217,9 @@ extension ReadStore {
         let next = try await sendPrompt(entry.sessionID, input: input, prelude: prelude)
         try await discardOutbox(id)
         return next
+    }
+    private func clearOutboxEditing(_ id: String) {
+        for composer in composers.values where composer.options.editingOutboxID == id { composer.cancelEditingOutbox() }
     }
     func writeAPI() async throws -> APIClient {
         guard let client else { throw WriteStoreError.sessionUnavailable }

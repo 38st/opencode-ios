@@ -32,7 +32,7 @@ extension ReadStore {
             }
         }
         running = nextRunning
-        rootCursor = roots.cursor.next
+        rootCursor = roots.nextCursor(limit: 50)
         confirmStatus()
         let deleted = Set(overlay.events.filter { $0.header?.type == "session.deleted" }.compactMap(\.sessionID))
         for info in roots.data where !deleted.contains(info.id) && !hiddenSessions.contains(info.id) {
@@ -97,6 +97,7 @@ extension ReadStore {
             if let splice, let transcript, model.transcript === transcript {
                 transcript.replace(overlay.retainedRows(splice.rows, sessionID: id).filter { !self.cancelledInputs.contains($0.id) }, keeping: overlay.changed[id] ?? [])
                 transcript.olderCursor = splice.cursor
+                transcript.isAtStart = splice.cursor == nil
             }
             if let splice, transcript == nil, let cache = self.cache {
                 await cache.save(.init(serverID: self.serverID, sessions: [model.info], transcripts: [id: .init(messages: overlay.retainedRows(splice.rows, sessionID: id), olderCursor: splice.cursor)]))
@@ -184,24 +185,28 @@ extension ReadStore {
 
 struct SpliceResult { let rows: [SessionMessage]; let cursor: String? }
 extension ReadStore {
-    func fetchSplice(_ id: String, transcript: TranscriptModel, api: APIClient) async throws -> SpliceResult {
+    func fetchSplice(_ id: String, transcript: TranscriptModel, api: APIClient, limit: Int = 50) async throws -> SpliceResult {
         let local = transcript.snapshot
         let pending = Set(sessions[id]?.pending.map(\.id) ?? [])
         let confirmed = Set(transcript.order.filter { transcript.messages[$0]?.acknowledged == true && !pending.contains($0) })
-        let newest = try await api.send(ReadEndpoints.messages(id))
-        var fetched = Array(newest.data.reversed()), cursor = newest.cursor.next
+        let newest = try await api.send(ReadEndpoints.messages(id, limit: limit))
+        let newestCursor = newest.nextCursor(limit: limit)
+        var fetched = Array(newest.data.reversed()), cursor = newestCursor
         guard !confirmed.isEmpty else { return .init(rows: fetched, cursor: cursor) }
         for attempt in 0...4 {
+            // A complete history must retain its fetched prefix too. Splicing
+            // only at the newest overlap could hide older rows with no cursor.
+            if cursor == nil { return .init(rows: fetched, cursor: nil) }
             let fetchedIDs = Set(fetched.map(\.id))
             if let anchor = local.lastIndex(where: { confirmed.contains($0.id) && fetchedIDs.contains($0.id) }),
                let remote = fetched.firstIndex(where: { $0.id == local[anchor].id }) {
                 return .init(rows: Array(local.prefix(anchor)) + Array(fetched.dropFirst(remote)), cursor: transcript.olderCursor)
             }
-            if attempt == 4 || cursor == nil { break }
-            let page = try await api.send(ReadEndpoints.messages(id, cursor: cursor))
-            fetched = Array(page.data.reversed()) + fetched; cursor = page.cursor.next
+            if attempt == 4 { break }
+            let page = try await api.send(ReadEndpoints.messages(id, limit: limit, cursor: cursor))
+            fetched = Array(page.data.reversed()) + fetched; cursor = page.nextCursor(limit: limit)
         }
-        return .init(rows: Array(newest.data.reversed()), cursor: newest.cursor.next)
+        return .init(rows: Array(newest.data.reversed()), cursor: newestCursor)
     }
     public func open(_ id: String) async throws {
         openSessions.insert(id); lru.removeAll { $0 == id }; lru.append(id)
@@ -242,11 +247,13 @@ extension ReadStore {
         t.loadingOlder = true; defer { t.loadingOlder = false }
         let token = UUID(), overlay = FetchOverlay(); overlays[token] = overlay
         defer { overlays.removeValue(forKey: token) }
-        let api = try await client(), page = try await api.send(ReadEndpoints.messages(id, cursor: cursor))
+        let limit = 50
+        let api = try await client(), page = try await api.send(ReadEndpoints.messages(id, limit: limit, cursor: cursor))
         try Task.checkCancellation()
         guard sessions[id]?.transcript === t else { return }
         t.prepend(overlay.retainedRows(Array(page.data.reversed()), sessionID: id))
-        t.olderCursor = page.cursor.next; dirty.insert(id); schedulePersistence()
+        t.olderCursor = page.nextCursor(limit: limit); t.isAtStart = t.olderCursor == nil
+        dirty.insert(id); schedulePersistence()
     }
     public func jumpToStart(_ id: String) async throws {
         guard let t = sessions[id]?.transcript, let client else { return }

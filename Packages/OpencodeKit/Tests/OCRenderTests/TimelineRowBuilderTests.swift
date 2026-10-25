@@ -14,8 +14,8 @@ enum TimelineFixtures {
         "compaction": [.userPrompt, .assistantText, .toolGroup],
         "final-error": [.userPrompt, .error],
         "fork": [.userPrompt, .assistantText],
-        "interrupt-resume": [.userPrompt, .assistantText, .error, .userPrompt, .assistantText],
-        "interrupt": [.userPrompt, .assistantText, .error],
+        "interrupt-resume": [.userPrompt, .assistantText, .notice, .userPrompt, .assistantText],
+        "interrupt": [.userPrompt, .assistantText, .notice],
         "pairing": [], "pty": [], "v1-probe": [],
         "permission-allow": [.userPrompt, .toolGroup, .assistantText, .turnEnd],
         "permission-reject": [.userPrompt, .toolGroup, .tool, .assistantText],
@@ -93,4 +93,24 @@ func tool(_ name: String, status: String = "completed", input: JSONValue = .obje
     #expect(await builder.build([idle], detail: .messagesOnly).map(\.kind) == [.error, .turnEnd])
     let assistant = message("a", "assistant", ["error": error])
     #expect(await builder.build([assistant, idle]).map(\.kind) == [.error])
+}
+
+@Test(arguments: ["aborted", "ABORT", "ExecutionInterrupted", "compaction.interrupted"])
+func interruptedStepsAreNeutralAtEveryDetailLevel(type: String) async {
+    let error: JSONValue = .object(["type": .string(type), "message": .string("Step interrupted")])
+    for detail in TimelineDetail.allCases {
+        let rows = await TimelineRowBuilder().build([
+            message("a", "assistant", ["error": error]),
+            message("i", "idle", ["error": error, "outcome": .string("interrupted")])
+        ], detail: detail)
+        #expect(!rows.contains { $0.kind == .error })
+        #expect(rows.filter { $0.kind == .notice }.map(\.text) == ["Interrupted"])
+    }
+}
+@Test func interruptedIdleOutsideThePageIsNeutral() async {
+    let rows = await TimelineRowBuilder().build([message("i", "idle", [
+        "error": .object(["message": .string("Stopped")]), "outcome": .string("interrupted")
+    ])])
+    #expect(rows.map(\.kind) == [.notice])
+    #expect(rows.first?.text == "Interrupted")
 }

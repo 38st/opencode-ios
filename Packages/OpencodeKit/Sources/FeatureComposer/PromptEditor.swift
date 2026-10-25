@@ -15,6 +15,7 @@ struct PromptEditor: UIViewRepresentable {
     @Binding var caret: Int
     var shell: Bool
     var enabled: Bool
+    var placeholder = ""
     var suggestionsActive = false
     var focusRequest: UUID?
     var pasteAttachment: (NSItemProvider) -> Void = { _ in }
@@ -29,7 +30,8 @@ struct PromptEditor: UIViewRepresentable {
         view.adjustsFontForContentSizeCategory = true
         view.accessibilityLabel = "Prompt"
         view.accessibilityIdentifier = "promptEditor"
-        view.keyboardDismissMode = .none
+        view.keyboardDismissMode = .interactive
+        view.updateStyle(shell: shell)
         view.key = key
         view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return view
@@ -38,6 +40,7 @@ struct PromptEditor: UIViewRepresentable {
         context.coordinator.parent = self; view.key = key; view.suggestionsActive = suggestionsActive
         guard view.markedTextRange == nil else { return }
         view.updateStyle(shell: shell)
+        view.placeholder = placeholder
         if Self.attributed(view.attributedText) != text {
             let value = Self.native(text, shell: shell, traits: view.traitCollection)
             context.coordinator.updating = true
@@ -108,6 +111,7 @@ struct PromptEditor: UIViewRepresentable {
         }
         func textViewDidChange(_ textView: UITextView) {
             guard !updating else { return }
+            (textView as? EditorView)?.updatePlaceholder()
             parent.caret = textView.selectedRange.location
             parent.text = PromptEditor.attributed(textView.attributedText)
         }
@@ -120,6 +124,22 @@ struct PromptEditor: UIViewRepresentable {
 }
 
 final class EditorView: UITextView {
+    // UITextView(usingTextLayoutManager:) is a factory initializer, so subclass property
+    // initializers never run. Keep new state in types whose zeroed memory is a valid value.
+    private var placeholderStorage: NSString?
+    var placeholder: String {
+        get { placeholderStorage.map { $0 as String } ?? "" }
+        set { guard newValue != placeholder else { return }; placeholderStorage = newValue as NSString; updatePlaceholder() }
+    }
+    private(set) lazy var placeholderView: UITextView = {
+        let view = UITextView(usingTextLayoutManager: true)
+        view.backgroundColor = .clear
+        view.isUserInteractionEnabled = false; view.isAccessibilityElement = false
+        view.accessibilityElementsHidden = true
+        view.isScrollEnabled = false
+        addSubview(view)
+        return view
+    }()
     var key: (ComposerKey) -> Bool = { _ in false }
     var suggestionsActive = false
     var focusRequest: UUID?
@@ -128,13 +148,57 @@ final class EditorView: UITextView {
     private var focusTask: Task<Void, Never>?
     private var styledFont: UIFont?
     private var styledParagraph: NSParagraphStyle?
+    private var shellTraitsState = 0 // 0 unknown, 1 prompt, 2 shell
     private(set) var styleApplications = 0
     func updateStyle(shell: Bool) {
+        updateInputTraits(shell: shell)
         let font = OCType.editorFont(shell: shell, traits: traitCollection)
         let paragraph = OCType.editorParagraphStyle(traits: traitCollection)
         guard styledFont != font || styledParagraph != paragraph else { return }
         styledFont = font; styledParagraph = paragraph; styleApplications += 1
         textStorage.addAttributes([.font: font, .paragraphStyle: paragraph], range: NSRange(location: 0, length: textStorage.length))
+        updatePlaceholder()
+    }
+    private func updateInputTraits(shell: Bool) {
+        let compact = traitCollection.horizontalSizeClass == .compact
+        let accessoryChanged = compact != (inputAccessoryView != nil)
+        if accessoryChanged {
+            if compact {
+                let toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: bounds.width, height: OCLayout.touchTarget))
+                toolbar.autoresizingMask = .flexibleWidth
+                toolbar.tintColor = UIColor(OCColor.text)
+                let hide = UIBarButtonItem(title: "Hide keyboard", style: .plain, target: self, action: #selector(hideKeyboard))
+                hide.setTitleTextAttributes([.font: OCType.editorFont(shell: false, traits: traitCollection)], for: .normal)
+                toolbar.items = [UIBarButtonItem(systemItem: .flexibleSpace), hide]
+                inputAccessoryView = toolbar
+            } else { inputAccessoryView = nil }
+        }
+        guard shellTraitsState != (shell ? 2 : 1) || accessoryChanged else { return }
+        shellTraitsState = shell ? 2 : 1
+        autocapitalizationType = shell ? .none : .sentences
+        autocorrectionType = shell ? .no : .default
+        spellCheckingType = shell ? .no : .default
+        smartQuotesType = .no; smartDashesType = .no
+        smartInsertDeleteType = shell ? .no : .default
+        inlinePredictionType = shell ? .no : .default
+        writingToolsBehavior = shell ? .none : .default
+        if isFirstResponder { reloadInputViews() }
+    }
+    @objc private func hideKeyboard() { resignFirstResponder() }
+    func updatePlaceholder() {
+        placeholderView.isHidden = !text.isEmpty || placeholder.isEmpty
+        placeholderView.textContainerInset = textContainerInset
+        placeholderView.textContainer.lineFragmentPadding = textContainer.lineFragmentPadding
+        placeholderView.attributedText = NSAttributedString(string: placeholder, attributes: [
+            .font: styledFont ?? OCType.editorFont(shell: false, traits: traitCollection),
+            .paragraphStyle: styledParagraph ?? OCType.editorParagraphStyle(traits: traitCollection),
+            .foregroundColor: UIColor(OCColor.textMuted)
+        ])
+        setNeedsLayout()
+    }
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        placeholderView.frame = CGRect(origin: .zero, size: bounds.size)
     }
     func resetTypingAttributes() {
         guard markedTextRange == nil else { return }
@@ -154,7 +218,7 @@ final class EditorView: UITextView {
     override func didMoveToWindow() {
         super.didMoveToWindow()
         if window == nil { focusTask?.cancel(); focusTask = nil; pendingFocusRequest = nil }
-        else { scheduleFocusRequest() }
+        else { updateInputTraits(shell: shellTraitsState == 2); scheduleFocusRequest() }
     }
     func scheduleFocusRequest() {
         guard window != nil, let request = focusRequest, request != consumedFocusRequest, request != pendingFocusRequest else { return }
@@ -183,6 +247,7 @@ final class EditorView: UITextView {
         }
         textStorage.setAttributedString(value)
         selectedRange = selection
+        updatePlaceholder()
     }
     override func deleteBackward() {
         if text.isEmpty && key(.emptyBackspace) { return }

@@ -80,6 +80,7 @@ public enum ContentKey: Hashable, Sendable {
     @ObservationIgnored var durableChanged: Set<String> = []
     public init(messages: [SessionMessage] = [], olderCursor: String? = nil) {
         self.olderCursor = olderCursor
+        self.isAtStart = olderCursor == nil
         for message in messages { upsert(message) }
     }
     public var snapshot: [SessionMessage] { order.compactMap { messages[$0]?.value } }

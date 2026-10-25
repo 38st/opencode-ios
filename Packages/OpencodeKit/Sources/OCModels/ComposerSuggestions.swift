@@ -76,6 +76,14 @@ public struct ComposerSuggestion: Identifiable, Equatable, Sendable {
 }
 
 public enum ComposerSuggestions {
+    public static func submittedCommand(_ text: String, server: JSONValue?, session: Bool, showAgent: Bool,
+                                        hasPrompts: Bool, reverted: Bool) -> ComposerSuggestion? {
+        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Resolve exact names using the same server-first ordering as the picker.
+        let match = commands(query: "", server: server, session: session, showAgent: showAgent,
+                             hasPrompts: hasPrompts, reverted: reverted).first { $0.label == text }
+        return match?.command == nil ? nil : match
+    }
     public static func matches(_ text: String, query: String) -> Bool {
         var remaining = query.lowercased().makeIterator(), next = remaining.next()
         for c in text.lowercased() where c == next { next = remaining.next() }

@@ -72,3 +72,80 @@ extension ReadPerformanceTests {
     }
 }
 #endif
+
+#if os(iOS)
+@MainActor @Suite(.serialized) struct TimelineInteractionTests {
+    @Test func externalScrollPausesFollowingAndViewportChangesPreserveIntent() async throws {
+        let store = ReadStore(serverID: "timeline-test")
+        let session = SessionModel(info: .init(raw: .object(["id": .string("s")])))
+        let transcript = TranscriptModel(), control = TimelineScrollControl()
+        var atBottom = true, reachedTop = 0
+        let rows = (0..<80).map { TimelineRow(id: "row-\($0)", kind: .notice, text: "Earlier message \($0)") }
+        func content(_ rows: [TimelineRow], history: Bool = false, loading: Bool = false) -> TimelineCollection {
+            TimelineCollection(rows: rows, store: store, session: session, transcript: transcript, detail: .everything,
+                working: false, control: control, openChild: { _ in }, openRoot: { _ in }, atBottom: { atBottom = $0 },
+                reachedTop: { reachedTop += 1 }, hasHistory: history, loadingHistory: loading)
+        }
+        let initial = content(rows, history: true), coordinator = initial.makeCoordinator()
+        let view = initial.makeCollection(coordinator: coordinator)
+        defer { control.cancel() }
+        #expect(view.keyboardDismissMode == .interactive)
+        view.frame = CGRect(x: 0, y: 0, width: 393, height: 600)
+        coordinator.update(initial)
+        try await settled(coordinator)
+        #expect(coordinator.ids.first == .history)
+        control.jumpToLatest(); view.layoutIfNeeded()
+        #expect(control.following)
+        for height: CGFloat in [300, 200, 600] {
+            view.frame.size.height = height; view.layoutIfNeeded()
+            #expect(abs(view.contentOffset.y - max(0, view.contentSize.height - height)) < 1)
+            #expect(control.following)
+        }
+        // Offset changes from layout or self-sizing are not user intent and keep following.
+        let bottom = view.contentOffset.y
+        view.setContentOffset(CGPoint(x: 0, y: bottom - 200), animated: false)
+        #expect(control.following)
+        view.setContentOffset(CGPoint(x: 0, y: bottom), animated: false)
+        // Hardware keyboard scrolls animate and end without touch flags; VoiceOver uses accessibilityScroll.
+        view.setContentOffset(CGPoint(x: 0, y: 100), animated: false)
+        coordinator.scrollViewDidEndScrollingAnimation(view)
+        #expect(!view.isDragging && !view.isDecelerating && !view.isTracking)
+        #expect(!control.following && !atBottom && reachedTop > 0)
+        let offset = view.contentOffset.y
+        view.frame.size.height = 300; view.layoutIfNeeded()
+        #expect(abs(view.contentOffset.y - offset) < 1 && !control.following)
+        coordinator.update(content(rows + [.init(id: "new", kind: .notice, text: "New activity")], history: true, loading: true))
+        try await settled(coordinator)
+        try await Task.sleep(for: .milliseconds(150))
+        #expect(!control.following && !atBottom)
+        #expect(abs(view.contentOffset.y - offset) < 1)
+        let anchorPath = try #require(view.indexPathsForVisibleItems.sorted().first { coordinator.source?.itemIdentifier(for: $0)?.rowID != nil })
+        let anchorID = try #require(coordinator.source?.itemIdentifier(for: anchorPath))
+        let anchorOffset = try #require(view.layoutAttributesForItem(at: anchorPath)).frame.minY - view.contentOffset.y
+        coordinator.update(content(rows))
+        try await settled(coordinator)
+        #expect(!coordinator.ids.contains(.history))
+        let newPath = IndexPath(item: try #require(coordinator.ids.firstIndex(of: anchorID)), section: 0)
+        let newOffset = try #require(view.layoutAttributesForItem(at: newPath)).frame.minY - view.contentOffset.y
+        #expect(abs(newOffset - anchorOffset) < 1)
+        control.jumpToLatest(); view.layoutIfNeeded()
+        let cell = try #require(view.visibleCells.first)
+        NotificationCenter.default.post(name: UIAccessibility.elementFocusedNotification, object: nil,
+                                        userInfo: [UIAccessibility.focusedElementUserInfoKey: cell])
+        #expect(control.accessibilityFocused && !control.following && !atBottom)
+        control.followLatest()
+        try await Task.sleep(for: .milliseconds(150))
+        #expect(!control.following)
+        control.jumpToLatest()
+        #expect(control.following && !control.accessibilityFocused)
+        await store.stop()
+    }
+    private func settled(_ coordinator: TimelineCollection.Coordinator) async throws {
+        for _ in 0..<200 {
+            if !coordinator.applying { coordinator.view?.layoutIfNeeded(); return }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        Issue.record("Timeline did not finish applying rows")
+    }
+}
+#endif

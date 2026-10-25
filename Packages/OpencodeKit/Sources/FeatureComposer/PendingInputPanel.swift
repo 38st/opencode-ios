@@ -26,7 +26,8 @@ public struct PendingInputPanel: View {
                         ForEach(rows, id: \.id) { item in queueRow(item) }
                         ForEach(saved) { item in outboxRow(item) }
                     }.onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
-                }.frame(height: min(contentHeight, typeSize.isAccessibilitySize ? 350 : OCLayout.touchTarget * 4))
+                }.scrollDismissesKeyboard(.interactively)
+                    .frame(maxHeight: min(contentHeight, typeSize.isAccessibilitySize ? 350 : OCLayout.touchTarget * 4))
                 if let error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding(OCSpacing.sm) }
             }.background(OCColor.background, in: RoundedRectangle(cornerRadius: OCRadius.dock))
                 .overlay(RoundedRectangle(cornerRadius: OCRadius.dock).strokeBorder(OCColor.border, lineWidth: OCBorder.hairline).allowsHitTesting(false))

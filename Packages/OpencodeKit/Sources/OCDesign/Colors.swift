@@ -24,6 +24,8 @@ public enum OCColor {
     public static let surface = OCTheme.openCode.color("surface")
     /// `v2-background-bg-contrast`
     public static let contrast = OCTheme.openCode.color("contrast")
+    /// `v2-background-bg-icon-button-contrast` (also used by submit text buttons).
+    public static let iconButtonContrast = OCTheme.openCode.color("iconButtonContrast")
     /// `v2-text-text-base`
     public static let text = OCTheme.openCode.color("text")
     /// `v2-text-text-muted`

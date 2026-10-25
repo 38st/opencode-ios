@@ -35,7 +35,7 @@ public struct QuestionContent: View {
                         Text(answerText(field.fields.key)).font(OCType.body).fixedSize(horizontal: false, vertical: true)
                     }
                 }
-                Button("Submit answers", action: submit).buttonStyle(OCButtonStyle(.contrast)).accessibilityIdentifier("submitAnswers")
+                Button("Submit answers", action: submit).buttonStyle(OCButtonStyle(.submit)).accessibilityIdentifier("submitAnswers")
                 Button("Edit answers") { state = .editing }.buttonStyle(OCButtonStyle(.neutral))
             case .sending: OCLabel("Sending answers…", icon: "status").font(OCType.small)
             case .settled: OCBadge("Already handled", tone: .success)
@@ -44,7 +44,7 @@ public struct QuestionContent: View {
                 FormRenderer(form: form, answers: $answers, showErrors: state == .invalid || state == .failed)
                 Button("Review answers") {
                     state = FormValidation.errors(form, answers: answers).isEmpty ? .review : .invalid
-                }.buttonStyle(OCButtonStyle(.contrast)).accessibilityIdentifier("reviewAnswers")
+                }.buttonStyle(OCButtonStyle(.submit)).accessibilityIdentifier("reviewAnswers")
                 Button("Dismiss") { state = .dismiss }.buttonStyle(OCButtonStyle(.ghost)).accessibilityIdentifier("dismissQuestion")
             }
         }.frame(maxWidth: .infinity, alignment: .leading)

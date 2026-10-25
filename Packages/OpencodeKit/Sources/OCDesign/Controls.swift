@@ -3,23 +3,36 @@
 import SwiftUI
 
 public struct OCButtonStyle: ButtonStyle {
-    public enum Variant: Sendable { case neutral, contrast, ghost, danger }
+    public enum Variant: Sendable { case neutral, contrast, submit, ghost, danger }
     let variant: Variant
     @Environment(\.isEnabled) private var enabled
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     public init(_ variant: Variant = .neutral) { self.variant = variant }
     public func makeBody(configuration: Configuration) -> some View {
         configuration.label.font(OCType.button)
-            .foregroundStyle(variant == .contrast ? OCColor.textContrast : variant == .danger ? OCColor.danger : OCColor.text)
+            .foregroundStyle(variant == .submit ? OCColor.textInverse : variant == .contrast ? OCColor.textContrast : variant == .danger ? OCColor.danger : OCColor.text)
             .padding(.horizontal, OCSpacing.md).padding(.vertical, OCSpacing.sm)
             .frame(minWidth: OCLayout.touchTarget, minHeight: OCLayout.touchTarget)
-            .background(variant == .contrast ? OCColor.contrast : variant == .ghost ? .clear : OCColor.surface,
+            .background(variant == .submit ? OCColor.iconButtonContrast : variant == .contrast ? OCColor.contrast : variant == .ghost ? .clear : OCColor.surface,
                         in: RoundedRectangle(cornerRadius: OCRadius.md))
             .overlay(RoundedRectangle(cornerRadius: OCRadius.md).fill(configuration.isPressed ? OCColor.pressed : .clear))
             .overlay(RoundedRectangle(cornerRadius: OCRadius.md).strokeBorder(variant == .ghost ? .clear : OCColor.borderStrong, lineWidth: OCBorder.hairline))
-            .opacity(enabled ? 1 : 0.5)
+            .opacity(enabled ? 1 : variant == .submit ? 0.4 : 0.5)
             .contentShape(Rectangle())
             .animation(reduceMotion ? nil : .easeOut(duration: OCMotion.fast), value: configuration.isPressed)
+    }
+}
+public struct OCSubmitIconButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var enabled
+    public init() {}
+    public func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .frame(width: OCComposerMetrics.submit, height: OCComposerMetrics.submit)
+            .foregroundStyle(OCColor.textInverse)
+            .background(OCColor.iconButtonContrast, in: RoundedRectangle(cornerRadius: OCRadius.md))
+            .overlay(RoundedRectangle(cornerRadius: OCRadius.md).fill(configuration.isPressed ? OCColor.pressed : .clear))
+            .opacity(enabled ? 1 : 0.4)
+            .frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget).contentShape(Rectangle())
     }
 }
 public struct OCIconButton: View {

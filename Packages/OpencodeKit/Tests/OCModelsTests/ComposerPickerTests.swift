@@ -53,3 +53,23 @@ private func pickerModel(_ id: String, provider: String, name: String? = nil, re
     #expect(!WorktreeFailure(raw: .object([:])).forceRequired)
     #expect(FileEntry(raw: .object(["type": .string("future")])).type == .unknown("future"))
 }
+
+@Test func submittedClientCommandsMatchAvailablePickerActionsExactly() {
+    func command(_ text: String, session: Bool = true, showAgent: Bool = true,
+                 hasPrompts: Bool = true, reverted: Bool = true, server: JSONValue? = nil) -> ComposerCommand? {
+        ComposerSuggestions.submittedCommand(text, server: server, session: session, showAgent: showAgent,
+                                             hasPrompts: hasPrompts, reverted: reverted)?.command
+    }
+    for action in ComposerCommand.allCases {
+        #expect(command(" /" + action.rawValue + "\n") == action)
+    }
+    #expect(command("/comp") == nil)
+    #expect(command("/undo the edits") == nil)
+    #expect(command("/unknown") == nil)
+    #expect(command("/compact", session: false) == nil)
+    #expect(command("/undo", hasPrompts: false) == nil)
+    #expect(command("/redo", reverted: false) == nil)
+    #expect(command("/agent", showAgent: false) == nil)
+    #expect(command("/new", session: false) == .new)
+    #expect(command("/compact", server: .array([.object(["name": .string("compact")])])) == nil)
+}

@@ -58,7 +58,7 @@ public struct PermissionCard: View {
     @ViewBuilder private var actions: some View {
         Button("Review") { show = true }.buttonStyle(OCButtonStyle(.neutral)).accessibilityIdentifier("reviewPermission")
         Button("Allow once") { store.respondToPermission(request, decision: .once) }
-            .buttonStyle(OCButtonStyle(.contrast)).accessibilityIdentifier("dockAllowOnce")
+            .buttonStyle(OCButtonStyle(.submit)).accessibilityIdentifier("dockAllowOnce")
     }
 }
 public struct QuestionCard: View {
@@ -73,7 +73,7 @@ public struct QuestionCard: View {
                 OCLabel("Question", icon: "bubble-5").font(OCType.button)
                 if child { OCBadge("Subagent") }
                 Text(form.title).font(OCType.body)
-                Button("Answer question") { show = true }.buttonStyle(OCButtonStyle(.contrast)).accessibilityIdentifier("answerQuestion")
+                Button("Answer question") { show = true }.buttonStyle(OCButtonStyle(.submit)).accessibilityIdentifier("answerQuestion")
             }
         }.sheet(isPresented: $show) { QuestionSheet(store: store, form: form).ocSheet() }
             .accessibilityElement(children: .contain)

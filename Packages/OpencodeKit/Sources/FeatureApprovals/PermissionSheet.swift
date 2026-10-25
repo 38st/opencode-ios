@@ -66,7 +66,7 @@ public struct PermissionContent: View {
     @ViewBuilder private var actions: some View {
         Button("Reject") { state = .reject }.buttonStyle(OCButtonStyle(.ghost)).accessibilityIdentifier("rejectPermission")
         Button("Allow always") { reply(.always, nil) }.buttonStyle(OCButtonStyle(.neutral)).accessibilityIdentifier("allowAlways")
-        Button("Allow once") { reply(.once, nil) }.buttonStyle(OCButtonStyle(.contrast)).accessibilityIdentifier("allowOnce")
+        Button("Allow once") { reply(.once, nil) }.buttonStyle(OCButtonStyle(.submit)).accessibilityIdentifier("allowOnce")
     }
     private func copyable(_ title: String, values: [String]) -> some View {
         VStack(alignment: .leading, spacing: OCSpacing.sm) {

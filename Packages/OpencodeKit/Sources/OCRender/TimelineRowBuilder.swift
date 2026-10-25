@@ -51,6 +51,14 @@ public actor TimelineRowBuilder {
             case .separate: flush(); result.append(row)
             }
         }
+        func appendError(_ error: StructuredError, id: String, interrupted: Bool = false, deduplicate: Bool = false) {
+            let type = error.type.lowercased()
+            let interrupted = interrupted || type.contains("abort") || type.contains("interrupt")
+            let row = TimelineRow(id: id + ":error", kind: interrupted ? .notice : .error,
+                                  text: interrupted ? "Interrupted" : error.message)
+            if deduplicate && result.contains(where: { $0.kind == row.kind && $0.text == row.text }) { return }
+            append(row, required: true)
+        }
         for message in messages {
             let f = message.fields
             switch message.type {
@@ -82,11 +90,9 @@ public actor TimelineRowBuilder {
                     append(.init(id: message.id + ":retry", kind: .retry, text: retry.error.message,
                                  badge: "Attempt \(Int(clamping: retry.attempt))"))
                 }
-                if let error = f.error { append(.init(id: message.id + ":error", kind: .error, text: error.message)) }
+                if let error = f.error { appendError(error, id: message.id) }
             case "idle":
-                if let error = f.error, !result.contains(where: { $0.kind == .error && $0.text == error.message }) {
-                    append(.init(id: message.id + ":error", kind: .error, text: error.message))
-                }
+                if let error = f.error { appendError(error, id: message.id, interrupted: f.outcome == "interrupted", deduplicate: true) }
                 if detail == .compact && files.isEmpty { continue }
                 append(.init(id: message.id, kind: .turnEnd, text: files.isEmpty ? "Turn complete" : "Changed \(files.count) \(files.count == 1 ? "file" : "files")",
                              files: files.sorted(), badge: f.outcome, turnFrom: messages.first { $0.type == "user" }?.id))
