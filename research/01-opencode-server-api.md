@@ -1684,7 +1684,7 @@ Scope: **instance** = takes `?directory=` / `?workspace=` (or the `x-opencode-di
 
 ## Review and file endpoints: findings from M4 (2026-10-21)
 
-Observed while building M4 against V2 2.0.32 and 2.1.2; see docs/m4-audit.md.
+Observed while building M4 against V2 2.0.32 and 2.1.2.
 
 - **Path bases differ by route.** VCS diff and status paths are relative to the repository root and limited to the requested location. Session diff, revert and step-snapshot paths are relative to the project root. `fs` paths and ordinary tool paths are relative to the location. To read a file outside the location, strip the session subpath and use the project location.
 - **`session.diff`** takes optional `from`, `to` and `context`, and no location. Omitted bounds resolve to the latest whole turn; omitted `context` returns full patches. Running steps compare against the working copy, and missing or disabled snapshots return an empty array. Failures come back as typed 400/404 errors, or as `UnknownError` for bad refs.
