@@ -20,7 +20,7 @@ final class CodeCell: UICollectionViewCell {
     var extend: ((LineSelection.Side) -> Void)?
     override init(frame: CGRect) {
         super.init(frame: frame); isOpaque = true; isAccessibilityElement = true; contentView.isHidden = true
-        more.setImage(UIImage(named: "ellipsis", in: .module, compatibleWith: nil), for: .normal)
+        more.setImage(UIImage(named: "dot-grid", in: .module, compatibleWith: nil), for: .normal)
         more.tintColor = UIColor(OCColor.iconMuted); more.showsMenuAsPrimaryAction = true
         more.accessibilityLabel = "More options"; addSubview(more)
     }
@@ -164,7 +164,7 @@ final class CodeHeader: UICollectionReusableView {
     private let toggle = UIButton(type: .system), open = UIButton(type: .system)
     private var toggled: (() -> Void)?, opened: (() -> Void)?
     override init(frame: CGRect) {
-        super.init(frame: frame); backgroundColor = UIColor(OCColor.layer1)
+        super.init(frame: frame); backgroundColor = UIColor(OCColor.band)
         addSubview(toggle); addSubview(open)
         toggle.addTarget(self, action: #selector(toggleAction), for: .touchUpInside)
         open.addTarget(self, action: #selector(openAction), for: .touchUpInside)

@@ -110,7 +110,7 @@ public struct ReviewScreen: View {
                                     if model.isReviewed(file) { OCIcon("check") }
                                     if file.status == "added" || file.status == "deleted" { Text(file.status == "added" ? "A" : "D").font(OCType.micro).foregroundStyle(file.status == "added" ? OCColor.success : OCColor.danger) }
                                 }.padding(.leading, CGFloat(entry.depth) * 16 + OCSpacing.sm).padding(.trailing, OCSpacing.sm).frame(minHeight: OCLayout.touchTarget).contentShape(Rectangle())
-                                    .background(model.selected?.file == file.file ? OCColor.layer2 : OCColor.background)
+                                    .background(model.selected?.file == file.file ? OCColor.pressed : .clear).background(OCColor.background)
                             }.buttonStyle(.plain).accessibilityIdentifier("reviewFile-" + file.file)
                                 .accessibilityValue(model.selected?.file == file.file ? "Selected" : "")
                         } else { OCLabel(entry.name, icon: "folder").font(OCType.small).padding(.leading, CGFloat(entry.depth) * 16 + OCSpacing.sm).frame(maxWidth: .infinity, minHeight: OCLayout.touchTarget, alignment: .leading) }

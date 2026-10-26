@@ -24,6 +24,16 @@ private func pickerModel(_ id: String, provider: String, name: String? = nil, re
     #expect(recent.first?.name == "Recent")
     #expect(recent.first?.models.map(\.id) == ["m7", "m6", "m5", "m4", "m3"])
 }
+@Test func selectionDisplayNameResolvesThroughTheCatalog() {
+    let models = [pickerModel("claude-sonnet-4-5-20250929", provider: "anthropic", name: "Claude Sonnet 4.5 (latest)"),
+                  pickerModel("claude-sonnet-4-5-20250929", provider: "bedrock", name: "Sonnet on Bedrock"), pickerModel("unnamed", provider: "mock", name: "")]
+    func ref(_ id: String, _ provider: String) -> ModelRef { .init(raw: .object(["id": .string(id), "providerID": .string(provider)])) }
+    #expect(ComposerPickers.displayName(ref("claude-sonnet-4-5-20250929", "anthropic"), in: models) == "Claude Sonnet 4.5")
+    #expect(ComposerPickers.displayName(ref("claude-sonnet-4-5-20250929", "bedrock"), in: models) == "Sonnet on Bedrock")
+    #expect(ComposerPickers.displayName(ref("claude-sonnet-4-5-20250929", ""), in: models) == "Claude Sonnet 4.5")
+    #expect(ComposerPickers.displayName(ref("missing", "anthropic"), in: models) == "missing")
+    #expect(ComposerPickers.displayName(ref("unnamed", "mock"), in: models) == "unnamed")
+}
 @Test func pickerBadgesAndAgentVisibility() {
     var model = pickerModel("free", provider: "opencode", name: "Free model (latest)")
     model["capabilities"] = .object(["input": .array([.string("image"), .string("pdf")])])

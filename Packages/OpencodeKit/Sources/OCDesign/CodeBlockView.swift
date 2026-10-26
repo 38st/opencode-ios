@@ -21,7 +21,7 @@ public struct CodeBlockView: View {
     private var preview: String { folded ? code.split(separator: "\n", omittingEmptySubsequences: false).prefix(200).joined(separator: "\n") : code }
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            header.padding(.horizontal, OCSpacing.md).background(OCColor.layer1)
+            header.padding(.horizontal, OCSpacing.md).background(OCColor.band)
             ScrollView(.horizontal) {
                 Text(highlighted ?? AttributedString(preview)).font(OCType.code)
                     .fixedSize(horizontal: true, vertical: true).padding(OCSpacing.md)

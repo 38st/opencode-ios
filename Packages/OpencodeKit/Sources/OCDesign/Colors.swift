@@ -84,6 +84,8 @@ public enum OCColor {
     public static let infoBorder = OCTheme.openCode.color("infoBorder")
     /// `v2-grey-200`
     public static let toggleThumb = OCTheme.openCode.color("toggleThumb")
+    /// `v2-background-bg-layer-02` (light), `v2-background-bg-layer-01` (dark)
+    public static let band = OCTheme.openCode.color("band")
     /// `syntax-comment`
     public static let syntaxComment = OCTheme.openCode.color("syntaxComment")
     /// `syntax-keyword`

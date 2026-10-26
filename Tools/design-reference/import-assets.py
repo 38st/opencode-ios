@@ -22,6 +22,8 @@ for name,body in re.findall(r'^  ([\w-]+|"[^"]+"): `([^`]+)`',s,re.M):
  name=name.strip('"');icons[name]=('0 0 16 16' if name in small else '0 0 20 20',body)
 s=(r/'packages/ui/src/icons/catalog.ts').read_text()
 for name,box,body in re.findall(r'^  ([\w-]+|"[^"]+"): \{\s*viewBox: "([^"]+)",\s*body: `([^`]+)`',s,re.M): icons[name.strip('"')]=(box,body)
+# The catalog has no up chevron; Find's Previous match uses chevron-down mirrored vertically.
+icons.setdefault('chevron-up',('0 0 16 16','<path d="M5 9.5L8 6.5L11 9.5" stroke="currentColor"/>'))
 assets=out/'Icons.xcassets'; assets.mkdir(exist_ok=True)
 (assets/'Contents.json').write_text(json.dumps({'info':{'author':'xcode','version':1}}))
 for name,(box,body) in icons.items():

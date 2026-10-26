@@ -75,7 +75,7 @@ public struct OCCodeFrame<Content: View>: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             OCLabel(title, icon: "code").font(OCType.small).foregroundStyle(OCColor.textMuted)
-                .padding(OCSpacing.md).frame(maxWidth: .infinity, alignment: .leading).background(OCColor.layer1)
+                .padding(OCSpacing.md).frame(maxWidth: .infinity, alignment: .leading).background(OCColor.band)
             content.font(OCType.code).padding(OCSpacing.md).frame(maxWidth: .infinity, alignment: .leading)
         }.background(OCColor.backgroundDeep).clipShape(RoundedRectangle(cornerRadius: OCRadius.md))
             .overlay(RoundedRectangle(cornerRadius: OCRadius.md).strokeBorder(OCColor.border, lineWidth: OCBorder.hairline))

@@ -2,6 +2,8 @@ import Foundation
 import SwiftUI
 
 /// Artwork and mappings: packages/ui/src/components/file-icon.tsx and file-icons/sprite.svg (MIT).
+/// The sprite's `currentColor` fills are baked to iconMuted (#808080, the same in both themes), because
+/// `.original` rendering would otherwise resolve them to black and hide folders in dark mode.
 public struct OCFileIcon: View {
     let path: String
     let directory: Bool

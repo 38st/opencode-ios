@@ -87,12 +87,9 @@ public struct OCProjectTabs: View {
         ScrollView(.horizontal) {
             HStack(spacing: OCSpacing.xs) {
                 ForEach(projects) { project in
-                    Button { selection = project.id } label: {
-                        OCLabel(project.title, icon: "folder").font(OCType.button)
-                            .padding(.horizontal, OCSpacing.md).frame(minHeight: OCLayout.touchTarget)
-                            .background(selection == project.id || (selection == nil && project.id == projects.first?.id) ? OCColor.layer1 : .clear,
-                                        in: RoundedRectangle(cornerRadius: OCRadius.md))
-                    }.buttonStyle(.plain).accessibilityAddTraits(selection == project.id ? .isSelected : [])
+                    // A nil selection is Home's "All projects" filter, so no tab is drawn as selected.
+                    Button { selection = project.id } label: { OCLabel(project.title, icon: "folder") }
+                        .buttonStyle(OCTabStyle(selected: selection == project.id))
                 }
                 if projects.isEmpty { OCLabel("Projects", icon: "folder").font(OCType.small).foregroundStyle(OCColor.textMuted) }
             }

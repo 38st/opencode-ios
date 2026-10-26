@@ -191,6 +191,10 @@ private struct SessionHeader: View {
     let session: SessionModel
     let composer: ComposerModel
     let showsTitle: Bool
+    @Environment(\.dynamicTypeSize) private var typeSize
+    private var models: [ModelInfo] { server.catalogs[session.info.location.key]?.models.value ?? [] }
+    /// The server's selection, named as the composer names it (docs/design.md: the dock marks unapplied choices Pending).
+    private var modelName: String? { (session.info.model ?? lastAssistant?.model).map { ComposerPickers.displayName($0, in: models) } }
     private var lastAssistant: MessageFields? {
         guard let transcript = session.transcript else { return nil }
         for id in transcript.order.reversed() {
@@ -201,9 +205,7 @@ private struct SessionHeader: View {
     private var usage: String {
         let last = session.transcript?.order.reversed().compactMap { session.transcript?.messages[$0]?.fields }.first { $0.type == "assistant" && $0.tokens != nil }
         guard let tokens = last?.tokens, let model = last?.model ?? session.info.model,
-              let limit = server.catalogs[session.info.location.key]?.models.value?.first(where: {
-                  $0.id == model.id && (model.providerID.isEmpty || $0.providerID == model.providerID)
-              })?.limit.context, limit > 0, limit.isFinite else { return "Context —" }
+              let limit = ComposerPickers.model(model, in: models)?.limit.context, limit > 0, limit.isFinite else { return "Context —" }
         let fraction = (tokens.input + tokens.output + tokens.reasoning + tokens.cacheRead + tokens.cacheWrite) / limit
         guard fraction.isFinite, fraction >= 0 else { return "Context —" }
         return "Context " + fraction.formatted(.percent.precision(.fractionLength(0)))
@@ -213,9 +215,11 @@ private struct SessionHeader: View {
             if showsTitle {
                 Text(session.info.title ?? "Untitled session").font(OCType.heading).fixedSize(horizontal: false, vertical: true)
             }
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: OCSpacing.sm) { labels }
+            // One line where the model name truncates, so a long id or a new selection never reflows the header.
+            if typeSize.isAccessibilitySize {
                 VStack(alignment: .leading, spacing: OCSpacing.xs) { labels }
+            } else {
+                HStack(spacing: OCSpacing.sm) { labels }
             }
         }.padding(OCSpacing.lg).frame(maxWidth: .infinity, alignment: .leading)
             .overlay(alignment: .bottom) { Rectangle().fill(OCColor.borderMuted).frame(height: OCBorder.hairline) }
@@ -224,7 +228,7 @@ private struct SessionHeader: View {
     }
     @ViewBuilder var metadata: some View {
         Text("Agent: " + ((session.info.agent ?? lastAssistant?.agent)?.capitalized ?? "Agent"))
-        Text("Model: " + (session.info.model?.id ?? lastAssistant?.model?.id ?? "—"))
+        Text("Model: " + (modelName ?? "—"))
         if let variant = session.info.model?.variant, variant != "default" { Text("Variant: " + variant) }
         if composer.pendingSelection { Text("Agent or model choice pending") }
         Text(usage)
@@ -232,15 +236,18 @@ private struct SessionHeader: View {
         if session.info.parentID != nil { Text("Subagent · read only") }
     }
     @ViewBuilder private var labels: some View {
+        let fixed = !typeSize.isAccessibilitySize
         Text((session.info.agent ?? lastAssistant?.agent)?.capitalized ?? "Agent").font(OCType.small).foregroundStyle(OCColor.textMuted)
-        Text(session.info.model?.id ?? lastAssistant?.model?.id ?? "Model —").font(OCType.small).foregroundStyle(OCColor.textMuted).lineLimit(1)
+            .lineLimit(1).fixedSize(horizontal: fixed, vertical: false)
+        Text(modelName ?? "Model —").font(OCType.small).foregroundStyle(OCColor.textMuted)
+            .lineLimit(fixed ? 1 : nil).truncationMode(.middle).layoutPriority(-1)
         if let variant = session.info.model?.variant, variant != "default" {
-            Text(variant).font(OCType.small).foregroundStyle(OCColor.textMuted)
+            Text(variant).font(OCType.small).foregroundStyle(OCColor.textMuted).lineLimit(1).fixedSize(horizontal: fixed, vertical: false)
         }
-        if composer.pendingSelection { OCBadge("Pending").accessibilityLabel("Agent or model choice pending") }
-        OCBadge(usage)
+        OCBadge(usage).fixedSize(horizontal: fixed, vertical: false)
         Text(server.readPath.family(session.id).reduce(0) { $0 + $1.info.cost }.formatted(.currency(code: "USD")))
             .font(OCType.micro).foregroundStyle(OCColor.textMuted).accessibilityLabel("Family cost")
+            .lineLimit(1).fixedSize(horizontal: fixed, vertical: false)
     }
 }
 #endif

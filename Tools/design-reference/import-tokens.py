@@ -15,6 +15,9 @@ aliases={'background':'v2-background-bg-base','backgroundDeep':'v2-background-bg
 for state in ['success','warning','danger','info']:
  aliases[state]='v2-state-fg-'+state;aliases[state+'Background']='v2-state-bg-'+state;aliases[state+'Border']='v2-state-border-'+state
 aliases['toggleThumb'] = 'v2-grey-200'
+# App-only pairings, one key per mode: layer1 equals bg-deep in light mode, so a header band above code on
+# backgroundDeep steps up to layer2 there.
+aliases['band'] = {'light':'v2-background-bg-layer-02','dark':'v2-background-bg-layer-01'}
 for name in ['comment','keyword','string','primitive','property','type','constant','critical','diff-add','diff-delete','diff-unknown','info','object','operator','punctuation','regexp','success','variable','warning']:
  aliases['syntax'+''.join(x.title() for x in name.split('-'))]='syntax-'+name
 for name in ['add','delete']:
@@ -38,7 +41,7 @@ for mode in ['light','dark']:
   if value.startswith('rgba('):
    parts=[float(x.strip()) for x in value[5:-1].split(',')];return [x/255 for x in parts[:3]]+[parts[3]]
   raise ValueError((key,value))
- values[mode]={name:resolve(key) for name,key in aliases.items()}
+ values[mode]={name:resolve(key if isinstance(key,str) else key[mode]) for name,key in aliases.items()}
 for name in aliases:
  dest=assets/('oc2-'+name+'.colorset');dest.mkdir(exist_ok=True)
  colors=[]
@@ -58,6 +61,6 @@ public enum OCTheme: String, Sendable {
 
 public enum OCColor {
 '''
-for name,key in aliases.items():s+=f'    /// `{key}`\n    public static let {name} = OCTheme.openCode.color("{name}")\n'
+for name,key in aliases.items():s+='    /// '+(f'`{key}`' if isinstance(key,str) else ', '.join(f'`{v}` ({m})' for m,v in key.items()))+f'\n    public static let {name} = OCTheme.openCode.color("{name}")\n'
 s+='}\n';(root/'Colors.swift').write_text(s)
 print('Imported',len(aliases),'semantic pairs', {m:values[m]['background'] for m in values})

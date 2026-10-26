@@ -52,7 +52,7 @@ public struct OCCommentCard: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: OCSpacing.sm) {
             HStack { OCFileIcon(comment.file); Text((comment.file as NSString).lastPathComponent).font(OCType.small).lineLimit(1); Spacer(minLength: 0)
-                if edit != nil || delete != nil { Menu { if let edit { Button("Edit", action: edit) }; if let delete { Button("Delete", action: delete) } } label: { OCIcon("ellipsis").frame(width: 44, height: 44) }.accessibilityLabel("More options") }
+                if edit != nil || delete != nil { Menu { if let edit { Button("Edit", action: edit) }; if let delete { Button("Delete", action: delete) } } label: { OCIcon("dot-grid").frame(width: 44, height: 44) }.accessibilityLabel("More options") }
             }
             if let selection = comment.selection { Text(selection.label).font(OCType.micro).foregroundStyle(OCColor.textMuted) }
             Text(comment.comment).font(OCType.small).fixedSize(horizontal: false, vertical: true)

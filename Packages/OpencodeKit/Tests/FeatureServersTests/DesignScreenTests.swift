@@ -78,6 +78,48 @@ import OCSync
         let light = UITraitCollection(userInterfaceStyle: .light)
         let dark = UITraitCollection(userInterfaceStyle: .dark)
         #expect(UIColor(OCColor.background).resolvedColor(with: light) != UIColor(OCColor.background).resolvedColor(with: dark))
+        // Header bands sit on backgroundDeep, which layer1 matches in light mode.
+        for traits in [light, dark] {
+            #expect(UIColor(OCColor.band).resolvedColor(with: traits) != UIColor(OCColor.backgroundDeep).resolvedColor(with: traits))
+        }
+    }
+
+    /// Every icon literal in the UI sources must name a bundled asset; a missing one draws an empty button.
+    @Test func everyReferencedIconIsBundled() throws {
+        let sources = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appending(path: "../../Sources").standardizedFileURL
+        let modules = try FileManager.default.contentsOfDirectory(atPath: sources.path).filter { $0.hasPrefix("Feature") || ["OCDesign", "OCRender"].contains($0) }
+        // The expression after an icon parameter, up to the end of the argument; comparisons inside ternaries are skipped.
+        let site = try Regex(#"(?:OCIcon\(|icon: |\.icon = |UIImage\(named: )([^,)\n]*)"#)
+        let literal = try Regex(#"(== )?"([a-z0-9][a-z0-9-]*)""#)
+        var names: [String: String] = [:]
+        for module in modules {
+            let enumerator = FileManager.default.enumerator(at: sources.appending(path: module), includingPropertiesForKeys: nil)
+            while let file = enumerator?.nextObject() as? URL {
+                guard file.pathExtension == "swift" else { continue }
+                let text = try String(contentsOf: file, encoding: .utf8)
+                for match in text.matches(of: site) {
+                    guard let expression = match.output[1].substring else { continue }
+                    for name in expression.matches(of: literal) where name.output[1].substring == nil {
+                        if let value = name.output[2].substring { names[String(value)] = file.lastPathComponent }
+                    }
+                }
+            }
+        }
+        #expect(names.count > 40)
+        for (name, file) in names.sorted(by: { $0.key < $1.key }) { #expect(OCIcon.isBundled(name), "\(file) references missing icon \(name)") }
+        #expect(OCIcon.isBundled("dot-grid") && OCIcon.isBundled("chevron-up"))
+    }
+
+    /// File icons render `.original`, where `currentColor` resolves to black and vanishes in dark mode.
+    @Test func fileIconsHaveNoCurrentColor() throws {
+        let assets = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appending(path: "../../Sources/OCDesign/Resources/Icons.xcassets").standardizedFileURL
+        let sets = try FileManager.default.contentsOfDirectory(atPath: assets.path).filter { $0.hasPrefix("filetype-") }
+        #expect(sets.count > 100)
+        for set in sets {
+            for file in try FileManager.default.contentsOfDirectory(atPath: assets.appending(path: set).path) where file.hasSuffix(".svg") {
+                #expect(try !String(contentsOf: assets.appending(path: set).appending(path: file), encoding: .utf8).contains("currentColor"), "\(set)")
+            }
+        }
     }
 
 
@@ -107,6 +149,7 @@ import OCSync
                 OCSidebarHeader("Projects")
                 OCListRow("opencode-ios", subtitle: "3 sessions", kind: .project)
                 OCListRow("Design system", selected: true)
+                HStack { Button("Selected tab") {}.buttonStyle(OCTabStyle(selected: true)); Button("Tab") {}.buttonStyle(OCTabStyle(selected: false)) }
                 TextField("Server URL", text: .constant("https://studio.example.com"))
                 OCToggleRow("Notifications", isOn: .constant(true))
                 OCCodeFrame("Terminal") { Text("opencode serve") }

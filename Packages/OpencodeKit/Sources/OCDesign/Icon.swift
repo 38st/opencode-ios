@@ -13,7 +13,11 @@ public struct OCIcon: View {
     public static func isBundled(_ name: String) -> Bool { UIImage(named: name, in: .module, compatibleWith: nil) != nil }
     #endif
     public var body: some View {
-        Image(name, bundle: .module).renderingMode(.template).resizable().scaledToFit()
+        #if DEBUG && canImport(UIKit)
+        // A missing asset renders as an empty, still tappable frame; catch typos while developing.
+        assert(Self.isBundled(name), "OCIcon: no \"\(name)\" asset in Icons.xcassets")
+        #endif
+        return Image(name, bundle: .module).renderingMode(.template).resizable().scaledToFit()
             .frame(width: size, height: size).accessibilityHidden(true)
     }
 }

@@ -91,6 +91,24 @@ public struct OCToggleRow: View {
     }.padding().ocTheme()
 }
 
+// Source: packages/app/src/shell tabs and session-review-v2.css. The selected tab is a filled pill with the base
+// text colour; `pressed` composites to the reference's #e6e6e6 on light surfaces and stays visible on every layer,
+// unlike layer1, which equals backgroundDeep in light mode.
+public struct OCTabStyle: ButtonStyle {
+    let selected: Bool
+    let fill: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    public init(selected: Bool, fill: Bool = false) { self.selected = selected; self.fill = fill }
+    public func makeBody(configuration: Configuration) -> some View {
+        configuration.label.font(OCType.button).foregroundStyle(selected ? OCColor.text : OCColor.textMuted)
+            .padding(.horizontal, fill ? OCSpacing.xs : OCSpacing.md).frame(maxWidth: fill ? .infinity : nil).frame(minHeight: OCLayout.touchTarget)
+            .background(selected ? OCColor.pressed : configuration.isPressed ? OCColor.hover : .clear, in: RoundedRectangle(cornerRadius: OCRadius.md))
+            .contentShape(Rectangle())
+            .accessibilityAddTraits(selected ? .isSelected : [])
+            .animation(reduceMotion ? nil : .easeOut(duration: OCMotion.fast), value: configuration.isPressed)
+    }
+}
+
 // Source: packages/ui/src/navigation/segmented-control/segmented-control.css. At accessibility sizes options stack,
 // retaining their full labels and the selected trait instead of truncating.
 public struct OCSegmentedControl<Value: Hashable>: View {
@@ -108,15 +126,10 @@ public struct OCSegmentedControl<Value: Hashable>: View {
             ForEach(options.indices, id: \.self) { index in
                 let option = options[index]
                 Button { selection = option.0 } label: {
-                    Text(option.1).font(OCType.button).lineLimit(equalWidth ? nil : 1)
-                        .fixedSize(horizontal: !equalWidth, vertical: false).padding(.horizontal, equalWidth ? 0 : OCSpacing.sm).frame(maxWidth: equalWidth ? .infinity : nil)
-                        .frame(minHeight: OCLayout.touchTarget)
-                        .contentShape(Rectangle())
-                        .background(selection == option.0 ? OCColor.background : .clear, in: RoundedRectangle(cornerRadius: OCRadius.sm))
-                }.buttonStyle(.plain)
-                    .accessibilityAddTraits(selection == option.0 ? .isSelected : [])
+                    Text(option.1).lineLimit(equalWidth ? nil : 1).fixedSize(horizontal: !equalWidth, vertical: false)
+                }.buttonStyle(OCTabStyle(selected: selection == option.0, fill: equalWidth))
             }
-        }.padding(OCSpacing.xs).background(OCColor.layer1, in: RoundedRectangle(cornerRadius: OCRadius.md))
+        }.padding(OCSpacing.xs)
             .accessibilityElement(children: .contain).accessibilityLabel(title)
     }
 }

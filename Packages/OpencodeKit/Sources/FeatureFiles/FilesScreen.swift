@@ -33,10 +33,10 @@ public struct FilesScreen: View {
             VStack(spacing: 0) {
                 ScrollView(.horizontal) {
                     HStack(spacing: OCSpacing.xs) {
-                        Button("All files") { model.allFiles() }.buttonStyle(OCButtonStyle(.ghost))
+                        Button("All files") { model.allFiles() }.buttonStyle(OCTabStyle(selected: model.selectedPath == nil))
                         ForEach(model.openFiles, id: \.absolute) { path in
                             HStack(spacing: 0) {
-                                Button((path.path as NSString).lastPathComponent) { model.open(path) }.buttonStyle(OCButtonStyle(.ghost))
+                                Button((path.path as NSString).lastPathComponent) { model.open(path) }.buttonStyle(OCTabStyle(selected: model.selectedPath == path))
                                 OCIconButton("Close tab", icon: "close") { model.close(path) }
                             }
                         }

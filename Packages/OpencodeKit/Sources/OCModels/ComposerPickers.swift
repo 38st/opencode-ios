@@ -8,6 +8,14 @@ public struct ModelGroup: Identifiable, Sendable {
 }
 public enum ComposerPickers {
     public static func displayName(_ model: ModelInfo) -> String { model.name.replacingOccurrences(of: "(latest)", with: "").trimmingCharacters(in: .whitespaces) }
+    /// The catalog entry for a selection; an empty provider matches any provider, as in older messages.
+    public static func model(_ ref: ModelRef, in models: [ModelInfo]) -> ModelInfo? {
+        models.first { $0.id == ref.id && (ref.providerID.isEmpty || $0.providerID == ref.providerID) }
+    }
+    /// The name the composer shows for a selection, falling back to the raw id before the catalog loads.
+    public static func displayName(_ ref: ModelRef, in models: [ModelInfo]) -> String {
+        model(ref, in: models).map(displayName).flatMap { $0.isEmpty ? nil : $0 } ?? ref.id
+    }
     public static let providerOrder = ["opencode-go", "opencode", "anthropic", "github-copilot", "openai", "google", "openrouter", "vercel"]
     public static func key(_ model: ModelRef) -> String { model.providerID + ":" + model.id }
     public static func key(_ model: ModelInfo) -> String { model.providerID + ":" + model.id }
