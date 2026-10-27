@@ -7,6 +7,23 @@ import OCSecurity
 @testable import OCSync
 
 @MainActor @Suite(.serialized) struct ServerRegistryTests {
+    @Test func coldNotificationActionUsesLastHealthyEnabledEndpoint() async throws {
+        let records = MemoryRecords()
+        var record = syncRecord()
+        let healthy = EndpointRecord(url: try #require(URL(string: "https://healthy.example.invalid")), kind: .https,
+            stats: .init(lastSuccess: Date(timeIntervalSince1970: 100)))
+        let disabled = EndpointRecord(url: try #require(URL(string: "https://disabled.example.invalid")), kind: .https,
+            isEnabled: false, stats: .init(lastSuccess: Date(timeIntervalSince1970: 200)))
+        record.endpoints += [healthy, disabled]
+        await records.save([record])
+        let registry = ServerRegistry(records: records, credentials: CredentialStore(secrets: InMemorySecretStore()),
+            pathMonitor: nil, factory: { _, _, _ in FakeConnection() })
+        await registry.load()
+        let client = try await registry.directActions(for: #require(registry.servers.first))
+        #expect(client.endpoints == [healthy.url, syncEndpoint.url])
+        await registry.shutdown()
+    }
+
     @Test func persistenceRoundTripRenameOrderAndKeychainRemoval() async throws {
         let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

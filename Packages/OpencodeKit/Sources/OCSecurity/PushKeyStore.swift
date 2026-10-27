@@ -68,6 +68,7 @@ public actor PushKeyStore {
     public func pin(serverPublicKey: Data, for server: ServerID) async throws {
         guard serverPublicKey.count == 32 else { throw KeychainError(status: errSecParam) }
         guard var current = try await existingKey(for: server) else { throw KeychainError(status: errSecItemNotFound) }
+        if let pinned = current.serverPublicKey, pinned != serverPublicKey { throw KeychainError(status: errSecAuthFailed) }
         current.serverPublicKey = serverPublicKey
         try await save(current)
     }

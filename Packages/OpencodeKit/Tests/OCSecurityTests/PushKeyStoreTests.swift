@@ -29,7 +29,7 @@ import Testing
     // One key account and one server account: no orphaned key is left in the store.
     #expect(try await store.key(keyID: keys[0].keyID) == keys[0])
     try await store.delete(for: server)
-    #expect(try await secrets.read(account: "key." + keys[0].keyID) == nil)
+    #expect(await secrets.read(account: "key." + keys[0].keyID) == nil)
 }
 
 @Test func pinningNeedsAnExistingKey() async throws {
@@ -49,4 +49,15 @@ import Testing
     try await store.delete(for: server)
     #expect(try await store.key(keyID: key.keyID) == nil)
     #expect(try await store.key(for: server).keyID != key.keyID)
+}
+
+@Test func pinnedSenderCannotBeSilentlyReplaced() async throws {
+    let store = PushKeyStore(secrets: InMemorySecretStore()), server = ServerID()
+    _ = try await store.key(for: server)
+    let first = Curve25519.KeyAgreement.PrivateKey().publicKey.rawRepresentation
+    try await store.pin(serverPublicKey: first, for: server)
+    await #expect(throws: KeychainError(status: errSecAuthFailed)) {
+        try await store.pin(serverPublicKey: Curve25519.KeyAgreement.PrivateKey().publicKey.rawRepresentation, for: server)
+    }
+    #expect(try await store.existingKey(for: server)?.serverPublicKey == first)
 }

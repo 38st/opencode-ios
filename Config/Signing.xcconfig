@@ -1,2 +1,8 @@
 BUNDLE_ID_PREFIX = dev.opencodeios
 DEVELOPMENT_TEAM =
+APP_GROUP_ID = group.$(BUNDLE_ID_PREFIX)
+SHARED_KEYCHAIN_GROUP = $(AppIdentifierPrefix)$(BUNDLE_ID_PREFIX).push
+// APNs gateway, set per configuration: the aps-environment entitlement and the env the app registers with
+// the relay both read it, so a Release (TestFlight or App Store) build always uses production.
+APNS_ENVIRONMENT = production
+APNS_ENVIRONMENT[config=Debug] = development

@@ -8,6 +8,9 @@ import OCSecurity
 
 /// The read projection is also M1's event sink and resync extension.
 @MainActor @Observable public final class ReadStore: ServerEventSink, ResyncExtension {
+    @ObservationIgnored var activityProgress = ActivityProgress()
+    @ObservationIgnored var pushChanged: @MainActor () -> Void = {}
+    @ObservationIgnored var phonePromptSent: @MainActor (String) -> Void = { _ in }
     public let serverID: String
     public var projects: [Project] = []
     public var sessions: [String: SessionModel] = [:]
@@ -120,6 +123,7 @@ import OCSecurity
             if header.durable != nil, header.type.hasPrefix("session."), let id = sessionID { scheduleRefresh(id) }
             return
         }
+        activityProgress.receive(event, sessions: sessions)
         let before = sessionID.flatMap { sessions[$0]?.info.raw }
         handle(event)
         refreshReviewViews(event)
@@ -197,6 +201,7 @@ import OCSecurity
     }
     func confirmStatus() { lastStatusSync = clock.date() }
     func updateAttention() {
+        defer { pushChanged() }
         var counts: [String: Int] = [:]
         let owners = Set(permissions.keys).union(forms.keys.compactMap { if case .session(let id) = $0 { id } else { nil } }).union(sessions.keys)
         for owner in owners {

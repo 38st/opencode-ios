@@ -19,3 +19,13 @@ public struct DeepLink: Equatable, Sendable {
         serverID = server; sessionID = parts.count >= 3 ? parts[2] : nil; requestID = parts.count == 5 ? parts[4] : nil
     }
 }
+
+public extension DeepLink {
+    static func url(serverID: UUID, sessionID: String? = nil, requestID: String? = nil) -> URL? {
+        var url = URL(string: "opencodeios://server/" + serverID.uuidString)
+        if let sessionID { url = url?.appending(path: "session").appending(path: sessionID) }
+        if sessionID != nil, let requestID { url = url?.appending(path: "request").appending(path: requestID) }
+        guard let url, DeepLink(url: url) != nil else { return nil }
+        return url
+    }
+}

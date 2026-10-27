@@ -51,10 +51,10 @@ let package = Package(
         .target(name: "OCPersistence", dependencies: ["OCModels", "OCFoundation", .product(name: "GRDB", package: "GRDB.swift")], swiftSettings: coreSettings),
         .target(name: "OCShared", dependencies: ["OCFoundation"], swiftSettings: coreSettings),
         // The contract files are byte-identical copies of server/contracts (Tools/sync-push-contracts.mjs).
-        .target(name: "OCPushCore", dependencies: ["OCFoundation", "OCModels", "OCSecurity"], resources: [.copy("Resources/Contracts")], swiftSettings: coreSettings),
+        .target(name: "OCPushCore", dependencies: ["OCFoundation", "OCModels", "OCSecurity", "OCShared"], resources: [.copy("Resources/Contracts")], swiftSettings: coreSettings),
         .target(
             name: "OCSync",
-            dependencies: ["OCModels", "OCFoundation", "OCNetworking", "OCPersistence", "OCSecurity", "OCShared", "OCPushCore"],
+            dependencies: ["OCModels", "OCFoundation", "OCNetworking", "OCPersistence", "OCSecurity", "OCShared", "OCPushCore", "OCActivity", "OCIntents"],
             swiftSettings: uiSettings
         ),
         .target(name: "OCRender", dependencies: ["OCModels", "OCFoundation", .product(name: "Markdown", package: "swift-markdown"), .product(name: "SwiftTreeSitter", package: "swift-tree-sitter")] + grammarNames.map { .byName(name: "Grammar_" + $0) }, swiftSettings: coreSettings),
@@ -64,15 +64,15 @@ let package = Package(
         // Widgets must be able to link this shared target without networking or sync.
         .target(name: "OCIntents", dependencies: ["OCShared"], swiftSettings: uiSettings),
     ] + grammarTargets + features.map {
-        .target(name: $0, dependencies: ["OCModels", "OCFoundation", "OCSync", "OCDesign", "OCRender"] + ($0 == "FeatureServers" ? [.byName(name: "FeatureInbox"), .byName(name: "FeatureTranscript"), .byName(name: "FeatureComposer"), .byName(name: "FeatureReview"), .byName(name: "OCShared")] : []) + ($0 == "FeatureTranscript" ? [.byName(name: "FeatureApprovals"), .byName(name: "FeatureComposer"), .byName(name: "FeatureReview")] : []) + (["FeatureReview", "FeatureApprovals"].contains($0) ? [.byName(name: "FeatureFiles")] : []) + ($0 == "FeatureApprovals" ? [.byName(name: "OCPushCore"), .byName(name: "OCSecurity")] : []), swiftSettings: uiSettings)
+        .target(name: $0, dependencies: ["OCModels", "OCFoundation", "OCSync", "OCDesign", "OCRender"] + ($0 == "FeatureServers" ? [.byName(name: "FeatureInbox"), .byName(name: "FeatureTranscript"), .byName(name: "FeatureComposer"), .byName(name: "FeatureReview"), .byName(name: "OCShared"), .byName(name: "FeatureSettings")] : []) + ($0 == "FeatureTranscript" ? [.byName(name: "FeatureApprovals"), .byName(name: "FeatureComposer"), .byName(name: "FeatureReview")] : []) + (["FeatureReview", "FeatureApprovals"].contains($0) ? [.byName(name: "FeatureFiles")] : []) + ($0 == "FeatureApprovals" ? [.byName(name: "OCPushCore"), .byName(name: "OCSecurity")] : []) + ($0 == "FeatureSettings" ? [.byName(name: "OCShared")] : []), swiftSettings: uiSettings)
     } + [
         .testTarget(name: "OCNetworkingTests", dependencies: ["OCNetworking", "OCSecurity", .product(name: "Clocks", package: "swift-clocks")], swiftSettings: coreSettings),
         .testTarget(name: "OCNetworkingLiveTests", dependencies: ["OCNetworking", "OCSecurity", "OCSync", "OCModels", "OCFoundation", "OCPersistence"], swiftSettings: coreSettings),
-        .testTarget(name: "OCPushCoreTests", dependencies: ["OCPushCore", "OCFoundation", "OCModels"], swiftSettings: coreSettings),
+        .testTarget(name: "OCPushCoreTests", dependencies: ["OCPushCore", "OCFoundation", "OCModels", "OCShared", "OCSecurity"], swiftSettings: coreSettings),
         .testTarget(name: "OCPersistenceTests", dependencies: ["OCPersistence", "OCModels", "OCFoundation", .product(name: "Clocks", package: "swift-clocks")], swiftSettings: coreSettings),
-        .testTarget(name: "OCSyncTests", dependencies: ["OCSync", "OCRender", "OCShared", "OCNetworking", "OCSecurity", "OCModels", .product(name: "Clocks", package: "swift-clocks")], swiftSettings: coreSettings),
+        .testTarget(name: "OCSyncTests", dependencies: ["OCSync", "OCActivity", "OCPushCore", "OCRender", "OCShared", "OCNetworking", "OCSecurity", "OCModels", .product(name: "Clocks", package: "swift-clocks")], swiftSettings: coreSettings),
         .testTarget(name: "FeatureServersTests", dependencies: ["OCFoundation", "FeatureServers", "OCSync", "OCModels", "OCDesign", "OCNetworking", "OCSecurity", .product(name: "SnapshotTesting", package: "swift-snapshot-testing")], exclude: ["__Snapshots__"], swiftSettings: uiSettings),
-    ] + ["OCFoundation", "OCModels", "OCSecurity", "OCRender"].map {
+    ] + ["OCFoundation", "OCModels", "OCSecurity", "OCRender", "OCShared", "OCActivity"].map {
         .testTarget(name: "\($0)Tests", dependencies: [.byName(name: $0)], swiftSettings: coreSettings)
     }
 )

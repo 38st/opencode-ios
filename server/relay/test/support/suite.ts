@@ -18,8 +18,11 @@ export interface Target {
 }
 
 const hex = (bytes: number) => Array.from(crypto.getRandomValues(new Uint8Array(bytes)), (byte) => byte.toString(16).padStart(2, "0")).join("");
-/** A 32-byte APNs token; a prefix picks the mock's reply. */
-const deviceToken = (prefix = "") => prefix + hex(32).slice(prefix.length);
+/**
+ * A 32-byte APNs token; a prefix picks the mock's reply. Without one the token starts with "0", which no
+ * reply prefix does: a fully random token starts with "410" once in 4,096 and would then be Unregistered.
+ */
+const deviceToken = (prefix = "0") => prefix + hex(32).slice(prefix.length);
 const seconds = () => Math.floor(Date.now() / 1000);
 let ipCounter = 0;
 const freshIP = () => `198.51.100.${(ipCounter = (ipCounter % 250) + 1)}`;

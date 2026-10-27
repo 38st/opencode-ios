@@ -29,6 +29,7 @@ extension ReadStore {
         let entry = OutboxEntry(id: id, serverID: serverID, sessionID: sessionID,
             prelude: try JSONEncoder().encode(prepared), body: try input.body(id: id), createdAt: clock.date())
         try await submit(entry)
+        phonePromptSent(sessionID)
         return id
     }
     @discardableResult public func createSession(location: Location, title: String? = nil, agent: String? = nil,

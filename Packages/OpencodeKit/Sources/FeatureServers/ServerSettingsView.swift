@@ -3,6 +3,7 @@ import SwiftUI
 import OCDesign
 import OCModels
 import OCSync
+import FeatureSettings
 
 struct ServerSettingsView: View {
     let registry: ServerRegistry
@@ -23,6 +24,10 @@ struct ServerSettingsView: View {
                 VStack(alignment: .leading, spacing: OCSpacing.sm) {
                     Text("Servers").font(OCType.title).accessibilityAddTraits(.isHeader)
                     Text("Manage server connections").foregroundStyle(OCColor.textMuted)
+                }
+                if let controller = registry.notifications {
+                    NavigationLink { NotificationSettings(controller: controller) } label: { OCLabel("Notifications", icon: "notifications") }
+                        .font(OCType.body).accessibilityIdentifier("notificationSettings")
                 }
                 ForEach(registry.servers) { server in
                     Button { selection = server.id } label: {

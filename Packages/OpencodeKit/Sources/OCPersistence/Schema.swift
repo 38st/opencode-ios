@@ -38,6 +38,9 @@ extension PersistenceWriter {
             try db.execute(sql: "ALTER TABLE draft ADD COLUMN comments_json BLOB NOT NULL DEFAULT x'5b5d'")
             try db.execute(sql: "ALTER TABLE local_meta ADD COLUMN review_state BLOB")
         }
+        migrator.registerMigration("v5-notification-replies") { db in
+            try db.execute(sql: "CREATE TABLE notification_reply(server_id TEXT NOT NULL,notification_id TEXT NOT NULL,input_id TEXT NOT NULL,PRIMARY KEY(server_id,notification_id))")
+        }
         return migrator
     }
 }

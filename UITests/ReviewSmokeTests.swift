@@ -161,7 +161,7 @@ nonisolated final class ReviewSmokeTests: SmokeTestCase {
         app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Open file")).firstMatch.tap()
         XCTAssertTrue(app.buttons["Mention in composer"].waitForExistence(timeout: 10))
         XCTAssertTrue(collection.cells.matching(NSPredicate(format: "label BEGINSWITH %@", "Line 2,")).firstMatch.waitForExistence(timeout: 5))
-        // The first synthesized iPad ⌘F is carried to M6; see docs/m4-audit.md.
+        // On iPad the first synthesized ⌘F does not reach the Find field until M6 adds menu commands; it is an expected failure below.
         app.buttons["Find"].tap()
         let find = app.textFields["Find"]
         let opened = find.waitForExistence(timeout: 5)
@@ -194,7 +194,7 @@ nonisolated final class ReviewSmokeTests: SmokeTestCase {
         XCTAssertTrue(app.buttons["Mention in composer"].waitForExistence(timeout: 10))
         screenshot("review-file-link")
         if ipad {
-            XCTExpectFailure("First synthesized ⌘F is carried to M6; see docs/m4-audit.md, Known issue: the first ⌘F on iPad (carried to M6)", options: .nonStrict()) {
+            XCTExpectFailure("Known issue: on iPad the first synthesized ⌘F does not reach the Find field until M6 adds menu commands", options: .nonStrict()) {
                 app.typeKey("f", modifierFlags: .command)
                 XCTAssertTrue(app.textFields["Find"].waitForExistence(timeout: 5))
             }

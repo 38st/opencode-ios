@@ -22,7 +22,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>dev.opencodeios.routes</string>
+			<string>$(BUNDLE_ID_PREFIX).routes</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>opencodeios</string>
@@ -42,6 +42,14 @@
 	<string>Opencode verifies it is you before always allowing an action or approving a high-risk request.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Opencode uses your local network to connect to opencode servers you choose on your computers.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>OCAPNSEnvironment</key>
+	<string>$(APNS_ENVIRONMENT)</string>
+	<key>OCAppGroup</key>
+	<string>$(APP_GROUP_ID)</string>
+	<key>OCKeychainGroup</key>
+	<string>$(SHARED_KEYCHAIN_GROUP)</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

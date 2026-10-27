@@ -7,6 +7,7 @@ import OCSecurity
 import OCPersistence
 
 @MainActor @Observable public final class ServerStore: Identifiable {
+    @ObservationIgnored var pushConnectionChanged: @MainActor () -> Void = {}
     public var id: ServerID { record.id }
     public private(set) var record: ServerRecord
     public private(set) var state: ConnectionState = .idle
@@ -144,7 +145,7 @@ import OCPersistence
     private func receive(_ output: ConnectionOutput) async {
         switch output {
         case .state(let state):
-            if case .connected = state { readPath.setWritesConnected(true) }
+            if case .connected = state { readPath.setWritesConnected(true); pushConnectionChanged() }
             else { readPath.setWritesConnected(false) }
             if state == .unauthorized { needsRepair = true }
             setState(needsRepair ? .unauthorized : state)

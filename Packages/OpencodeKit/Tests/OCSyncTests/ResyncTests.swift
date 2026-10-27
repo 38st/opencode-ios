@@ -110,6 +110,48 @@ private actor Counter {
     #expect(store.sessions["s"]?.info.outcome == "succeeded")
     await store.stop()
 }
+@Test @MainActor func resyncDropsRequestsAnsweredWhileDisconnected() async throws {
+    // Neither running nor open: before the fix, resync never refetched this session's location requests.
+    let store = ReadStore(serverID: "server"); store.seed(info: readInfo())
+    store.apply(try readEvent("permission.asked", data: ["id": .string("per"), "action": .string("bash")]))
+    store.apply(try readEvent("form.created", data: ["form": .object(["id": .string("form"), "sessionID": .string("s")])]))
+    // A location's global form, which the badge counts too.
+    store.apply(try readEvent("form.created", session: "global", data: ["form": .object(["id": .string("global-form"), "sessionID": .string("global")])]))
+    let global = FormOwner.global(location: Location(directory: "/p").key)
+    #expect(store.permissions["s"]?.map(\.id) == ["per"]); #expect(store.forms[.session("s")]?.map(\.id) == ["form"])
+    #expect(store.forms[global]?.map(\.id) == ["global-form"])
+    store.client = { readAPI { request in
+        switch request.url?.path {
+        case "/api/session/active": return .object(["data": .object([:])])
+        case "/api/project": return .array([])
+        case "/api/permission/request", "/api/form": return .object(["location": .object(["directory": .string("/p")]), "data": .array([])])
+        default: return .object(["data": .array([readInfo().raw]), "cursor": .object([:])])
+        }
+    } }
+    try await store.resync(reason: .backlogOverflow)
+    #expect(store.permissions["s"]?.isEmpty == true)
+    #expect(store.forms[.session("s")]?.isEmpty == true)
+    #expect(store.forms[global]?.isEmpty == true)
+    await store.stop()
+}
+@Test @MainActor func resyncDropsAGlobalFormAnsweredWhileDisconnected() async throws {
+    // Only a location's global form is pending: no session request pulls its location into the refetch.
+    let store = ReadStore(serverID: "server"); store.seed(info: readInfo())
+    store.apply(try readEvent("form.created", session: "global", data: ["form": .object(["id": .string("global-form"), "sessionID": .string("global")])]))
+    let global = FormOwner.global(location: Location(directory: "/p").key)
+    #expect(store.forms[global]?.map(\.id) == ["global-form"])
+    store.client = { readAPI { request in
+        switch request.url?.path {
+        case "/api/session/active": return .object(["data": .object([:])])
+        case "/api/project": return .array([])
+        case "/api/permission/request", "/api/form": return .object(["location": .object(["directory": .string("/p")]), "data": .array([])])
+        default: return .object(["data": .array([readInfo().raw]), "cursor": .object([:])])
+        }
+    } }
+    try await store.resync(reason: .backlogOverflow)
+    #expect(store.forms[global]?.isEmpty == true)
+    await store.stop()
+}
 @Test @MainActor func revalidationSerializesAndDiscardsStaleResponses() async throws {
     let cell = Revalidating<Int>(), counter = Counter()
     let result = try await cell.load {

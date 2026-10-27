@@ -4,10 +4,14 @@ import OCModels
 import OCNetworking
 import OCSecurity
 import OCPersistence
+import OCShared
 
 public enum AppScenePhase: Sendable { case active, inactive, background }
 
 @MainActor @Observable public final class ServerRegistry {
+    #if os(iOS)
+    public var notifications: PushController?
+    #endif
     public private(set) var servers: [ServerStore] = []
     public private(set) var isLoaded = false
     public private(set) var isLoading = false
@@ -78,15 +82,22 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
                                   localNetworkExplained: defaults.bool(forKey: storage.explanationKey),
                                   rememberLocalNetwork: { defaults.set(true, forKey: storage.explanationKey) })
             registry.uiTestDefaults = defaults
+            #if os(iOS)
+            registry.installPush()
+            #endif
             return registry
         }
         #endif
         let writer = try PersistenceWriter.applicationSupport()
         let legacy = try JSONServerRecordStore.applicationSupport()
-        return ServerRegistry(records: GRDBServerRecordStore(writer: writer, legacyURL: legacy.url),
+        let registry = ServerRegistry(records: GRDBServerRecordStore(writer: writer, legacyURL: legacy.url),
                        credentials: CredentialStore(secrets: KeychainStore()), cache: CacheStore(writer: writer),
                        localNetworkExplained: UserDefaults.standard.bool(forKey: "localNetworkExplained"),
                        rememberLocalNetwork: { UserDefaults.standard.set(true, forKey: "localNetworkExplained") })
+        #if os(iOS)
+        registry.installPush()
+        #endif
+        return registry
     }
     deinit { pathTask?.cancel(); debounceTask?.cancel(); lifecycleTask?.cancel(); saveTask?.cancel() }
 
@@ -125,6 +136,17 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
                                      let store = self.servers.first(where: { $0.id == record.id }) else { return false }
                                return self.mayConnect(store)
                            }, recordChanged: { [weak self] in try await self?.persist() })
+        #if os(iOS)
+        store.pushConnectionChanged = { [weak self, weak store] in
+            if let store { self?.notifications?.connected(store) }
+        }
+        store.readPath.pushChanged = { [weak self, weak store] in
+            if let store { self?.notifications?.changed(store) }
+        }
+        store.readPath.phonePromptSent = { [weak self, weak store] sessionID in
+            if let store { self?.notifications?.promptSent(store, sessionID: sessionID) }
+        }
+        #endif
         try await store.readPath.loadCache()
         return store
     }
@@ -165,6 +187,9 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
     }
     public func rename(_ server: ServerStore, to name: String) async throws { try await server.rename(name) }
     public func remove(_ server: ServerStore) async throws {
+        #if os(iOS)
+        await notifications?.remove(server)
+        #endif
         await server.suspend()
         // Delete the secret first: a failed file write can leave a repairable record, never an orphaned secret.
         do { try await credentials.delete(for: server.id) }
@@ -214,6 +239,9 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
             let lease = BackgroundLease(provider: background)
             lease.begin()
             defer { lease.end() }
+            #if os(iOS)
+            await notifications?.phase(.background)
+            #endif
             do { for server in servers { try await server.readPath.flushComposers() }; try await drafts?.flush() } catch { self.error = "Could not save drafts before pausing." }
             do { try await persist() } catch { self.error = "Could not save servers before pausing." }
             for server in servers {
@@ -221,6 +249,9 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
                 await server.suspend()
             }
         case .active:
+            #if os(iOS)
+            await notifications?.phase(.active)
+            #endif
             guard previous != .active else { return }
             let generation = pathGeneration
             for server in servers where mayConnect(server) {
@@ -258,10 +289,39 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
             if !Task.isCancelled && generation == self.pathGeneration { self.pathChanged = false }
         }
     }
+    func directActions(for server: ServerStore) async throws -> DirectActionClient {
+        let enabled = server.record.endpoints.filter(\.isEnabled)
+        let selected = server.lastResolution?.selected?.url
+        let first = enabled.first(where: { $0.url == selected })?.url ?? enabled
+            .filter { $0.stats.lastSuccess != nil }
+            .max { ($0.stats.lastSuccess ?? .distantPast) < ($1.stats.lastSuccess ?? .distantPast) }?.url
+        let urls = (first.map { [$0] } ?? []) + enabled.map(\.url).filter { $0 != first }
+        return try await DirectActionClient(endpoints: urls, credential: credentials.credential(for: server.id), headers: credentials.headers(for: server.id))
+    }
+    #if os(iOS)
+    private var pushTestSuffix: String {
+        #if DEBUG
+        if let id = ProcessInfo.processInfo.environment["OPENCODE_UI_TEST_ID"], id.hasPrefix("ui-") { return "." + id }
+        #endif
+        return ""
+    }
+    private func installPush() {
+        guard let store = try? PushSnapshotStore.appGroup() else { return }
+        notifications = PushController(registry: self, store: store,
+            keys: .keychain(accessGroup: Bundle.main.object(forInfoDictionaryKey: "OCKeychainGroup") as? String),
+            secrets: KeychainStore(service: "app.opencode.push-registration" + pushTestSuffix))
+        #if DEBUG
+        if let notifications { notifications.debugDriver = DebugPushDriver(controller: notifications); notifications.debugDriver?.start() }
+        #endif
+    }
+    #endif
     public func refresh() async {
         for server in servers where mayConnect(server) { await server.reconnect() }
     }
     public func shutdown() async {
+        #if DEBUG && os(iOS)
+        notifications?.debugDriver?.stop()
+        #endif
         pathTask?.cancel(); debounceTask?.cancel()
         await lifecycleTask?.value
         for server in servers { await server.dispose() }

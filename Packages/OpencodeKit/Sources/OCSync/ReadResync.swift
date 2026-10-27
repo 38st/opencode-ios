@@ -60,7 +60,19 @@ extension ReadStore {
         }
         self.projects = projectMap.values.sorted { ($0.time.active ?? 0) > ($1.time.active ?? 0) }
         for id in running where sessions[id] == nil { try await refreshSession(id, includeTranscript: false) }
-        let locations = Set(running.union(openSessions).compactMap { sessions[$0]?.info.location.directory })
+        // Requests still shown as pending may have been answered elsewhere while the stream was down; their
+        // locations are refetched too, or a session that is neither running nor open (or a location's global
+        // form) keeps a stale request, and the badge counts it, until something else touches it.
+        var waiting = Set(permissions.filter { !$0.value.isEmpty }.map(\.key))
+        var waitingDirectories = Set<String>()
+        for (owner, items) in forms where !items.isEmpty {
+            switch owner {
+            case .session(let id): waiting.insert(id)
+            // A global form's owner is `Location.key`: the JSON array [directory, workspaceID], or the bare directory.
+            case .global(let key): waitingDirectories.insert((try? JSONDecoder().decode([String?].self, from: Data(key.utf8)))?.first.flatMap { $0 } ?? key)
+            }
+        }
+        let locations = Set(running.union(openSessions).union(waiting).compactMap { sessions[$0]?.info.location.directory }).union(waitingDirectories)
         try await withThrowingTaskGroup(of: Void.self) { group in
             for directory in locations { group.addTask { try await self.refreshLocationRequests(directory, api: api) } }
             for id in openSessions { group.addTask { try await self.refreshSession(id) } }

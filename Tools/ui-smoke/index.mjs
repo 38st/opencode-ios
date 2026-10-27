@@ -72,7 +72,7 @@ await audit(path.join(repository, '.build/opencode-sandbox/audits', runID), asyn
     try {
       log = await run('/usr/bin/xcodebuild', ['-project', 'Opencode.xcodeproj', '-scheme', 'Opencode',
         '-destination', destination, '-derivedDataPath', '.build/DerivedData', '-resultBundlePath', result,
-        '-parallel-testing-enabled', 'NO', ...(reviewOnly ? ['-only-testing:OpencodeUITests/ReviewSmokeTests' + (reviewTest ? '/' + reviewTest : '')] : composerOnly ? ['-only-testing:OpencodeUITests/ComposerSmokeTests' + (composerTest ? '/' + composerTest : '')] : values['ipad-only'] || values['read-flows-only'] ? ['-only-testing:OpencodeUITests/ReadSmokeTests'] : values['skip-snapshots'] ? ['-only-testing:OpencodeUITests'] : []), '-collect-test-diagnostics', 'never', 'test'],
+        '-parallel-testing-enabled', 'NO', '-skip-testing:OpencodeUITests/PushSmokeTests', ...(reviewOnly ? ['-only-testing:OpencodeUITests/ReviewSmokeTests' + (reviewTest ? '/' + reviewTest : '')] : composerOnly ? ['-only-testing:OpencodeUITests/ComposerSmokeTests' + (composerTest ? '/' + composerTest : '')] : values['ipad-only'] || values['read-flows-only'] ? ['-only-testing:OpencodeUITests/ReadSmokeTests'] : values['skip-snapshots'] ? ['-only-testing:OpencodeUITests'] : []), '-collect-test-diagnostics', 'never', 'test'],
         { cwd: repository, env: environment });
     } catch (error) {
       await writeFile(path.join(output, 'test.log'), error.message);
@@ -175,3 +175,7 @@ await audit(path.join(repository, '.build/opencode-sandbox/audits', runID), asyn
   }
 });
 console.log('PASS UI smoke process cleanup and opencode isolation audit');
+
+if (!reviewOnly && !composerOnly && !values['ipad-only'] && !values['read-flows-only'] && !values['skip-snapshots']) {
+  console.log(await run(process.execPath, ['Tools/push-e2e/simulator.mjs', '--version', version], { cwd: repository }));
+}

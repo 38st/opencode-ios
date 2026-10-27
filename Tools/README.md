@@ -117,6 +117,49 @@ with its `HOME`, XDG and log directories inside the run (`server/relay/scripts/i
 telemetry off and no Cloudflare credentials, and the run fails if the account's own wrangler state
 changed.
 
+## App push in the simulator (M5b)
+
+```sh
+node Tools/push-e2e/index.mjs --simulator # M5a checks, then the app bridge run
+node Tools/push-e2e/simulator.mjs        # only the app bridge run
+```
+
+The bridge run uses the existing booted **iPhone 17 Pro**, a sandbox with the plugin,
+M5a's Node relay adapter and its HTTP/2 mock APNs. Each accepted payload is saved
+unchanged and passed to `xcrun simctl push`. It never creates or reconfigures a
+simulator. The full `node Tools/ui-smoke/index.mjs` run includes this check after
+its normal iPhone and iPad flows, with all simulator-dependent commands serialized.
+
+The DEBUG app driver requires a `ui-` test identity and a loopback control URL.
+It substitutes a synthetic APNs token and a loopback relay URL; these overrides
+are absent from Release. It inspects the untouched delivered notification first.
+A DEBUG NSE invocation marker and non-sensitive log distinguish an extension
+launch from an Open-only decryption failure. If necessary, the driver invokes
+OCPushCore in the app and schedules the resulting local notification. This bypasses
+system NSE launch, while retaining HPKE, the shared Keychain, the protected store
+and the category builder. XCUITest attempts the notification action; the fallback
+calls the production action handler and bypasses SpringBoard gestures and device
+authentication. The report says which path ran.
+
+The changed-request case uses a loopback forwarding proxy: V2 pending requests are
+immutable, so it changes the resources in the action's fresh GET. No reply may be
+sent. The harness waits for each session to become idle before changing the mock
+model's script. Approval timing ends only when the sandbox file has actually
+changed. APNs collapse headers are recorded separately because `simctl push` takes
+only a payload; local rendered replacements use a stable request identifier.
+
+Evidence is under `.build/push-e2e/ui-push-<run>/`: the live `test.log`, XCTest result
+bundle, raw `.apns` files and bridge results, app reports, NSE log and activity probe.
+The matching isolation audit is under `.build/opencode-sandbox/audits/`.
+
+What the simulator cannot show, so only a signed build on a device can: `simctl push`
+delivers an alert payload but does not launch the Notification Service Extension (the
+decrypted alert comes from the DEBUG renderer above), it cannot deliver an ActivityKit
+update (`NSPOSIXErrorDomain 14`), and it issues no APNs device token (the driver
+substitutes one; Live Activity push tokens do arrive and are registered with the local
+relay and plugin). Real APNs delivery, lock-screen latency, device-owner authentication
+for Allow once and remote Live Activity updates need the owner's team.
+
 ## Isolation and lifecycle
 
 `opencode-sandbox/index.mjs` launches only

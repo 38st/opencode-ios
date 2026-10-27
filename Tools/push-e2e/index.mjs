@@ -18,7 +18,7 @@ import { Capture } from '../fixture-recorder/transport.mjs';
 import { configurePlugin, fakeDevice, openFor, registerDevice, repository, rpc, script, until } from './support.mjs';
 import { changedWranglerHomes, isolatedEnvironment, snapshotWranglerHomes } from '../../server/relay/scripts/isolated.mjs';
 
-const { values } = parseArgs({ options: { version: { type: 'string' } } });
+const { values } = parseArgs({ options: { version: { type: 'string' }, simulator: { type: 'boolean' } } });
 const version = await resolveVersion(values.version);
 const runDirectory = path.join(repository, '.build/push-e2e', String(Date.now()));
 const relayDirectory = path.join(repository, 'server/relay');
@@ -136,7 +136,8 @@ await audit(auditDir, async () => {
 
     // A fake phone: an APNs token and a sender at the relay, a raw X25519 key pair for this server.
     const phone = await fakeDevice('E2E iPhone');
-    phone.relay = await relayDevice(relay, randomBytes(32).toString('hex'));
+    // The leading 0 keeps the token clear of every mock APNs failure prefix (410, 400b, 4290, 5000, 403e).
+    phone.relay = await relayDevice(relay, '0' + randomBytes(32).toString('hex').slice(1));
     phone.sendToken = phone.relay.sendToken;
     const registered = await registerDevice(server, phone, relay.url);
     const serverPublicKey = registered.serverPublicKey;
@@ -303,3 +304,5 @@ await audit(auditDir, async () => {
 const wranglerChanged = changedWranglerHomes(wranglerBefore, await snapshotWranglerHomes());
 assert.deepEqual(wranglerChanged, [], `The account's wrangler state changed during the run: ${wranglerChanged.join(', ')}`);
 console.log('PASS process cleanup, opencode isolation audit, and the account\'s wrangler state untouched');
+
+if (values.simulator) console.log(await run(process.execPath, ['Tools/push-e2e/simulator.mjs', '--version', version], { cwd: repository }));

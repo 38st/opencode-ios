@@ -1,5 +1,6 @@
 // Live checks of the push plugin inside the sandboxed opencode server, with the scripted model
-// and a recording relay. They settle the M0 questions of docs/m5a-audit.md:
+// and a recording relay: plugin loading and RPC registration, one instance per location, what is pushed for
+// requests, results, presence, Stop and Live Activities, and where ctx.storage keeps its data.
 //   node Tools/push-e2e/plugin-checks.mjs [--version 2.x.y]
 // Tools/contract/index.mjs runs the same checks.
 import assert from 'node:assert/strict';
