@@ -44,6 +44,7 @@ struct CodeCollection: UIViewControllerRepresentable {
         longPress.minimumPressDuration = 0.4; longPress.delegate = context.coordinator; view.addGestureRecognizer(longPress)
         let pan = UIPanGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.horizontal(_:)))
         pan.delegate = context.coordinator; view.addGestureRecognizer(pan)
+        view.addGestureRecognizer(UIHoverGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.hover(_:))))
         context.coordinator.view = view
         view.viewportChanged = { [weak coordinator = context.coordinator] in coordinator?.revealEditor() }
         #if DEBUG
@@ -132,6 +133,9 @@ struct CodeCollection: UIViewControllerRepresentable {
         var lastSelectedDocumentID: String?
         var start: (String, Int, LineSelection.Side)?
         var selection: LineSelection?
+        /// A pointer is over the code. Its secondary click opens a line's menu; a touch long press keeps selecting lines.
+        var hovering = false
+        @objc func hover(_ recognizer: UIHoverGestureRecognizer) { hovering = recognizer.state == .began || recognizer.state == .changed }
         var horizontalOffset: CGFloat = 0
         private var decay: CADisplayLink?
         private var velocity: CGFloat = 0, lastTick: CFTimeInterval = 0
@@ -213,6 +217,7 @@ struct CodeCollection: UIViewControllerRepresentable {
         }
         func collectionView(_ view: UICollectionView, contextMenuConfigurationForItemAt path: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
             let section = parent.sections[path.section], row = section.rows[path.item]
+            if hovering, row.commentID == nil, row.hidden == nil, let menu = lineMenu(section, row: row, right: parent.split && point.x >= view.bounds.width / 2) { return menu }
             guard row.commentID != "__editor", row.hidden != nil || row.commentID != nil else { return nil }
             return UIContextMenuConfiguration(actionProvider: { _ in
                 var actions: [UIMenuElement] = []
@@ -226,6 +231,18 @@ struct CodeCollection: UIViewControllerRepresentable {
                 }
                 actions.append(UIAction(title: "Copy line") { _ in OCCopy.text((row.right ?? row.left)?.text ?? row.label ?? "") })
                 return UIMenu(title: "More options", children: actions)
+            })
+        }
+        private func lineMenu(_ section: CodeSection, row: DiffRow, right: Bool) -> UIContextMenuConfiguration? {
+            guard let line = parent.split ? (right ? row.right : row.left) ?? row.right ?? row.left : row.right ?? row.left else { return nil }
+            let side: LineSelection.Side = parent.split ? (right ? .additions : .deletions) : line.kind == .deletion ? .deletions : .additions
+            let number = side == .deletions ? line.oldLine ?? line.newLine : line.newLine ?? line.oldLine
+            return UIContextMenuConfiguration(actionProvider: { _ in
+                var actions: [UIMenuElement] = []
+                if let number { actions.append(UIAction(title: "Comment", image: nil) { _ in self.parent.onComment(section.id, .init(start: number, side: side)) }) }
+                actions.append(UIAction(title: "Copy line") { _ in OCCopy.text(line.text) })
+                if !section.source { actions.append(UIAction(title: "Open file") { _ in self.parent.onOpen(section.id) }) }
+                return UIMenu(children: actions)
             })
         }
         func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
@@ -332,20 +349,12 @@ private final class CodeCollectionView: UICollectionView {
         return super.canPerformAction(action, withSender: sender)
     }
     override var keyCommands: [UIKeyCommand]? {
-        var commands: [UIKeyCommand] = []
-        if move != nil {
-            commands.append(UIKeyCommand(input: UIKeyCommand.inputLeftArrow, modifierFlags: [], action: #selector(handleCodeKey(_:))))
-            commands.append(UIKeyCommand(input: UIKeyCommand.inputRightArrow, modifierFlags: [], action: #selector(handleCodeKey(_:))))
-        }
-        for command in commands { command.wantsPriorityOverSystemBehavior = true }
+        let commands = move == nil ? [] : [WorkspaceKeys.CodeList.previous, WorkspaceKeys.CodeList.next].map { $0.keyCommand(#selector(handleCodeKey(_:))) }
         return commands + (super.keyCommands ?? [])
     }
     @objc fileprivate func handleCodeKey(_ command: UIKeyCommand) {
-        switch command.input {
-        case UIKeyCommand.inputLeftArrow: move?(-1)
-        case UIKeyCommand.inputRightArrow: move?(1)
-        default: break
-        }
+        if WorkspaceKeys.CodeList.previous.matches(command) { move?(-1) }
+        else if WorkspaceKeys.CodeList.next.matches(command) { move?(1) }
     }
     @objc private func previousFile() { move?(-1) }
     @objc private func nextFile() { move?(1) }

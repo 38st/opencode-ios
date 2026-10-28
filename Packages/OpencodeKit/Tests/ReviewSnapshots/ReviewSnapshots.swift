@@ -100,6 +100,45 @@ import FeatureComposer
             model.disappear(); await store.stop()
         }
     }
+    @Test func contextPanel() async throws {
+        for state in ["known-limit", "unknown-limit", "no-assistant"] {
+            let store = try store("context-" + state)
+            Self.seedContext(store, state: state)
+            await capture(ContextPanel(store: store, sessionID: "s").environment(\.locale, Locale(identifier: "en_US")).environment(\.timeZone, TimeZone(secondsFromGMT: 0)!), name: "context-" + state)
+            await store.stop()
+        }
+        let store = try store("context-sheet")
+        Self.seedContext(store, state: "known-limit")
+        await capture(ContextSheet(store: store, sessionID: "s") {}.environment(\.locale, Locale(identifier: "en_US")).environment(\.timeZone, TimeZone(secondsFromGMT: 0)!), name: "context-sheet", widths: [393])
+        await store.stop()
+    }
+    /// A session with usage, todos, MCP servers, a system prompt and a subagent.
+    static func seedContext(_ store: ReadStore, state: String) {
+        let model: JSONValue = .object(["id": .string(state == "unknown-limit" ? "mock-preview" : "mock-1"), "providerID": .string("mock"), "variant": .string("careful")])
+        let location: JSONValue = .object(["directory": .string("/Users/Shared/opencode-ios")])
+        let time = { (created: Double) -> JSONValue in .object(["created": .double(created), "updated": .double(created + 600_000)]) }
+        let info = SessionInfo(raw: .object(["id": .string("s"), "title": .string("Polish the iPad workspace"), "agent": .string("build"), "model": model, "cost": .double(0.4213),
+                                             "location": location, "time": time(1_792_000_000_000)]))
+        let child = SessionInfo(raw: .object(["id": .string("ses_child"), "parentID": .string("s"), "title": .string("Review the switcher"), "cost": .double(0.0571),
+                                              "location": location, "time": time(1_792_000_300_000)]))
+        let todos: JSONValue = .array([.object(["content": .string("Add the menu bar"), "status": .string("completed")]), .object(["content": .string("Build the switcher"), "status": .string("in_progress")]),
+                                       .object(["content": .string("Fill the Context tab"), "status": .string("pending")])])
+        var messages: [SessionMessage] = [.init(raw: .object(["id": .string("msg_0"), "type": .string("system"), "text": .string("You are opencode, an interactive coding agent."), "time": .object(["created": .double(1_792_000_000_000)])])),
+                                          .init(raw: .object(["id": .string("msg_1"), "type": .string("user"), "text": .string("Polish the iPad workspace"), "time": .object(["created": .double(1_792_000_010_000)])]))]
+        if state != "no-assistant" {
+            messages.append(.init(raw: .object(["id": .string("msg_2"), "type": .string("assistant"), "model": model, "agent": .string("build"), "time": .object(["created": .double(1_792_000_420_000)]),
+                "tokens": .object(["input": .integer(52_400), "output": .integer(3_120), "reasoning": .integer(1_880), "cache": .object(["read": .integer(18_200), "write": .integer(940)])]),
+                "content": .array([.object(["type": .string("tool"), "id": .string("tool_1"), "name": .string("todowrite"), "state": .object(["status": .string("completed"), "input": .object(["todos": todos])])])])])))
+        }
+        store.seed(info: info, messages: messages)
+        store.seed(info: child, messages: [])
+        let catalog = store.catalog(for: Location(directory: "/Users/Shared/opencode-ios"))
+        catalog.models.seed([ModelInfo(raw: .object(["id": .string("mock-1"), "providerID": .string("mock"), "name": .string("Mock Sonnet"), "limit": .object(["context": .integer(200_000), "output": .integer(16_000)])]))])
+        catalog.providers.seed([ProviderInfo(raw: .object(["id": .string("mock"), "name": .string("Mock Provider")]))])
+        catalog.mcp.seed([MCPServer(raw: .object(["name": .string("filesystem"), "status": .object(["status": .string("connected")])])),
+                          MCPServer(raw: .object(["name": .string("github"), "status": .object(["status": .string("failed"), "error": .string("Token expired")])]))])
+        catalog.vcs.seed(.object(["branch": .object(["current": .string("ipad-workspace")])]))
+    }
     private func store(_ state: String) throws -> ReadStore {
         let client = APIClient(baseURL: try #require(URL(string: "http://127.0.0.1:1")), transport: ReviewSnapshotTransport(state: state))
         let store = ReadStore(serverID: "snapshot-" + state, cache: CacheStore(writer: try PersistenceWriter()), client: { client })
@@ -109,9 +148,11 @@ import FeatureComposer
     private func wait(_ predicate: () -> Bool) async {
         for _ in 0..<500 { if predicate() { return }; try? await Task.sleep(for: .milliseconds(10)) }
     }
-    private func capture<V: View>(_ view: V, name: String) async {
+    private func capture<V: View>(_ view: V, name: String) async { await capture(view, name: name, widths: [393, 820]) }
+    /// References keep the names `capture(_:name:)` gave them.
+    private func capture<V: View>(_ view: V, name: String, widths: [Double]) async {
         if let filter = ProcessInfo.processInfo.environment["OC_SNAPSHOT_FILTER"], !name.contains(filter) { return }
-        for width in [393.0, 820.0] { for dark in [false, true] { for accessibility in [false, true] {
+        for width in widths { for dark in [false, true] { for accessibility in [false, true] {
             let size = CGSize(width: width, height: 852)
             let controller = UIHostingController(rootView: view
                 .environment(\.dynamicTypeSize, accessibility ? .accessibility5 : .large)
@@ -131,8 +172,8 @@ import FeatureComposer
             let label = "\(name)-\(dark ? "dark" : "light")-\(Int(width))-\(accessibility ? "accessibility5" : "default")"
             let strategy: Snapshotting<UIViewController, UIImage> = .image(size: size)
             if ProcessInfo.processInfo.environment["OC_RECORD_SNAPSHOTS"] == "1" {
-                if let result = verifySnapshot(of: controller as UIViewController, as: strategy, named: label, record: true), !result.contains("Record mode is on") { Issue.record(Comment(rawValue: result)) }
-            } else { assertSnapshot(of: controller as UIViewController, as: strategy, named: label) }
+                if let result = verifySnapshot(of: controller as UIViewController, as: strategy, named: label, record: true, testName: "capture(_:name:)"), !result.contains("Record mode is on") { Issue.record(Comment(rawValue: result)) }
+            } else { assertSnapshot(of: controller as UIViewController, as: strategy, named: label, testName: "capture(_:name:)") }
             window.isHidden = true
         } } }
     }

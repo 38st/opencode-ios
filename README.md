@@ -21,7 +21,7 @@ Follow every session live, answer approvals with the full diff in front of you, 
 > [!NOTE]
 > This is an unofficial client. It is not affiliated with or endorsed by the opencode project or Anomaly.
 
-**Status:** in development, not yet on TestFlight or the App Store. Connection, Home, the live transcript, approvals, the composer, and review and files have landed (milestones M0 to M4). Push notifications (M5) come next.
+**Status:** in development, not yet on TestFlight or the App Store. Connection, Home, the live transcript, approvals, the composer, review and files, push notifications and the iPad workspace have landed. Shortcuts, Spotlight and widgets come next.
 
 ## Features
 
@@ -29,11 +29,12 @@ Follow every session live, answer approvals with the full diff in front of you, 
 - **One Home for every server.** Sessions from all your servers and projects, grouped by day, with *Needs you* and *Running* on top, search, unread markers and pins.
 - **A live transcript.** Streaming Markdown with highlighted code, reasoning, grouped tool calls, diff cards, live shell output and subagent drill-in. Long sessions load in pages.
 - **Approvals with the full picture.** The whole command, path or diff is on screen before you answer. Allow once, Allow always (behind device authentication), or Reject with a note. Question forms cover every field type.
+- **Push notifications.** Sealed end to end, so only your device can read them. Approve or deny from the lock screen with risk tiers: Allow once needs an unlocked device, and high-risk requests offer only Open and Reject. A Live Activity follows a running session.
 - **A real prompt dock.** `@` mentions for files, agents and skills, `/` commands, `!` shell mode, and image and PDF attachments. Pick the model, variant and agent. While a run is going, steer it, queue the next prompt or stop it.
 - **Review and files.** Uncommitted, branch and last-turn changes as unified or split diffs with word-level highlights. Mark files reviewed, comment on selected lines for your next prompt, and browse the project's files with highlighting, find and previews.
 - **Nothing gets lost.** Drafts and an outbox survive a kill and relaunch, and no prompt is sent twice.
 - **Connections that recover.** Endpoint racing across LAN, Tailscale, HTTPS and OpenTunnel addresses, a stream watchdog, backoff, and a full resync after every reconnect.
-- **An iPad workspace.** Project tabs, a collapsible Home sidebar and the session side by side, as in the desktop app.
+- **An iPad workspace.** Project tabs, a collapsible Home sidebar and the session side by side, as in the desktop app. A menu bar with keyboard shortcuts, a ⌘K switcher across every server, a Context tab with token usage and cost, a window for each session you want side by side, and drag and drop into the composer.
 - **The opencode look.** The desktop app's colours, fonts, icons and timeline, adapted for touch, Dynamic Type and dark mode.
 
 ## Screenshots

@@ -11,10 +11,17 @@ struct WorkspaceSidebar: View {
     let openSettings: () -> Void
     let newSession: () -> Void
     var selectedSession: SessionRef? = nil
+    var openInNewWindow: ((SessionRef) -> Void)? = nil
+    var openPalette: (() -> Void)? = nil
+    var shortcut: (SessionRef) -> String? = { _ in nil }
+    var search: Binding<String>? = nil
+    var showHidden: Binding<Bool>? = nil
     let selectSession: (SessionRef) -> Void
     var body: some View {
         HomeView(registry: registry, selectedServer: $selectedServer, selectedProject: $selectedProject,
-                 openSettings: openSettings, newSession: newSession, selectedSession: selectedSession, selectSession: selectSession)
+                 openSettings: openSettings, newSession: newSession, selectedSession: selectedSession,
+                 openInNewWindow: openInNewWindow, openPalette: openPalette, shortcut: shortcut, search: search, showHidden: showHidden,
+                 selectSession: selectSession)
     }
 }
 #endif

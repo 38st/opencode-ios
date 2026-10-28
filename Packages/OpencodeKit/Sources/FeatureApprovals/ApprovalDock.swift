@@ -55,6 +55,8 @@ public struct PermissionCard: View {
                 }
             }
         }.sheet(isPresented: $show) { PermissionSheet(store: store, request: request, directory: directory).ocSheet() }
+            // Review next approval (⇧⌘A) opens this request's full review once its card appears.
+            .onChange(of: store.reviewRequest, initial: true) { _, id in if id == request.id { store.reviewRequest = nil; show = true } }
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("permission-" + request.id)
     }
@@ -82,6 +84,7 @@ public struct QuestionCard: View {
                 Button("Answer question") { show = true }.buttonStyle(OCButtonStyle(.submit)).accessibilityIdentifier("answerQuestion")
             }
         }.sheet(isPresented: $show) { QuestionSheet(store: store, form: form).ocSheet() }
+            .onChange(of: store.reviewRequest, initial: true) { _, id in if id == form.id { store.reviewRequest = nil; show = true } }
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("question-" + form.id)
     }

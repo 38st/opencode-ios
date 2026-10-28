@@ -2,7 +2,20 @@
 // session/screen-layout.ts. Direct SwiftUI chrome avoids native toolbar image flattening.
 #if os(iOS)
 import SwiftUI
+import OCModels
 
+/// A window's panel state: whether Home and the review panel are open, and their widths.
+public struct OCWorkspaceLayout: Equatable, Sendable {
+    /// The review's split-diff preference, which the shell reads to keep the review pane wide enough for it.
+    public static let reviewSplitKey = "reviewSplit"
+    public var homeOpen: Bool
+    public var reviewOpen: Bool
+    public var chatWidth: Double
+    public var homeWidth: Double
+    public init(homeOpen: Bool = true, reviewOpen: Bool = false, chatWidth: Double = WorkspaceWidths.chatDefault, homeWidth: Double = WorkspaceWidths.homeDefault) {
+        self.homeOpen = homeOpen; self.reviewOpen = reviewOpen; self.chatWidth = chatWidth; self.homeWidth = homeWidth
+    }
+}
 public struct OCWorkspaceShell<Sidebar: View, Tabs: View, Main: View, Panel: View>: View {
     let sidebar: Sidebar
     let tabs: Tabs
@@ -12,66 +25,98 @@ public struct OCWorkspaceShell<Sidebar: View, Tabs: View, Main: View, Panel: Vie
     let allowsPresentation: Bool
     let reviewRequest: UUID?
     let homeDismissal: UUID?
-    @State private var homeOpen: Bool
-    @State private var reviewOpen = false
+    let homeToggle: UUID?
+    let reviewToggle: UUID?
+    private let external: Binding<OCWorkspaceLayout>?
+    @State private var storage: OCWorkspaceLayout
     @State private var reviewSheet = false
+    @AppStorage(OCWorkspaceLayout.reviewSplitKey) private var reviewSplit = true
     @Environment(\.dynamicTypeSize) private var typeSize
-    public init(homeInitiallyOpen: Bool = false, selectionID: String? = nil, allowsPresentation: Bool = true, reviewRequest: UUID? = nil, homeDismissal: UUID? = nil, @ViewBuilder sidebar: () -> Sidebar, @ViewBuilder tabs: () -> Tabs,
+    /// A shell whose panel state belongs to its window; the toggles are requests from the menu bar.
+    public init(layout: Binding<OCWorkspaceLayout>, selectionID: String? = nil, allowsPresentation: Bool = true, reviewRequest: UUID? = nil, homeDismissal: UUID? = nil,
+                homeToggle: UUID? = nil, reviewToggle: UUID? = nil, @ViewBuilder sidebar: () -> Sidebar, @ViewBuilder tabs: () -> Tabs,
                 @ViewBuilder main: () -> Main, @ViewBuilder panel: () -> Panel) {
-        _homeOpen = State(initialValue: homeInitiallyOpen)
-        self.selectionID = selectionID
-        self.allowsPresentation = allowsPresentation
-        self.reviewRequest = reviewRequest
-        self.homeDismissal = homeDismissal
+        external = layout; _storage = State(initialValue: layout.wrappedValue)
+        self.selectionID = selectionID; self.allowsPresentation = allowsPresentation; self.reviewRequest = reviewRequest
+        self.homeDismissal = homeDismissal; self.homeToggle = homeToggle; self.reviewToggle = reviewToggle
         self.sidebar = sidebar(); self.tabs = tabs(); self.main = main(); self.panel = panel()
     }
+    public init(homeInitiallyOpen: Bool = false, selectionID: String? = nil, allowsPresentation: Bool = true, reviewRequest: UUID? = nil, homeDismissal: UUID? = nil, @ViewBuilder sidebar: () -> Sidebar, @ViewBuilder tabs: () -> Tabs,
+                @ViewBuilder main: () -> Main, @ViewBuilder panel: () -> Panel) {
+        external = nil; _storage = State(initialValue: OCWorkspaceLayout(homeOpen: homeInitiallyOpen))
+        self.selectionID = selectionID; self.allowsPresentation = allowsPresentation; self.reviewRequest = reviewRequest
+        self.homeDismissal = homeDismissal; homeToggle = nil; reviewToggle = nil
+        self.sidebar = sidebar(); self.tabs = tabs(); self.main = main(); self.panel = panel()
+    }
+    private var layout: Binding<OCWorkspaceLayout> { external ?? $storage }
     public var body: some View {
         GeometryReader { geometry in
             let wide = geometry.size.width >= OCLayout.workspaceWide && !typeSize.isAccessibilitySize
             let beside = geometry.size.width >= OCLayout.desktopBreakpoint && !typeSize.isAccessibilitySize
-            let available = geometry.size.width - OCSpacing.sm * 3 - (homeOpen && wide ? OCLayout.sidebar + OCSpacing.sm : 0)
-            let panelWidth = max(OCLayout.inspector, available - OCLayout.timelineWithReview)
+            let homeOpen = layout.wrappedValue.homeOpen, reviewOpen = layout.wrappedValue.reviewOpen
+            // Home never squeezes the session and review panels below the review layout's breakpoint.
+            let homeRange = WorkspaceWidths.homeMinimum...max(WorkspaceWidths.homeMinimum, min(WorkspaceWidths.homeMaximum, geometry.size.width - OCLayout.desktopBreakpoint))
+            let homeWidth = WorkspaceWidths.clamp(layout.wrappedValue.homeWidth, homeRange)
+            let available = geometry.size.width - OCSpacing.sm * 3 - (homeOpen && wide ? homeWidth + OCSpacing.sm : 0)
+            // As on the desktop, split diffs ask the session panel to leave the review pane its wider minimum.
+            let split = reviewOpen && beside && reviewSplit
+            let chatRange = WorkspaceWidths.chatMinimum...WorkspaceWidths.chatMaximum(available: available, split: split)
+            let chatWidth = WorkspaceWidths.clampChat(max(WorkspaceWidths.chatMinimum, layout.wrappedValue.chatWidth), available: available, split: split)
             VStack(spacing: OCSpacing.sm) {
                 HStack(spacing: OCSpacing.xs) {
-                    OCIconButton("Toggle Home sidebar", icon: "layout-left") { homeOpen.toggle() }
+                    OCIconButton("Toggle Home sidebar", icon: "layout-left") { layout.wrappedValue.homeOpen.toggle() }
                         .accessibilityIdentifier("toggleHome")
                         // What is visible: the sidebar, or Home as a sheet at narrow widths.
                         .accessibilityValue(homeOpen && (wide || allowsPresentation) ? "open" : "closed")
                     tabs
-                    OCIconButton("Toggle review", icon: "sidebar-right") {
-                        if beside { reviewOpen.toggle() } else { reviewSheet = true }
-                    }
-                        .accessibilityIdentifier("toggleReview").keyboardShortcut("r", modifiers: [.command, .shift])
+                    OCIconButton("Toggle review", icon: "sidebar-right") { toggleReview(beside: beside) }
+                        .accessibilityIdentifier("toggleReview")
                         .accessibilityValue(reviewOpen && beside || reviewSheet ? "open" : "closed")
                 }
-                HStack(spacing: OCSpacing.sm) {
-                    if homeOpen && wide { sidebar.frame(width: OCLayout.sidebar) }
-                    main.frame(maxWidth: .infinity, maxHeight: .infinity)
+                HStack(spacing: 0) {
+                    if homeOpen && wide {
+                        sidebar.frame(width: homeWidth)
+                        OCResizeHandle("Resize Home sidebar", value: layout.homeWidth, range: homeRange, reset: WorkspaceWidths.homeDefault, style: .gap)
+                            .accessibilityIdentifier("resizeHome")
+                    }
                     if reviewOpen && beside {
-                        panel.frame(width: panelWidth)
+                        main.frame(width: chatWidth).frame(maxHeight: .infinity)
+                        OCResizeHandle("Resize session panel", value: Binding(get: { chatWidth }, set: { layout.wrappedValue.chatWidth = $0 }),
+                                       range: chatRange, reset: WorkspaceWidths.chatDefault, style: .gap)
+                            .accessibilityIdentifier("resizeSession")
+                        panel.frame(maxWidth: .infinity)
+                    } else {
+                        main.frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                 }.frame(maxHeight: .infinity)
             }.padding(.horizontal, OCSpacing.sm).padding(.bottom, OCSpacing.sm)
                 .background(OCColor.backgroundDeep)
-                .sheet(isPresented: Binding(get: { homeOpen && !wide && allowsPresentation }, set: { homeOpen = $0 })) {
+                .sheet(isPresented: Binding(get: { homeOpen && !wide && allowsPresentation }, set: { layout.wrappedValue.homeOpen = $0 })) {
                     sidebar.ocSheet()
                 }
-                .onChange(of: reviewRequest) { _, request in if request != nil { if beside { reviewOpen = true } else { reviewSheet = true } } }
+                .onChange(of: reviewRequest) { _, request in if request != nil { if beside { layout.wrappedValue.reviewOpen = true } else { reviewSheet = true } } }
+                .onChange(of: reviewToggle) { _, request in if request != nil { toggleReview(beside: beside) } }
+                .onChange(of: homeToggle) { _, request in if request != nil { layout.wrappedValue.homeOpen.toggle() } }
                 // Home only reopens by itself when it is the sidebar; at narrow widths the sheet would cover
                 // the New session composer that a cleared selection shows.
                 .onChange(of: selectionID) { _, next in
-                    if next == nil { homeOpen = wide }
-                    else if !wide { homeOpen = false }
+                    if next == nil { layout.wrappedValue.homeOpen = wide }
+                    else if !wide { layout.wrappedValue.homeOpen = false }
                 }
                 // Every navigation from Home closes the sheet, even when the selection doesn't change.
-                .onChange(of: homeDismissal) { _, request in if request != nil && !wide { homeOpen = false } }
+                .onChange(of: homeDismissal) { _, request in if request != nil && !wide { layout.wrappedValue.homeOpen = false } }
                 .onChange(of: wide) { _, isWide in
-                    if !isWide && selectionID != nil { homeOpen = false }
+                    if !isWide && selectionID != nil { layout.wrappedValue.homeOpen = false }
                 }
+                // A restored window showing a session does not open with Home's sheet over it.
+                .onAppear { if !wide && selectionID != nil && homeOpen { layout.wrappedValue.homeOpen = false } }
                 .sheet(isPresented: $reviewSheet) {
                     panel.safeAreaInset(edge: .top) { HStack { Spacer(); OCIconButton("Close review", icon: "close") { reviewSheet = false }.accessibilityIdentifier("closeReview") }.padding(.horizontal, OCSpacing.sm) }.ocSheet()
                 }
         }.ocTheme()
+    }
+    private func toggleReview(beside: Bool) {
+        if beside { layout.wrappedValue.reviewOpen.toggle() } else { reviewSheet.toggle() }
     }
 }
 public struct OCProjectTab: Identifiable {

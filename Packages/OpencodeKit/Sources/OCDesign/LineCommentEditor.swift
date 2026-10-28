@@ -32,15 +32,26 @@ public struct OCLineCommentEditor: View {
             footer {
                 if let selection { Text(selection.label).font(OCType.micro).foregroundStyle(OCColor.textFaint) }
                 if !typeSize.isAccessibilitySize { Spacer(minLength: 0) }
+                // Return and Escape belong to the comment's text view while it has focus; ⌘↩ stays the menu's Send.
                 HStack(spacing: OCSpacing.sm) {
-                    Button("Cancel", action: cancel).buttonStyle(OCButtonStyle(.ghost)).keyboardShortcut(.cancelAction)
-                    Button(editing ? "Save" : "Comment") { submit(text) }.buttonStyle(OCButtonStyle(.contrast)).disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty).keyboardShortcut(.return, modifiers: .command)
+                    Button("Cancel", action: cancel).buttonStyle(OCButtonStyle(.ghost))
+                    Button(editing ? "Save" : "Comment") { submit(text) }.buttonStyle(OCButtonStyle(.contrast)).disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
         }.padding(OCSpacing.md).frame(maxWidth: 400)
             .background(OCColor.layer1, in: RoundedRectangle(cornerRadius: OCRadius.md))
             .overlay(RoundedRectangle(cornerRadius: OCRadius.md).strokeBorder(OCColor.border, lineWidth: OCBorder.hairline))
             .onAppear { focused = true }
+            .commenting()
+    }
+}
+private extension View {
+    @ViewBuilder func commenting() -> some View {
+        #if os(iOS)
+        focusedSceneValue(\.ocCommenting, true)
+        #else
+        self
+        #endif
     }
 }
 

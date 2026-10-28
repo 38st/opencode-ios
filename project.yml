@@ -69,7 +69,15 @@ targets:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         UIApplicationSceneManifest:
-          UIApplicationSupportsMultipleScenes: false
+          UIApplicationSupportsMultipleScenes: true
+        # A Home row dragged to the edge of the screen opens its session in a new window.
+        NSUserActivityTypes:
+          - $(PRODUCT_BUNDLE_IDENTIFIER).session
+        # The in-app type a Files row carries when it is dragged onto the composer.
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: dev.opencodeios.file-mention
+            UTTypeDescription: File mention
+            UTTypeConformsTo: [public.data]
         NSCameraUsageDescription: Opencode uses the camera to scan server pairing QR codes and attach photos to prompts.
         NSFaceIDUsageDescription: Opencode verifies it is you before always allowing an action or approving a high-risk request.
         NSLocalNetworkUsageDescription: Opencode uses your local network to connect to opencode servers you choose on your computers.
@@ -82,6 +90,8 @@ targets:
         embed: true
       - package: OpencodeKit
         product: FeatureServers
+      - package: OpencodeKit
+        product: OCModels
       - package: OpencodeKit
         product: OCSync
   NotificationService:

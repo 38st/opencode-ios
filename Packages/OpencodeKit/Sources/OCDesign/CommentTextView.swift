@@ -1,6 +1,7 @@
 #if os(iOS)
 import SwiftUI
 import UIKit
+import OCModels
 
 struct CommentTextView: UIViewRepresentable {
     @Binding var text: String
@@ -49,11 +50,7 @@ final class CommentEditorView: UITextView {
     }
     override var keyCommands: [UIKeyCommand]? {
         guard markedTextRange == nil else { return super.keyCommands }
-        return [("\r", #selector(send)), (UIKeyCommand.inputEscape, #selector(dismissEditor))].map { input, action in
-            let command = UIKeyCommand(input: input, modifierFlags: [], action: action)
-            command.wantsPriorityOverSystemBehavior = true
-            return command
-        }
+        return [WorkspaceKeys.CommentEditor.submit.keyCommand(#selector(send)), WorkspaceKeys.CommentEditor.cancel.keyCommand(#selector(dismissEditor))]
     }
     @objc private func send() { submit?() }
     @objc private func dismissEditor() { cancel?() }

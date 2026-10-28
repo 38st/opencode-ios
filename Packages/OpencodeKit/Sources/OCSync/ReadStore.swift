@@ -25,6 +25,9 @@ import OCSecurity
     public var forms: [FormOwner: [FormInfo]] = [:]
     public var catalogs: [String: LocationCatalog] = [:]
     public internal(set) var openSessions: Set<String> = []
+    @ObservationIgnored var openCounts: [String: Int] = [:]
+    /// A permission or question to present when its card appears (Review next approval).
+    public var reviewRequest: String?
     public internal(set) var error: String?
     public private(set) var cacheLoaded = false
     public internal(set) var outboxEntries: [String: OutboxEntry] = [:]

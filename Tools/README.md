@@ -256,6 +256,37 @@ error status, available tools, remaining calls and unexpected requests.
 The V2 tool is named **`subagent`**, not `task`; the fixture uses the source's
 name. It creates and verifies a real child session through the scripted model.
 
+## The iPad workspace flow
+
+```sh
+node Tools/ui-smoke/index.mjs --workspace-only                # every workspace test on the iPad
+node Tools/ui-smoke/index.mjs --workspace-test testTwoWindows # one of them
+```
+
+The full run's iPad stage includes `WorkspaceSmokeTests`, which the iPhone stage skips. It
+presses these menu shortcuts as synthesized hardware keys: ⌘1, ⌘2, ⌥⌘↓, ⌥⌘↑, ⌥⇧⌘↓, ⌥⇧⌘↑
+(with the composer focused), ⌘\, ⇧⌘R, ⌘N, ⌘K, ⌘., ⌘', ⇧⌘D, ⌘U, ⇧⌘A and ⇧⌘N; `ReviewSmokeTests`
+presses ⌘F. ⌘3–⌘9 share ⌘1 and ⌘2's path and are not pressed, and ⌘↩ is not pressed because the
+simulator does not deliver Return chords (see below). It drives the ⌘K switcher from the
+keyboard, opens the next approval, shows two sessions in two windows (restoring both
+after a relaunch), opens a third with ⇧⌘N, and drags a Files row onto the composer. Only under a
+`ui-` test identity, the DEBUG app exposes a `windowInventory` element (every window's
+sessions and the key window), a `commandTrace` element (commands counted where they are
+dispatched, so a test proves that one key press ran one action), a `workspaceCommands`
+element (the menu commands the menu bar enables). A fresh `--ui-testing-reset` launch asks
+iPadOS to close windows an earlier test left open; the simulator keeps them in the app
+switcher, so the tests check windows by the sessions they show. What the test saw of the windows is attached and copied next to the result bundle
+as `finding-*`. The iPad simulator drops the key of the first chord after a launch, so each
+flow first sends ⌘J, which no command owns; `testReviewNavigation` checks that first chord
+itself. XCUITest on this simulator delivers no Return chord or Escape, neither to the menu bar
+nor to a focused text view or field, so the composer flow runs Send from the switcher and the
+switcher flow opens an entry with a typed newline; ⌘↩, Return and Escape in the editor and the
+switcher are covered by unit tests instead. Deep links go through
+`XCUIDevice.shared.system.open`, because `XCUIApplication.open` relaunches the app and would
+drop the window that is not on screen.
+The iPhone stage's `SwitcherSmokeTests` opens the switcher from Home's toolbar button and the
+context sheet from the session header.
+
 ## Server UI smoke and snapshots (M1b)
 
 ```sh
@@ -270,6 +301,36 @@ single-use link with `POST /api/pair`, and runs `xcodebuild test` on iPhone 17 P
 (iOS 26.5). `TEST_RUNNER_OPENCODE_UI_*` environment variables carry the sandbox
 URLs, passwords and link into XCUITest. Only an isolated test identifier reaches
 the app's launch environment; the tests type the connection inputs through the UI.
+A full run first runs the unit and snapshot tests once (`Units.xcresult`, `units.log`), then
+the UI tests. When UI tests fail, their stage runs the failed tests again together, up to
+twice, on the same build (`xcodebuild test-without-building` with an `-only-testing:` for each,
+into `Smoke-attempt-2.xcresult` and `test-attempt-2.log`, and so on); a test passes when any
+attempt passes or ends in an expected failure. Before each retry the fault proxy's faults are
+cleared and the no-Git review fixture loses the repository a failed attempt may have created;
+other server state stays, so a retried test sees the sessions and messages its earlier attempt
+left. UI stages pass `-test-timeouts-enabled YES`, so a test that hangs fails at its
+`executionTimeAllowance` (600 seconds when it sets none) and is retried like any other failure.
+A crash during a test is that test's failure and is retried. A failure that belongs to no
+failed test (a test runner lost outside any test, a summary that disagrees with the result
+tree, an unknown result) fails the stage without a retry. The tool
+retries itself because Xcode's `-retry-tests-on-failure` does not:
+since Xcode 26 a failure in an async test whose class sets `continueAfterFailure = false`
+relaunches the test runner, which drops the retry (a known Xcode issue). A
+regression still fails every attempt; a burst of load on a shared host no longer fails the
+whole run. The large-diff scroll test logs its worst frame but never fails on it; its hitch
+rate, first rows and memory checks still fail the test. Snapshot tests never retry, because a snapshot test records a
+missing reference image and would pass on its next attempt; any stage that adds or changes a
+file under a `__Snapshots__` folder fails and prints `RECORDED <file>`. A test that passed on
+a later attempt prints `RETRIED <test> (attempt n of 3)`; one that failed every attempt prints
+`FAILED <test> (3 of 3)` and fails the stage. `retried.json` next to the result bundles lists
+both per stage. A test that passed on a later attempt contributes only that attempt's
+screenshots, findings and measurements, such as the approval latency and the review scroll
+metrics; if that attempt attached none, the stage's checks for them fail. The test's own
+checks are not isolated the same way: a retried `testReviewAndFiles` can match the comment
+message its failed attempt sent, because the session and the text are the same on every
+attempt. The full run's last
+stage, the simulator push tests (`Tools/push-e2e/simulator.mjs`), runs its one test once with no
+retry; the snapshot check covers it too.
 Debug builds use a separate JSON file and Keychain service for each test run.
 Production storage is not reset. UI tests use XCTest because XCUITest requires it;
 package and snapshot tests use Swift Testing.

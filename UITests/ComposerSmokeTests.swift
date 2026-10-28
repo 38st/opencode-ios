@@ -216,26 +216,22 @@ nonisolated final class ComposerSmokeTests: SmokeTestCase {
         XCTAssertEqual(info["agent"] as? String, "reviewer")
         XCTAssertEqual((info["model"] as? [String: Any])?["id"] as? String, "mock-vision")
         XCTAssertEqual((info["model"] as? [String: Any])?["variant"] as? String, "careful")
-        // The header names the server's selection by its catalog display name, as the composer does. While the
-        // keyboard is up the session uses compact chrome: the header is hidden and the same metadata is in the
-        // Session information menu. The chrome can switch while the keyboard animates, so retry either view.
-        let header = app.otherElements["sessionHeader-" + serverID]
-        var shown = false
-        for _ in 0..<5 where !shown {
-            if header.staticTexts["Mock Vision"].waitForExistence(timeout: 1) { shown = true; break }
-            let information = app.buttons["sessionInformation"]
-            guard information.exists, information.isHittable else { continue }
-            information.tap()
-            let model = app.descendants(matching: .any)["Model: Mock Vision"].firstMatch
-            shown = model.waitForExistence(timeout: 2)
-            // An outside tap only dismisses an open menu; it never reaches the view behind it. The status bar does not
-            // count as outside, so tap the empty trailing end of the session's navigation bar.
-            if model.exists {
-                app.navigationBars["Composer smoke"].coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
-                XCTAssertTrue(model.waitForNonExistence(timeout: 5))
-            }
-        }
-        XCTAssertTrue(shown, "The session header or Session information menu must name the selected model")
+        // The header names the server's selection by its catalog display name, as the composer does. With the keyboard
+        // up the session uses compact chrome, which moves that metadata into the Session information menu; the chrome
+        // stays compact while the menu is open, even when opening it dismisses the keyboard.
+        editor.tap()
+        let information = app.buttons["sessionInformation"]
+        XCTAssertTrue(information.waitForExistence(timeout: 5)); information.tap()
+        let model = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Model: ")).firstMatch
+        XCTAssertTrue(model.waitForExistence(timeout: 5), "Session information must stay open and name the model")
+        let label = model.label
+        // An outside tap only dismisses an open menu; it never reaches the view behind it. The status bar does not count
+        // as outside: tap the empty trailing end of the session's navigation bar, or the timeline beside the menu on iPad.
+        let navigationBar = app.navigationBars["Composer smoke"]
+        (navigationBar.exists ? navigationBar.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5))
+            : app.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.45))).tap()
+        XCTAssertTrue(model.waitForNonExistence(timeout: 5))
+        XCTAssertEqual(label, "Model: Mock Vision")
         sessionAction("Rename")
         let title = app.alerts.textFields.firstMatch; title.tap()
         title.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: (title.value as? String ?? "").count) + "Renamed composer")

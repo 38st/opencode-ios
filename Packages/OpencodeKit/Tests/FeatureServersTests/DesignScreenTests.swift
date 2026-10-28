@@ -68,6 +68,58 @@ import OCSync
         await registry.shutdown(); await empty.shutdown()
     }
 
+    @Test func commandPalette() async throws {
+        let server = ServerID(rawValue: try #require(UUID(uuidString: "00000000-0000-0000-0000-0000000000D1")))
+        let sessions = ["Polish the iPad workspace", "Design system tokens", "Review the switcher", "Fix the pairing flow", "Release notes", "Archive old sessions"].enumerated().map { index, title in
+            SwitcherIndex.Session(ref: SessionRef(serverID: server, sessionID: "ses_\(index)"), title: title, project: index % 2 == 0 ? "opencode-ios" : "design", updated: Double(100 - index))
+        }
+        let projects = [SwitcherIndex.Project(filter: server.rawValue.uuidString + ":design", name: "design", path: "/Users/Shared/design", server: "Studio Mac")]
+        let commands = WorkspaceCommand.all.filter { $0 != .commandPalette && $0 != .find }
+        for (name, query) in [("palette-empty", ""), ("palette-results", "design"), ("palette-none", "zzz")] {
+            let palette = CommandPalette(search: { SwitcherIndex.groups(query: $0, commands: commands, sessions: sessions, projects: projects) },
+                                         select: { _, _ in }, supportsWindows: true, maxHeight: 480, query: query, close: {})
+                .frame(maxWidth: 640).background(OCColor.background).ocTheme()
+            for dark in [false, true] { for accessibility in [false, true] { for width in [393.0, 820.0] {
+                let controller = UIHostingController(rootView: palette.environment(\.colorScheme, dark ? .dark : .light)
+                    .environment(\.dynamicTypeSize, accessibility ? .accessibility5 : .large).frame(maxHeight: .infinity, alignment: .top).background(OCColor.backgroundDeep))
+                controller.overrideUserInterfaceStyle = dark ? .dark : .light
+                assertSnapshot(of: controller, as: .image(size: CGSize(width: width, height: 852), traits: UITraitCollection { traits in
+                    traits.userInterfaceStyle = dark ? .dark : .light
+                    traits.horizontalSizeClass = width > 600 ? .regular : .compact
+                    traits.preferredContentSizeCategory = accessibility ? .accessibilityExtraExtraExtraLarge : .large
+                }), named: "\(name)-\(dark ? "dark" : "light")-\(Int(width))-\(accessibility ? "accessibility5" : "default")",
+                    record: ProcessInfo.processInfo.environment["OC_RECORD_SNAPSHOTS"] == "1")
+            } } }
+        }
+    }
+    /// The shell from a narrow split to a 13-inch screen in both orientations, with Home and review open where they fit.
+    @Test func workspaceSizes() async throws {
+        let connection = DesignConnection()
+        let registry = ServerRegistry(records: DesignRecords(), credentials: CredentialStore(secrets: InMemorySecretStore()),
+                                      pathMonitor: nil, localNetworkExplained: true, factory: { _, _, _ in connection })
+        await registry.load()
+        let endpoint = EndpointRecord(url: try #require(URL(string: "https://studio.example.com")), kind: .https)
+        let server = try await registry.add(.init(name: "Studio Mac", endpoints: [endpoint], lastInfo: .init(version: "2.0.32")), credential: .password("fixture"))
+        server.readPath.client = nil
+        server.readPath.projects = [.init(raw: .object(["id": .string("project"), "name": .string("Design system"), "canonical": .string("/work/project")]))]
+        for size in [CGSize(width: 507, height: 1180), CGSize(width: 694, height: 1180), CGSize(width: 820, height: 1180), CGSize(width: 1180, height: 820),
+                     CGSize(width: 1032, height: 1376), CGSize(width: 1376, height: 1032)] {
+            let regular = size.width >= 600
+            let view: AnyView = regular ? AnyView(OCWorkspaceShell(layout: .constant(OCWorkspaceLayout(homeOpen: true, reviewOpen: true))) {
+                WorkspaceSidebar(registry: registry, selectedServer: .constant(nil), selectedProject: .constant(nil), openSettings: {}, newSession: {}, selectSession: { _ in })
+            } tabs: {
+                OCProjectTabs(projects: [.init(id: "project", title: "Design system")], selection: .constant("project"))
+            } main: { WorkspacePlaceholder(title: "Design system") } panel: { OCWorkspacePanel() }) : AnyView(ServerRootView(registry: registry))
+            let controller = UIHostingController(rootView: view.environment(\.colorScheme, .light))
+            controller.overrideUserInterfaceStyle = .light
+            assertSnapshot(of: controller, as: .image(size: size, traits: UITraitCollection { traits in
+                traits.userInterfaceStyle = .light
+                traits.horizontalSizeClass = regular ? .regular : .compact
+            }), named: "workspace-\(Int(size.width))x\(Int(size.height))", record: ProcessInfo.processInfo.environment["OC_RECORD_SNAPSHOTS"] == "1")
+        }
+        await registry.shutdown()
+    }
+
     @Test func fontsAndIconsAreBundled() {
         OCFonts.register()
         #expect(UIFont(name: "Inter-Regular", size: 14) != nil)

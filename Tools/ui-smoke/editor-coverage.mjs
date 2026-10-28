@@ -5,6 +5,8 @@ export const editorCases = [
   'textKitMentionsDeleteAtomicallyAndUndoAndMarkedTextSurvive()',
   'typingAtMentionTrailingEdgeDoesNotExtendToken()',
   'markedCompositionOwnsHardwareReturnAndStyleChangesAreBounded()',
+  'dropsRouteMentionsMediaAndTextWithoutDuplicates()',
+  'returnCommandReturnAndEscapeEachRunOnce()',
 ];
 export function assertEditorCoverage(results) {
   const cases = [];

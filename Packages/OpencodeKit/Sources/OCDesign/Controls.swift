@@ -19,7 +19,18 @@ public struct OCButtonStyle: ButtonStyle {
             .overlay(RoundedRectangle(cornerRadius: OCRadius.md).strokeBorder(variant == .ghost ? .clear : OCColor.borderStrong, lineWidth: OCBorder.hairline))
             .opacity(enabled ? 1 : variant == .submit ? 0.4 : 0.5)
             .contentShape(Rectangle())
+            .ocHover(RoundedRectangle(cornerRadius: OCRadius.md))
             .animation(reduceMotion ? nil : .easeOut(duration: OCMotion.fast), value: configuration.isPressed)
+    }
+}
+public extension View {
+    /// The iPad pointer's highlight, in the control's own shape.
+    @ViewBuilder func ocHover(_ shape: some Shape = RoundedRectangle(cornerRadius: OCRadius.md)) -> some View {
+        #if os(iOS)
+        contentShape(.hoverEffect, shape).hoverEffect(.highlight)
+        #else
+        self
+        #endif
     }
 }
 public struct OCSubmitIconButtonStyle: ButtonStyle {
@@ -33,6 +44,7 @@ public struct OCSubmitIconButtonStyle: ButtonStyle {
             .overlay(RoundedRectangle(cornerRadius: OCRadius.md).fill(configuration.isPressed ? OCColor.pressed : .clear))
             .opacity(enabled ? 1 : 0.4)
             .frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget).contentShape(Rectangle())
+            .ocHover()
     }
 }
 public struct OCIconButton: View {
@@ -47,7 +59,7 @@ public struct OCIconButton: View {
         // Native toolbars may flatten custom ButtonStyle backgrounds into a
         // template image, turning the entire hit target into a solid rectangle.
         Button(role: role, action: action) {
-            OCIcon(icon).frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget).contentShape(Rectangle())
+            OCIcon(icon).frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget).contentShape(Rectangle()).ocHover()
         }.buttonStyle(.plain).tint(role == .destructive ? OCColor.danger : OCColor.text)
             .foregroundStyle(role == .destructive ? OCColor.danger : OCColor.text)
             .accessibilityLabel(title).help(title)
@@ -104,6 +116,7 @@ public struct OCTabStyle: ButtonStyle {
             .padding(.horizontal, fill ? OCSpacing.xs : OCSpacing.md).frame(maxWidth: fill ? .infinity : nil).frame(minHeight: OCLayout.touchTarget)
             .background(selected ? OCColor.pressed : configuration.isPressed ? OCColor.hover : .clear, in: RoundedRectangle(cornerRadius: OCRadius.md))
             .contentShape(Rectangle())
+            .ocHover()
             .accessibilityAddTraits(selected ? .isSelected : [])
             .animation(reduceMotion ? nil : .easeOut(duration: OCMotion.fast), value: configuration.isPressed)
     }

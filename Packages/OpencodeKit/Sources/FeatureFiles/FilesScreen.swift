@@ -18,14 +18,16 @@ public struct FilesScreen: View {
     @State private var finding = false
     @State private var find = ""
     @State private var matchIndex = 0
+    /// Names this viewer to the menu bar's Find.
+    @State private var findOwner = UUID()
     @State private var search = CodeSearchResult()
     @State private var comment: OCDiffSelection?
     @State private var quickLook = false
     @State private var editing: LineComment?
     @State private var regularWidth = false
-    @State private var dragWidth: Double?
     @State private var resultIndex = 0
     @FocusState private var filterFocused: Bool
+    @FocusState private var findFocused: Bool
     public init(model: FilesModel, composer: ComposerModel, changes: [FileDiff] = []) { self.model = model; self.composer = composer; self.changes = changes }
     public var body: some View {
         GeometryReader { geometry in
@@ -45,12 +47,9 @@ public struct FilesScreen: View {
                 HStack(spacing: 0) {
                     if regular || model.selectedPath == nil {
                         browser.frame(width: regular ? min(sidebarWidth, geometry.size.width - 200) : nil)
-                        if regular { Rectangle().fill(OCColor.border).frame(width: 6).contentShape(Rectangle().inset(by: -19)).gesture(DragGesture().onChanged { value in
-                            if dragWidth == nil { dragWidth = sidebarWidth }
-                            sidebarWidth = min(480, max(200, (dragWidth ?? 240) + value.translation.width))
-                        }.onEnded { _ in dragWidth = nil }).onTapGesture(count: 2) { sidebarWidth = 240 }
-                            .accessibilityLabel("Resize file tree").accessibilityValue("\(Int(sidebarWidth)) points")
-                            .accessibilityAdjustableAction { direction in sidebarWidth = min(480, max(200, sidebarWidth + (direction == .increment ? 20 : -20))) }
+                        if regular {
+                            OCResizeHandle("Resize file tree", value: $sidebarWidth, range: WorkspaceWidths.reviewTreeMinimum...WorkspaceWidths.reviewTreeMaximum,
+                                           reset: WorkspaceWidths.reviewTreeDefault)
                         }
                     }
                     if model.selectedPath != nil { viewer }
@@ -126,11 +125,29 @@ public struct FilesScreen: View {
                 Text((entry.path.trimmingCharacters(in: CharacterSet(charactersIn: "/")) as NSString).lastPathComponent).font(OCType.small).lineLimit(1)
                 Spacer(minLength: 0)
                 if let status = status(entry) { Text(status).font(OCType.micro).foregroundStyle(OCColor.textMuted) }
-            }.padding(.leading, CGFloat(depth) * 16 + OCSpacing.sm).padding(.trailing, OCSpacing.sm).frame(minHeight: 44).contentShape(Rectangle())
+            }.padding(.leading, CGFloat(depth) * 16 + OCSpacing.sm).padding(.trailing, OCSpacing.sm).frame(minHeight: 44).contentShape(Rectangle()).ocHover()
         }.buttonStyle(.plain).accessibilityIdentifier("fileEntry-" + entry.path).background(!model.query.isEmpty && model.results.indices.contains(resultIndex) && model.results[resultIndex].path == entry.path ? OCColor.layer2 : OCColor.background).contextMenu {
+            if entry.type != .directory, let path = ReviewPath(entry.path, root: .location, location: model.directory, project: model.projectDirectory) {
+                Button("Open") { filterFocused = false; model.open(path) }
+            }
             Button("Mention in composer") { composer.mentionFile(ComposerInput.absolute(entry.path, directory: model.directory), focus: regularWidth) }
             Button("Copy path") { OCCopy.text(ComposerInput.absolute(entry.path, directory: model.directory)) }
-        }.draggable(ComposerInput.absolute(entry.path, directory: model.directory))
+        }.onDrag { Self.mentionProvider(ComposerInput.absolute(entry.path, directory: model.directory)) }
+    }
+    /// A file dropped on the composer becomes an @file mention; other apps receive the path as text.
+    static func mentionProvider(_ path: String) -> NSItemProvider {
+        let provider = NSItemProvider(object: path as NSString)
+        provider.registerDataRepresentation(forTypeIdentifier: ComposerDrop.mentionType, visibility: .ownProcess) { done in
+            done(ComposerDrop.mentionPayload(path), nil); return nil
+        }
+        provider.suggestedName = (path as NSString).lastPathComponent
+        return provider
+    }
+    /// Find in this file, from the Find button, its ⌘F or the menu bar's Find.
+    private func openFind() { finding = true; preview = false; findFocused = true }
+    private var findable: Bool {
+        guard let path = model.selectedPath, let content = model.content else { return false }
+        return !FileContent.image(path.path) && !FileContent.quickLook(path.path) && !content.binary
     }
     private func openResult() {
         guard model.results.indices.contains(resultIndex), let path = ReviewPath(model.results[resultIndex].path, root: .location, location: model.directory, project: model.projectDirectory) else { return }
@@ -166,7 +183,8 @@ public struct FilesScreen: View {
         VStack(spacing: 0) {
             ScrollView(.horizontal) {
                 HStack {
-                    OCIconButton("Find", icon: "magnifying-glass") { finding.toggle(); preview = false }.keyboardShortcut("f", modifiers: .command)
+                    // The button owns ⌘F: on iPadOS a menu item's ⌘F does not run, as the system's Edit ▸ Find has it.
+                    OCIconButton("Find", icon: "magnifying-glass") { openFind() }.keyboardShortcut(WorkspaceKeys.FilesViewer.find.keyboardShortcut)
                     Button("Mention in composer") { if let path = model.selectedPath { composer.mentionFile(path.absolute, focus: regularWidth) } }.buttonStyle(OCButtonStyle(.ghost))
                     if model.selectedPath?.path.lowercased().hasSuffix(".md") == true { Button(preview ? "Source" : "Preview") { preview.toggle() }.buttonStyle(OCButtonStyle(.ghost)) }
                     if model.loading { Button("Cancel") { model.cancel() }.buttonStyle(OCButtonStyle(.ghost)) }
@@ -175,6 +193,7 @@ public struct FilesScreen: View {
             if finding {
                 HStack {
                     TextField("Find", text: $find).font(OCType.small).frame(minHeight: OCLayout.touchTarget).onSubmit { nextMatch(1) }
+                        .focused($findFocused).onAppear { findFocused = true }
                     Text(search.matches.isEmpty ? "0/0" : "\(matchIndex + 1)/\(search.matches.count)").font(OCType.micro).accessibilityLabel("Search matches").accessibilityValue(search.matches.isEmpty ? "0 of 0" : "\(matchIndex + 1) of \(search.matches.count)")
                     OCIconButton("Previous match", icon: "chevron-up") { nextMatch(-1) }.disabled(search.matches.isEmpty)
                     OCIconButton("Next match", icon: "chevron-down") { nextMatch(1) }.disabled(search.matches.isEmpty)
@@ -213,7 +232,8 @@ public struct FilesScreen: View {
                 }
             } else if model.loading { ProgressView("Loading…").font(OCType.small) }
             Spacer(minLength: 0)
-        }.task(id: SearchRequest(query: finding ? find : "", text: model.content?.text ?? "")) {
+        }.focusedSceneValue(\.ocFindCommand, findable ? OCFindCommand(owner: findOwner, id: model.selectedPath?.absolute ?? "", perform: openFind) : nil)
+        .task(id: SearchRequest(query: finding ? find : "", text: model.content?.text ?? "")) {
             let result = await CodeSearchResult.find(finding ? find : "", in: model.content?.text ?? "")
             guard !Task.isCancelled else { return }; search = result; matchIndex = 0; nextMatch(0)
         }

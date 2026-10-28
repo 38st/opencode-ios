@@ -15,6 +15,7 @@ public struct ComposerDock: View {
     let clientCommand: (ComposerCommand) -> Void
     let start: (@MainActor (String, ModelRef?) async throws -> String)?
     let opened: (String) -> Void
+    let ownsCommands: Bool
     @AppStorage("followUpBehavior") private var followUp = "steer"
     @AppStorage("showAgent") private var showAgentSetting = false
     @AppStorage("composerModelHistory") private var history = "{}"
@@ -31,13 +32,19 @@ public struct ComposerDock: View {
     @State private var showCamera = false
     @State private var photos: [PhotosPickerItem] = []
     @State private var action: Task<Void, Never>?
+    @State private var composing = false
+    /// Names this composer to the menu bar.
+    @State private var commandOwner = UUID()
     @Environment(\.dynamicTypeSize) private var typeSize
     @ScaledMetric(relativeTo: .body) private var editorLineHeight = OCType.lineHeight
+    /// - Parameter ownsCommands: whether the menu bar's composer commands act here; false while another screen covers
+    ///   this one.
     public init(store: ReadStore, model: ComposerModel, newSession: @escaping () -> Void = {},
                 clientCommand: @escaping (ComposerCommand) -> Void = { _ in },
-                start: (@MainActor (String, ModelRef?) async throws -> String)? = nil, opened: @escaping (String) -> Void = { _ in }) {
+                start: (@MainActor (String, ModelRef?) async throws -> String)? = nil, opened: @escaping (String) -> Void = { _ in },
+                ownsCommands: Bool = true) {
         self.store = store; self.model = model; self.newSession = newSession; self.clientCommand = clientCommand
-        self.start = start; self.opened = opened
+        self.start = start; self.opened = opened; self.ownsCommands = ownsCommands
     }
     private var running: Bool { model.session?.status.isRunning == true }
     private var showAgent: Bool { ComposerPickers.showAgent(model.catalog.agents.value ?? [], setting: showAgentSetting) }
@@ -66,10 +73,7 @@ public struct ComposerDock: View {
                 }
             }
         }
-        .dropDestination(for: String.self) { paths, _ in
-            for path in paths where path.hasPrefix("/") { model.mentionFile(path) }
-            return paths.contains { $0.hasPrefix("/") }
-        }
+        .focusedSceneValue(\.ocComposerCommands, ownsCommands ? OCComposerCommands(owner: commandOwner, session: model.sessionID, state: commandState, perform: perform) : nil)
         .task { await model.load(); caret = String(model.text.characters).utf16.count }
         .task(id: trigger) { await updateSuggestions() }
         .popover(isPresented: $showModels) {
@@ -90,8 +94,10 @@ public struct ComposerDock: View {
         .fileImporter(isPresented: $showFiles, allowedContentTypes: [.image, .pdf, .text, .data], allowsMultipleSelection: true) { result in
             run { for url in try result.get() { try await importFile(url) } }
         }
-        .onDrop(of: [.fileURL, .image, .pdf, .text], isTargeted: nil) { providers in
-            run { for provider in providers { try await importProvider(provider) } }; return true
+        // Drops on the editor itself go through its paste configuration; this takes the rest of the dock.
+        .onDrop(of: [UTType(exportedAs: ComposerDrop.mentionType), .fileURL, .image, .pdf, .text, .audiovisualContent], isTargeted: nil) { providers in
+            guard model.session?.info.parentID == nil else { return false }
+            run { for provider in providers { try await drop(provider) } }; return true
         }
         .sheet(isPresented: $model.confirmRevert) {
             OCConfirmationSheet("Discard reverted messages?", message: "The reverted messages and their file changes will be permanently discarded when you send this prompt.",
@@ -159,7 +165,9 @@ public struct ComposerDock: View {
                          placeholder: placeholder,
                          suggestionsActive: trigger != nil && trigger != closedTrigger,
                          focusRequest: model.focusRequest,
-                         pasteAttachment: { provider in run { try await importProvider(provider) } }, key: handleKey)
+                         pasteAttachment: { provider in run { try await importProvider(provider) } },
+                         dropMention: { path, offset in caret = model.mentionFile(path, atUTF16: offset) },
+                         composing: { composing = $0 }, key: handleKey)
                 .fixedSize(horizontal: false, vertical: true)
             if let error = model.error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding(OCSpacing.sm).accessibilityIdentifier("composerError").ocAnnounce(error, initial: true) }
         }.fixedSize(horizontal: false, vertical: true)
@@ -377,7 +385,29 @@ public struct ComposerDock: View {
         if !text.characters.isEmpty { text.append(AttributedString(" ")) }
         text.append(AttributedString(value)); caret = String(text.characters).utf16.count; model.setText(text)
     }
+    private var commandState: ComposerCommandState {
+        ComposerCommandState(loaded: model.loaded, busy: model.busy, blank: model.blank, running: running, shell: model.options.shell,
+                             composing: composing, child: model.session?.info.parentID != nil,
+                             hasVariants: model.selectedModel?.variants.contains { $0.id != "default" } == true,
+                             sendTitle: running && !model.blank && !model.options.shell ? (followUp == "queue" ? "Steer" : "Queue") : "Send")
+    }
+    /// The menu bar's composer commands. ⌘↩ sends with the alternate delivery, as it did from the editor.
+    private func perform(_ command: WorkspaceCommand) {
+        switch command {
+        case .send: send(alternate: true)
+        case .stop: stop()
+        case .chooseModel: showModels = true
+        case .cycleVariant:
+            let values = [String?](arrayLiteral: nil) + (model.selectedModel?.variants.filter { $0.id != "default" }.map { Optional($0.id) } ?? [])
+            selectVariant(values[((values.firstIndex(of: model.effectiveModel?.variant) ?? 0) + 1) % values.count])
+        case .addFiles: showFiles = true
+        default: break
+        }
+    }
     private func handleKey(_ key: ComposerKey) -> Bool {
+        #if DEBUG
+        if key == .send || key == .escape { OCCommandTrace.shared.record(key == .send ? "key.return" : "key.escape") }
+        #endif
         if trigger != nil && trigger != closedTrigger {
             switch key {
             case .escape: closedTrigger = trigger; return true
@@ -389,20 +419,31 @@ public struct ComposerDock: View {
         }
         switch key {
         case .send: send()
-        case .alternate: send(alternate: true)
         case .escape:
             if model.options.shell { model.shellMode(false) } else if running { stop() }
         case .emptyBackspace: if model.options.shell { model.shellMode(false) } else { return false }
-        case .stop: stop()
-        case .model: showModels = true
-        case .variant:
-            let values = [String?](arrayLiteral: nil) + (model.selectedModel?.variants.filter { $0.id != "default" }.map { Optional($0.id) } ?? [])
-            selectVariant(values[((values.firstIndex(of: model.effectiveModel?.variant) ?? 0) + 1) % values.count])
-        case .attach: showFiles = true
-        case .newSession: newSession()
+        case .menu(let command):
+            // A menu key the text system would take first: run the menu's command here, once, or nothing when disabled.
+            guard WorkspaceCommandRouter.composerAllows(command, commandState) else { return true }
+            perform(command)
+            #if DEBUG
+            OCCommandTrace.shared.record("editor." + command.id)
+            #endif
         default: return false
         }
         return true
+    }
+    private func drop(_ provider: NSItemProvider) async throws {
+        switch ComposerDrop.classify(provider.registeredTypeIdentifiers, named: provider.suggestedName) {
+        case .mention:
+            let data = try await ComposerMedia.data(provider, type: ComposerDrop.mentionType)
+            if let path = ComposerDrop.mentionPath(data) { caret = model.mentionFile(path, atUTF16: caret) }
+        case .attachment: try await importProvider(provider)
+        case .text(let type):
+            let data = try await ComposerMedia.data(provider, type: type)
+            if let text = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .utf16) { caret = model.insertText(text, atUTF16: caret) }
+        case .refused: model.refuseDrop()
+        }
     }
     private func stop() { if let id = model.sessionID { run { _ = try await store.interrupt(id, resume: true) } } }
     private func run(_ work: @escaping @MainActor () async throws -> Void) {

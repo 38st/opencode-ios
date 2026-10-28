@@ -54,7 +54,7 @@ public struct HomeSessionRow: View {
                             HStack(spacing: OCSpacing.sm) { badges; Spacer(minLength: 0); cost }
                         }
                     }
-                }.frame(minHeight: OCLayout.touchTarget).contentShape(Rectangle())
+                }.frame(minHeight: OCLayout.touchTarget).contentShape(Rectangle()).ocHover()
         }.buttonStyle(.plain).accessibilityAddTraits(selected ? .isSelected : [])
             .accessibilityIdentifier("homeSession-" + item.session.id)
     }

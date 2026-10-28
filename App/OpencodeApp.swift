@@ -1,4 +1,5 @@
 import FeatureServers
+import OCModels
 import OCSync
 import SwiftUI
 
@@ -7,21 +8,24 @@ struct OpencodeApp: App {
     @UIApplicationDelegateAdaptor(MobileAppDelegate.self) private var appDelegate
     @State private var registry: ServerRegistry?
     @State private var startupError: String?
-    @State private var incomingURL: URL?
     var body: some Scene {
-        WindowGroup {
+        // Each window shows one session; links and notifications are routed by the window coordinator.
+        WindowGroup(id: ServerRootView.windowGroup, for: SessionRef.self) { $session in
             Group {
-                if let registry { ServerRootView(registry: registry, incomingURL: $incomingURL) }
+                if let registry { ServerRootView(registry: registry, windows: ApplicationServices.windows, window: $session) }
                 else if let startupError { ContentUnavailableView("Could not open saved servers", systemImage: "externaldrive.badge.exclamationmark", description: Text(startupError)) }
                 else { ProgressView("Opening servers…") }
             }
-            .onOpenURL { incomingURL = $0 }
-            .onChange(of: registry?.notifications?.incomingURL) { _, url in if let url { incomingURL = url; registry?.notifications?.incomingURL = nil } }
             .task {
                 guard registry == nil else { return }
-                do { registry = try await ApplicationServices.registry() }
+                do {
+                    let registry = try await ApplicationServices.registry()
+                    ApplicationServices.windows.applyPhase = { await registry.setScenePhase($0) }
+                    self.registry = registry
+                }
                 catch { startupError = "Application Support is unavailable. Relaunch the app to try again." }
             }
         }
+        .commands { WorkspaceCommands() }
     }
 }

@@ -9,7 +9,7 @@ struct AgentOptions: View {
     let selected: String
     let select: (String) -> Void
     var body: some View {
-        Picker("Agent", selection: Binding(get: { selected }, set: select)) {
+        Picker("Agent", selection: Binding(get: { selected }, set: { value in select(value) })) {
             ForEach(ComposerPickers.agents(agents)) { agent in
                 Text(agent.name).foregroundStyle(OCMentionStyle.agentAccent(agent.color)).tag(ComposerPickers.agentID(agent))
             }
@@ -22,7 +22,7 @@ struct VariantOptions: View {
     let selected: String?
     let select: (String?) -> Void
     var body: some View {
-        Picker("Variant", selection: Binding(get: { selected == "default" ? nil : selected }, set: select)) {
+        Picker("Variant", selection: Binding(get: { selected == "default" ? nil : selected }, set: { value in select(value) })) {
             Text("Default").tag(String?.none)
             ForEach(variants.filter { $0.id != "default" }) { variant in Text(variant.id).tag(Optional(variant.id)) }
         }.pickerStyle(.inline).labelsHidden()

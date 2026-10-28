@@ -6,7 +6,9 @@ import UniformTypeIdentifiers
 import OCModels
 import OCDesign
 
-enum ComposerKey: Equatable { case send, alternate, escape, up, down, tab, stop, model, variant, attach, newSession, emptyBackspace }
+/// Keys that only make sense while the prompt is being edited, plus the menu keys the editor forwards
+/// (`WorkspaceKeys.forwarded`). The menu bar owns the rest (⌘., ⌘', ⇧⌘D, ⌘U, ⌘N).
+enum ComposerKey: Equatable { case send, escape, up, down, tab, emptyBackspace, menu(WorkspaceCommand) }
 
 /// TextKit 2 lets a pre-edit delegate expand deletion to a complete mention and
 /// keeps marked text untouched while the SwiftUI projection catches up.
@@ -19,12 +21,18 @@ struct PromptEditor: UIViewRepresentable {
     var suggestionsActive = false
     var focusRequest: UUID?
     var pasteAttachment: (NSItemProvider) -> Void = { _ in }
+    /// A file dragged from the Files tab, with the UTF-16 offset it was dropped at.
+    var dropMention: (String, Int) -> Void = { _, _ in }
+    /// Whether an input method holds marked text.
+    var composing: (Bool) -> Void = { _ in }
     var key: (ComposerKey) -> Bool
     func makeUIView(context: Context) -> EditorView {
         let view = EditorView(usingTextLayoutManager: true)
         view.delegate = context.coordinator
         view.pasteDelegate = context.coordinator
-        view.pasteConfiguration = UIPasteConfiguration(acceptableTypeIdentifiers: [UTType.plainText.identifier, UTType.image.identifier, UTType.pdf.identifier, UTType.fileURL.identifier])
+        view.textDropDelegate = context.coordinator
+        // Drops go through the same paste configuration: text is inserted where it lands, media become attachments.
+        view.pasteConfiguration = UIPasteConfiguration(acceptableTypeIdentifiers: [ComposerDrop.mentionType, UTType.plainText.identifier, UTType.image.identifier, UTType.pdf.identifier, UTType.fileURL.identifier])
         view.backgroundColor = .clear
         view.textContainerInset = .init(top: OCSpacing.lg, left: OCSpacing.md, bottom: OCSpacing.sm, right: OCSpacing.md)
         view.adjustsFontForContentSizeCategory = true
@@ -37,7 +45,7 @@ struct PromptEditor: UIViewRepresentable {
         return view
     }
     func updateUIView(_ view: EditorView, context: Context) {
-        context.coordinator.parent = self; view.key = key; view.suggestionsActive = suggestionsActive
+        context.coordinator.parent = self; view.key = key; view.suggestionsActive = suggestionsActive; view.composing = composing
         guard view.markedTextRange == nil else { return }
         view.updateStyle(shell: shell)
         view.placeholder = placeholder
@@ -78,15 +86,30 @@ struct PromptEditor: UIViewRepresentable {
         }
         return value
     }
-    final class Coordinator: NSObject, UITextViewDelegate, UITextPasteDelegate {
+    final class Coordinator: NSObject, UITextViewDelegate, UITextPasteDelegate, UITextDropDelegate {
         var parent: PromptEditor
         var updating = false
+        /// Where the current drop lands; nil for a paste.
+        private var dropOffset: Int?
         init(_ parent: PromptEditor) { self.parent = parent }
         func textPasteConfigurationSupporting(_ textPasteConfigurationSupporting: any UITextPasteConfigurationSupporting, transform item: any UITextPasteItem) {
-            if [UTType.image, .pdf, .fileURL].contains(where: { item.itemProvider.hasItemConformingToTypeIdentifier($0.identifier) }) {
+            if item.itemProvider.registeredTypeIdentifiers.contains(ComposerDrop.mentionType) {
+                let provider = item.itemProvider
+                let offset = dropOffset ?? (textPasteConfigurationSupporting as? UITextView)?.selectedRange.location ?? 0
+                item.setNoResult()
+                Task { [weak self] in
+                    guard let data = try? await ComposerMedia.data(provider, type: ComposerDrop.mentionType),
+                          let path = ComposerDrop.mentionPath(data) else { return }
+                    self?.parent.dropMention(path, offset)
+                }
+            } else if [UTType.image, .pdf, .fileURL].contains(where: { item.itemProvider.hasItemConformingToTypeIdentifier($0.identifier) }) {
                 parent.pasteAttachment(item.itemProvider); item.setNoResult()
             } else { item.setDefaultResult() }
         }
+        func textDroppableView(_ textDroppableView: any UIView & UITextDroppable, willPerformDrop drop: any UITextDropRequest) {
+            dropOffset = textDroppableView.offset(from: textDroppableView.beginningOfDocument, to: drop.dropPosition)
+        }
+        func textDroppableView(_ textDroppableView: any UIView & UITextDroppable, dropSessionDidEnd session: any UIDropSession) { dropOffset = nil }
         func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
             guard parent.enabled else { return false }
             guard textView.markedTextRange == nil else { return true }
@@ -141,6 +164,8 @@ final class EditorView: UITextView {
         return view
     }()
     var key: (ComposerKey) -> Bool = { _ in false }
+    /// Optional: the factory initializer leaves it zeroed, which for an optional is nil.
+    var composing: ((Bool) -> Void)?
     var suggestionsActive = false
     var focusRequest: UUID?
     private var consumedFocusRequest: UUID?
@@ -213,7 +238,9 @@ final class EditorView: UITextView {
     override func insertText(_ text: String) { resetTypingAttributes(); super.insertText(text) }
     override func setMarkedText(_ markedText: String?, selectedRange: NSRange) {
         resetTypingAttributes(); super.setMarkedText(markedText, selectedRange: selectedRange)
+        composing?(markedTextRange != nil)
     }
+    override func unmarkText() { super.unmarkText(); composing?(false) }
     deinit { focusTask?.cancel() }
     override func didMoveToWindow() {
         super.didMoveToWindow()
@@ -277,34 +304,21 @@ final class EditorView: UITextView {
         // Do not register priority commands while the IME owns the keyboard.
         // Returning early from handleKey would still consume Return.
         guard markedTextRange == nil else { return super.keyCommands }
-        let values: [(String, UIKeyModifierFlags)] = [("\r", []), ("\r", .command), (UIKeyCommand.inputEscape, []),
-            (UIKeyCommand.inputUpArrow, []), (UIKeyCommand.inputDownArrow, []), ("n", .control), ("p", .control), ("\t", []),
-            (".", .command), ("'", .command), ("d", [.command, .shift]), ("u", .command), ("n", .command)]
-        return values.filter { input, flags in
-            suggestionsActive || ![UIKeyCommand.inputUpArrow, UIKeyCommand.inputDownArrow, "\t"].contains(input) && !(flags == .control)
-        }.map { input, flags in
-            let command = UIKeyCommand(input: input, modifierFlags: flags, action: #selector(handleKey))
-            command.wantsPriorityOverSystemBehavior = true
-            return command
-        }
+        let chords = WorkspaceKeys.local(.promptEditor).filter { suggestionsActive || !WorkspaceKeys.PromptEditor.suggestions.contains($0) }
+            + WorkspaceKeys.forwarded(.promptEditor).map(\.chord)
+        return chords.map { $0.keyCommand(#selector(handleKey)) }
     }
     @objc private func handleKey(_ command: UIKeyCommand) {
         guard markedTextRange == nil else { return }
+        let keys = WorkspaceKeys.PromptEditor.self
         let action: ComposerKey
-        switch (command.input, command.modifierFlags) {
-        case ("\r", .command): action = .alternate
-        case ("\r", _): action = .send
-        case (UIKeyCommand.inputEscape, _): action = .escape
-        case (UIKeyCommand.inputUpArrow, _), ("p", .control): action = .up
-        case (UIKeyCommand.inputDownArrow, _), ("n", .control): action = .down
-        case ("\t", _): action = .tab
-        case (".", _): action = .stop
-        case ("'", _): action = .model
-        case ("d", _): action = .variant
-        case ("u", _): action = .attach
-        case ("n", .command): action = .newSession
-        default: return
-        }
+        if let forwarded = WorkspaceKeys.forwarded(.promptEditor).first(where: { $0.chord.matches(command) }) { action = .menu(forwarded) }
+        else if keys.send.matches(command) { action = .send }
+        else if keys.escape.matches(command) { action = .escape }
+        else if keys.up.matches(command) || keys.previous.matches(command) { action = .up }
+        else if keys.down.matches(command) || keys.next.matches(command) { action = .down }
+        else if keys.accept.matches(command) { action = .tab }
+        else { return }
         if !key(action), action == .tab { insertText("\t") }
     }
 }

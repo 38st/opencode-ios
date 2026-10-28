@@ -17,6 +17,11 @@ import UserNotifications
     private weak var controller: PushController?
     private var task: Task<Void, Never>?
     private var tokenTask: Task<Void, Never>?
+    /// Runs ordinary commands one at a time, in order. The fetch loop never waits for it.
+    private var worker: Task<Void, Never>?
+    private var queue: AsyncStream<JSONValue>.Continuation?
+    /// Cleanup commands run at once, outside the queue, so a hung command cannot hold back a teardown.
+    private var cleanups: [UUID: Task<Void, Never>] = [:]
     init?(controller: PushController) {
         let environment = ProcessInfo.processInfo.environment
         guard environment["OPENCODE_UI_TEST_ID"]?.hasPrefix("ui-") == true,
@@ -24,9 +29,25 @@ import UserNotifications
               url.scheme == "http", ["127.0.0.1", "localhost"].contains(url.host ?? "") else { return nil }
         self.url = url; self.controller = controller
     }
-    deinit { task?.cancel(); tokenTask?.cancel() }
-    func stop() { task?.cancel(); task = nil; tokenTask?.cancel(); tokenTask = nil }
+    deinit {
+        task?.cancel(); tokenTask?.cancel(); worker?.cancel(); queue?.finish()
+        for cleanup in cleanups.values { cleanup.cancel() }
+    }
+    func stop() {
+        task?.cancel(); task = nil; tokenTask?.cancel(); tokenTask = nil
+        worker?.cancel(); worker = nil; queue?.finish(); queue = nil
+        for cleanup in cleanups.values { cleanup.cancel() }
+        cleanups = [:]
+    }
     func start() {
+        let (commands, queue) = AsyncStream.makeStream(of: JSONValue.self)
+        self.queue = queue
+        worker = Task { [weak self] in
+            for await command in commands {
+                guard !Task.isCancelled else { return }
+                await self?.execute(command)
+            }
+        }
         task = Task { [weak self] in
             guard let self else { return }
             if ProcessInfo.processInfo.arguments.contains("--ui-testing-reset") {
@@ -56,12 +77,19 @@ import UserNotifications
                     var request = URLRequest(url: url.appending(path: "next")); request.timeoutInterval = 2
                     let (data, response) = try await URLSession.shared.data(for: request)
                     if (response as? HTTPURLResponse)?.statusCode == 200 {
-                        let command = try JSONDecoder().decode(JSONValue.self, from: data)
-                        await execute(command)
+                        dispatch(try JSONDecoder().decode(JSONValue.self, from: data))
                     }
                     try await Task.sleep(for: .milliseconds(100))
                 } catch { if Task.isCancelled { return }; try? await Task.sleep(for: .milliseconds(250)) }
             }
+        }
+    }
+    private func dispatch(_ command: JSONValue) {
+        guard command["operation"]?.stringValue == "activityClear" else { queue?.yield(command); return }
+        let id = UUID()
+        cleanups[id] = Task { [weak self] in
+            await self?.execute(command)
+            self?.cleanups[id] = nil
         }
     }
     private func execute(_ command: JSONValue) async {

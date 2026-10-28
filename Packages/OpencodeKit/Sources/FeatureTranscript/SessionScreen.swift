@@ -18,32 +18,39 @@ public struct SessionScreen: View {
     let newSession: () -> Void
     let deleted: () -> Void
     let openSettings: () -> Void
+    let reviewToggle: UUID?
+    let ownsCommands: Bool
     @AppStorage("timelineDetail") private var detail = TimelineDetail.compact.rawValue
     @State private var error: String?
     @State private var review = false
+    @State private var context = false
+    /// Compact chrome stays while Session information is open: its menu would close as the keyboard leaves.
+    @State private var informationOpen = false
     @State private var composerCommand: ComposerCommand?
     @State private var selection: Selection?
     @Environment(\.scenePhase) private var phase
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dynamicTypeSize) private var typeSize
-    public init(server: ServerStore, sessionID: String, requestID: String? = nil, newSession: @escaping () -> Void = {}, deleted: @escaping () -> Void = {}, openSettings: @escaping () -> Void = {}, openRoot: @escaping (String) -> Void = { _ in }, openChild: @escaping (String) -> Void) {
+    /// - Parameter ownsCommands: whether this screen is on top, so the menu bar's composer commands and Toggle review act
+    ///   here; false for a parent session under a subagent or under New session.
+    public init(server: ServerStore, sessionID: String, requestID: String? = nil, newSession: @escaping () -> Void = {}, deleted: @escaping () -> Void = {}, openSettings: @escaping () -> Void = {}, reviewToggle: UUID? = nil, ownsCommands: Bool = true, openRoot: @escaping (String) -> Void = { _ in }, openChild: @escaping (String) -> Void) {
         self.server = server; self.sessionID = sessionID; self.requestID = requestID; self.openChild = openChild; self.newSession = newSession; self.deleted = deleted; self.openRoot = openRoot
-        self.openSettings = openSettings
+        self.openSettings = openSettings; self.reviewToggle = reviewToggle; self.ownsCommands = ownsCommands
     }
     public var body: some View {
         GeometryReader { geometry in
-            let compactChrome = typeSize.isAccessibilitySize || geometry.size.height < OCLayout.sessionCompactHeight
+            let compactChrome = typeSize.isAccessibilitySize || geometry.size.height < OCLayout.sessionCompactHeight || informationOpen
             VStack(spacing: 0) {
                 if let session = server.sessions[sessionID] {
-                    if !compactChrome {
-                        SessionHeader(server: server, session: session, composer: server.readPath.composer(sessionID: sessionID, directory: session.info.location.directory), showsTitle: sizeClass == .regular)
-                    }
+                    let header = SessionHeader(server: server, session: session, composer: server.readPath.composer(sessionID: sessionID, directory: session.info.location.directory),
+                                               showsTitle: sizeClass == .regular, showContext: showContext)
+                    if !compactChrome { header }
                     HStack {
                         if compactChrome {
-                            Menu {
-                                SessionHeader(server: server, session: session, composer: server.readPath.composer(sessionID: sessionID, directory: session.info.location.directory), showsTitle: false).metadata
-                            } label: { OCIcon("info").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
-                                .accessibilityLabel("Session information").accessibilityIdentifier("sessionInformation")
+                            OCMenuButton("Session information", identifier: "sessionInformation",
+                                         items: header.metadata + [OCMenuItem("Context details", action: showContext)], isOpen: $informationOpen) {
+                                OCIcon("info").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget)
+                            }
                         }
                         Menu {
                             Picker("Timeline detail", selection: $detail) {
@@ -81,7 +88,7 @@ public struct SessionScreen: View {
                             .padding(.horizontal, OCSpacing.md)
                     }
                     ComposerDock(store: server.readPath, model: server.readPath.composer(sessionID: sessionID, directory: session.info.location.directory),
-                                 newSession: newSession, clientCommand: { composerCommand = $0 }).padding(OCSpacing.md)
+                                 newSession: newSession, clientCommand: { composerCommand = $0 }, ownsCommands: ownsCommands).padding(OCSpacing.md)
                     #if DEBUG
                     if ProcessInfo.processInfo.environment["OPENCODE_UI_TEST_ID"] != nil, let elapsed = server.readPath.lastApprovalRoundTrip {
                         Color.clear.frame(height: 1).accessibilityElement().accessibilityLabel("Approval round trip")
@@ -102,10 +109,17 @@ public struct SessionScreen: View {
             .background(OCColor.background).clipShape(RoundedRectangle(cornerRadius: OCRadius.xl))
             .navigationTitle(server.sessions[sessionID]?.info.title ?? "Session").navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $review) {
-                WorkspaceReviewPanel(server: server, sessionID: sessionID)
+                WorkspaceReviewPanel(server: server, sessionID: sessionID, openSession: openSession)
                     .safeAreaInset(edge: .top) { HStack { Spacer(); OCIconButton("Close review", icon: "close") { review = false }.accessibilityIdentifier("closeReview") }.padding(.horizontal, OCSpacing.sm) }.ocSheet()
             }
+            .sheet(isPresented: $context) {
+                ContextSheet(store: server.readPath, sessionID: sessionID, openSession: { id in context = false; openSession(id) }, showChanges: {
+                    context = false
+                    if let session = server.sessions[sessionID] { server.readPath.review(sessionID: sessionID, directory: session.info.location.directory).present("Changes") }
+                }) { context = false }.ocSheet()
+            }
             .onChange(of: panelRequest) { _, request in if request != nil && sizeClass != .regular { review = true } }
+            .onChange(of: reviewToggle) { _, request in if request != nil && sizeClass != .regular && ownsCommands { review.toggle() } }
             .onChange(of: pendingInputStamp) { old, next in
                 // A request arriving while focus is in the composer or earlier output would otherwise be silent.
                 guard old.sessionID == next.sessionID, let text = TimelineAnnouncement.pendingInput(previous: Set(old.ids),
@@ -161,6 +175,15 @@ public struct SessionScreen: View {
             server.readPath.composer(sessionID: sessionID, directory: session.info.location.directory).removeComment(id)
         })
     }
+    /// The header's context label: the Context tab on iPad, a sheet on iPhone.
+    private func showContext() {
+        guard let session = server.sessions[sessionID] else { return }
+        if sizeClass == .regular { server.readPath.review(sessionID: sessionID, directory: session.info.location.directory).present("Context") }
+        else { context = true }
+    }
+    private func openSession(_ id: String) {
+        if server.sessions[id]?.info.parentID != nil { openChild(id) } else { openRoot(id) }
+    }
     private struct PendingInputStamp: Equatable { let sessionID: String; let ids: [String] }
     private var pendingInputStamp: PendingInputStamp {
         .init(sessionID: sessionID, ids: server.readPath.familyPermissions(sessionID).map(\.id) + server.readPath.familyForms(sessionID).map(\.id))
@@ -191,6 +214,7 @@ private struct SessionHeader: View {
     let session: SessionModel
     let composer: ComposerModel
     let showsTitle: Bool
+    var showContext: () -> Void = {}
     @Environment(\.dynamicTypeSize) private var typeSize
     private var models: [ModelInfo] { server.catalogs[session.info.location.key]?.models.value ?? [] }
     /// The server's selection, named as the composer names it (docs/design.md: the dock marks unapplied choices Pending).
@@ -202,13 +226,10 @@ private struct SessionHeader: View {
         }
         return nil
     }
+    /// The Context tab's calculation: the step after the last compaction and before the revert boundary.
     private var usage: String {
-        let last = session.transcript?.order.reversed().compactMap { session.transcript?.messages[$0]?.fields }.first { $0.type == "assistant" && $0.tokens != nil }
-        guard let tokens = last?.tokens, let model = last?.model ?? session.info.model,
-              let limit = ComposerPickers.model(model, in: models)?.limit.context, limit > 0, limit.isFinite else { return "Context —" }
-        let fraction = (tokens.input + tokens.output + tokens.reasoning + tokens.cacheRead + tokens.cacheWrite) / limit
-        guard fraction.isFinite, fraction >= 0 else { return "Context —" }
-        return "Context " + fraction.formatted(.percent.precision(.fractionLength(0)))
+        let messages = session.transcript.map { transcript in transcript.order.compactMap { transcript.messages[$0]?.fields } } ?? []
+        return ContextUsage.label(ContextUsage.compute(messages, boundary: session.info.revert?.messageID, models: models, session: session.info.model))
     }
     var body: some View {
         VStack(alignment: .leading, spacing: OCSpacing.sm) {
@@ -226,14 +247,15 @@ private struct SessionHeader: View {
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("sessionHeader-" + server.id.rawValue.uuidString)
     }
-    @ViewBuilder var metadata: some View {
-        Text("Agent: " + ((session.info.agent ?? lastAssistant?.agent)?.capitalized ?? "Agent"))
-        Text("Model: " + (modelName ?? "—"))
-        if let variant = session.info.model?.variant, variant != "default" { Text("Variant: " + variant) }
-        if composer.pendingSelection { Text("Agent or model choice pending") }
-        Text(usage)
-        Text("Family cost: " + server.readPath.family(session.id).reduce(0) { $0 + $1.info.cost }.formatted(.currency(code: "USD")))
-        if session.info.parentID != nil { Text("Subagent · read only") }
+    /// The header's labels as the compact chrome's Session information rows.
+    var metadata: [OCMenuItem] {
+        var rows = [OCMenuItem("Agent: " + ((session.info.agent ?? lastAssistant?.agent)?.capitalized ?? "Agent")), OCMenuItem("Model: " + (modelName ?? "—"))]
+        if let variant = session.info.model?.variant, variant != "default" { rows.append(OCMenuItem("Variant: " + variant)) }
+        if composer.pendingSelection { rows.append(OCMenuItem("Agent or model choice pending")) }
+        rows.append(OCMenuItem(usage))
+        rows.append(OCMenuItem("Family cost: " + server.readPath.family(session.id).reduce(0) { $0 + $1.info.cost }.formatted(.currency(code: "USD"))))
+        if session.info.parentID != nil { rows.append(OCMenuItem("Subagent · read only")) }
+        return rows
     }
     @ViewBuilder private var labels: some View {
         let fixed = !typeSize.isAccessibilitySize
@@ -244,7 +266,9 @@ private struct SessionHeader: View {
         if let variant = session.info.model?.variant, variant != "default" {
             Text(variant).font(OCType.small).foregroundStyle(OCColor.textMuted).lineLimit(1).fixedSize(horizontal: fixed, vertical: false)
         }
-        OCBadge(usage).fixedSize(horizontal: fixed, vertical: false)
+        Button(action: showContext) { OCBadge(usage) }.buttonStyle(.plain).ocHover(RoundedRectangle(cornerRadius: OCRadius.xs))
+            .accessibilityHint("Shows context and token usage").accessibilityIdentifier("sessionContext")
+            .fixedSize(horizontal: fixed, vertical: false)
         Text(server.readPath.family(session.id).reduce(0) { $0 + $1.info.cost }.formatted(.currency(code: "USD")))
             .font(OCType.micro).foregroundStyle(OCColor.textMuted).accessibilityLabel("Family cost")
             .lineLimit(1).fixedSize(horizontal: fixed, vertical: false)

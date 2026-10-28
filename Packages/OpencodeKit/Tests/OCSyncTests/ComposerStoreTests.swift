@@ -38,6 +38,26 @@ private actor PreludeOrder {
     await store.stop()
 }
 
+@Test @MainActor func droppedItemsKeepTheComposerLimitsAndErrors() async throws {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: root) }
+    let writer = try PersistenceWriter(), drafts = DraftStore(writer: writer, filesRoot: root)
+    let store = ReadStore(serverID: "server", cache: CacheStore(writer: writer), drafts: drafts)
+    store.seed(info: readInfo(), messages: [])
+    let composer = store.composer(sessionID: "s", directory: "/project")
+    await composer.load()
+    // A dropped file is attached through the same path as one picked in Add files, with the same limit.
+    await composer.addAttachment(Data(repeating: 0x61, count: AttachmentProcessing.maximumBytes + 1), mime: "text/plain", name: "large.txt")
+    #expect(composer.attachments.isEmpty)
+    #expect(composer.error == AttachmentError.tooLarge.localizedDescription)
+    composer.error = nil
+    composer.refuseDrop()
+    #expect(composer.attachments.isEmpty)
+    #expect(composer.error == AttachmentError.unsupported.localizedDescription)
+    await composer.addAttachment(Data("fits".utf8), mime: "text/plain", name: "small.txt")
+    #expect(composer.attachments.map(\.name) == ["small.txt"])
+}
+
 @Test @MainActor func composerDeletesDraftOnlyAfterDurableAdmissionAndKeepsItOnFailure() async throws {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
     defer { try? FileManager.default.removeItem(at: root) }

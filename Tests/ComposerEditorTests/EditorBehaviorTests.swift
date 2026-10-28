@@ -153,6 +153,55 @@ extension EditorBehaviorTests {
         #expect(!view.isFirstResponder && !sent && view.text == "Keep my prompt")
     }
 
+    @Test func returnCommandReturnAndEscapeEachRunOnce() throws {
+        let view = EditorView(usingTextLayoutManager: true)
+        var keys: [ComposerKey] = []; view.key = { keys.append($0); return true }
+        let hardware: [(String, UIKeyModifierFlags)] = [("\r", []), ("\r", .command), (UIKeyCommand.inputEscape, [])]
+        for (input, flags) in hardware {
+            let matches = view.keyCommands?.filter { $0.input == input && $0.modifierFlags == flags } ?? []
+            // A text view's text system takes Return chords and Escape ahead of commands without priority.
+            #expect(matches.count == 1 && matches.allSatisfy { $0.wantsPriorityOverSystemBehavior }, "One priority command for \(input) \(flags.rawValue)")
+            let command = try #require(matches.first)
+            UIApplication.shared.sendAction(try #require(command.action), to: view, from: command, for: nil)
+        }
+        #expect(keys == [.send, .menu(.send), .escape], "⌘↩ runs the menu's Send, never the editor's Return")
+    }
+
+    @Test func dropsRouteMentionsMediaAndTextWithoutDuplicates() async throws {
+        let state = EditorBinding(AttributedString("Start here"))
+        var mentions: [String] = [], offsets: [Int] = [], attachments = 0
+        let editor = PromptEditor(text: state.binding, caret: state.selection, shell: false, enabled: true,
+                                  pasteAttachment: { _ in attachments += 1 }, dropMention: { mentions.append($0); offsets.append($1) }, key: { _ in false })
+        let coordinator = editor.makeCoordinator()
+        let view = EditorView(usingTextLayoutManager: true)
+        view.attributedText = PromptEditor.native(state.text, shell: false, traits: view.traitCollection)
+        view.selectedRange = NSRange(location: 5, length: 0)
+        // A Files row: the in-app mention type, with the path as text for other apps.
+        let path = "/Users/Shared/project/Sources/App.swift"
+        let file = NSItemProvider(object: path as NSString)
+        file.registerDataRepresentation(forTypeIdentifier: ComposerDrop.mentionType, visibility: .ownProcess) { done in done(ComposerDrop.mentionPayload(path), nil); return nil }
+        let mention = PasteItem(file)
+        coordinator.textPasteConfigurationSupporting(view, transform: mention)
+        #expect(mention.result == "none", "The path is never inserted as text")
+        for _ in 0..<100 where mentions.isEmpty { try await Task.sleep(for: .milliseconds(10)) }
+        #expect(mentions == [path] && offsets == [5])
+        // Another app's item that claims the type without this process's token mentions nothing.
+        let foreign = NSItemProvider(object: "/etc/hosts" as NSString)
+        foreign.registerDataRepresentation(forTypeIdentifier: ComposerDrop.mentionType, visibility: .all) { done in done(Data("/etc/hosts".utf8), nil); return nil }
+        let claimed = PasteItem(foreign)
+        coordinator.textPasteConfigurationSupporting(view, transform: claimed)
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(claimed.result == "none" && mentions == [path], "A foreign mention is refused")
+        #expect(ComposerDrop.mentionPath(ComposerDrop.mentionPayload("relative/path")) == nil, "Only absolute paths")
+        let image = NSItemProvider(); image.registerDataRepresentation(forTypeIdentifier: "public.png", visibility: .all) { done in done(Data([0x89]), nil); return nil }
+        let media = PasteItem(image)
+        coordinator.textPasteConfigurationSupporting(view, transform: media)
+        #expect(media.result == "none" && attachments == 1)
+        let text = PasteItem(NSItemProvider(object: "dropped words" as NSString))
+        coordinator.textPasteConfigurationSupporting(view, transform: text)
+        #expect(text.result == "default" && attachments == 1 && mentions.count == 1, "Text goes in where it lands")
+    }
+
     @Test func placeholderUsesTheEditorsTextLayoutAtEverySize() throws {
         for category in [UIContentSizeCategory.large, .accessibilityExtraExtraExtraLarge] {
             for shell in [false, true] {
@@ -177,5 +226,21 @@ extension EditorBehaviorTests {
             }
         }
     }
+}
+#endif
+
+#if os(iOS)
+/// A drop or paste item, as UIKit hands one to the paste delegate.
+@MainActor private final class PasteItem: NSObject, UITextPasteItem {
+    let itemProvider: NSItemProvider
+    var localObject: Any? { nil }
+    var defaultAttributes: [NSAttributedString.Key: Any] { [:] }
+    var result = ""
+    init(_ provider: NSItemProvider) { itemProvider = provider }
+    func setResult(string: String) { result = "string" }
+    func setResult(attributedString: NSAttributedString) { result = "attributed" }
+    func setResult(attachment: NSTextAttachment) { result = "attachment" }
+    func setNoResult() { result = "none" }
+    func setDefaultResult() { result = "default" }
 }
 #endif

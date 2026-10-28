@@ -44,6 +44,10 @@
 	<string>Opencode uses your local network to connect to opencode servers you choose on your computers.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER).session</string>
+	</array>
 	<key>OCAPNSEnvironment</key>
 	<string>$(APNS_ENVIRONMENT)</string>
 	<key>OCAppGroup</key>
@@ -53,7 +57,7 @@
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
-		<false/>
+		<true/>
 	</dict>
 	<key>UILaunchScreen</key>
 	<dict/>
@@ -69,6 +73,19 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>File mention</string>
+			<key>UTTypeIdentifier</key>
+			<string>dev.opencodeios.file-mention</string>
+		</dict>
 	</array>
 </dict>
 </plist>

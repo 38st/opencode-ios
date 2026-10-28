@@ -56,6 +56,8 @@ import OCPersistence
     public var reviewedCount: Int { files.filter(isReviewed).count }
     public var tab: String { state.tab }
     public func selectTab(_ tab: String) { state.tab = tab; persist() }
+    /// Selects a tab and asks the window to show the panel.
+    public func present(_ tab: String) { selectTab(tab); presentRequest = UUID() }
     public func select(_ file: String) {
         if state.selectedFile != file { selection = nil }
         state.selectedFile = file; ensureImages(); persist()

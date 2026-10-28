@@ -115,13 +115,42 @@ public enum ComposerError: Error, LocalizedError, Equatable {
             review.choose(review.source, file: path, present: true)
         }
     }
-    public func mentionFile(_ path: String, focus: Bool = true) {
-        var next = text
-        if !next.characters.isEmpty, next.characters.last?.isWhitespace != true { next.append(AttributedString(" ")) }
+    /// Inserts an @file mention at a UTF-16 offset, or at the end; returns the offset after it.
+    @discardableResult public func mentionFile(_ path: String, atUTF16 offset: Int? = nil, focus: Bool = true) -> Int {
         var token = AttributedString("@" + (path.split(separator: "/").last.map(String.init) ?? path))
         token[MentionAttribute.self] = .init(kind: "file", value: ComposerInput.absolute(path, directory: directory))
-        next.append(token); next.append(AttributedString(" ")); setText(next)
+        let caret = insert(token, atUTF16: offset ?? String(text.characters).utf16.count, spaced: true)
         if focus { requestFocus() }
+        return caret
+    }
+    /// Inserts dropped text at a UTF-16 offset; returns the offset after it.
+    @discardableResult public func insertText(_ value: String, atUTF16 offset: Int) -> Int {
+        insert(AttributedString(value), atUTF16: offset, spaced: false)
+    }
+    /// The offset moves out of a mention and onto a character boundary, so neither a token nor an emoji is split.
+    private func insert(_ value: AttributedString, atUTF16 offset: Int, spaced: Bool) -> Int {
+        guard !busy, !value.characters.isEmpty else { return offset }
+        let plain = String(text.characters)
+        var target = min(max(0, offset), plain.utf16.count)
+        for run in text.runs where run[MentionAttribute.self] != nil {
+            let start = String(text[..<run.range.lowerBound].characters).utf16.count
+            let end = start + String(text[run.range].characters).utf16.count
+            if target > start && target < end { target = end }
+        }
+        var boundary = plain.startIndex, consumed = 0
+        while boundary < plain.endIndex, consumed < target {
+            consumed += plain[boundary].utf16.count; boundary = plain.index(after: boundary)
+        }
+        var inserted = value
+        if spaced {
+            if boundary > plain.startIndex, !plain[plain.index(before: boundary)].isWhitespace { inserted = AttributedString(" ") + inserted }
+            inserted.append(AttributedString(" "))
+        }
+        var next = text
+        guard let index = AttributedString.Index(boundary, within: next) else { return offset }
+        next.insert(inserted, at: index)
+        setText(next)
+        return consumed + String(inserted.characters).utf16.count
     }
     public func removeAttachment(_ id: String) { guard !busy else { return }; editRevision += 1; attachments.removeAll { $0.id == id }; save() }
     public func addAttachment(_ data: Data, mime: String, name: String) async {
@@ -134,6 +163,8 @@ public enum ComposerError: Error, LocalizedError, Equatable {
             editRevision += 1; attachments.append(attachment); save()
         } catch { self.error = WriteErrorMessage.message(error) }
     }
+    /// An item dropped on the composer that it cannot attach: audio, video and other types the server drops.
+    public func refuseDrop() { error = AttachmentError.unsupported.localizedDescription }
     public func attachmentURL(_ attachment: ComposerAttachment) async -> URL? { try? await store?.drafts?.attachmentURL(attachment, draftID: draftID) }
     private func snapshot() throws -> Draft {
         try Draft(id: draftID, serverID: serverID, sessionID: sessionID, directory: sessionID == nil ? directory : nil,

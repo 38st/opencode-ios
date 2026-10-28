@@ -36,7 +36,7 @@ extension ReadStore {
         if type == "session.deleted" {
             deletedSessions.insert(id)
             sessions.removeValue(forKey: id); running.remove(id); permissions.removeValue(forKey: id)
-            forms.removeValue(forKey: .session(id)); openSessions.remove(id); lru.removeAll { $0 == id }
+            forms.removeValue(forKey: .session(id)); openSessions.remove(id); openCounts[id] = nil; lru.removeAll { $0 == id }
             if let cache { owned { try await cache.writer.deleteSession(serverID: self.serverID, sessionID: id) } }
             updateAttention(); return
         }

@@ -122,7 +122,7 @@ extension ReadStore {
         do { try await withTaskCancellationHandler { try await task.value } onCancel: { task.cancel() } }
         catch APIError.server(tag: "SessionNotFoundError", status: 404, body: _) {
             sessions.removeValue(forKey: id); running.remove(id); permissions.removeValue(forKey: id)
-            forms.removeValue(forKey: .session(id)); openSessions.remove(id); lru.removeAll { $0 == id }; dirty.remove(id)
+            forms.removeValue(forKey: .session(id)); openSessions.remove(id); openCounts[id] = nil; lru.removeAll { $0 == id }; dirty.remove(id)
             try await cache?.writer.deleteSession(serverID: serverID, sessionID: id)
             updateAttention()
         }
@@ -221,6 +221,7 @@ extension ReadStore {
         return .init(rows: Array(newest.data.reversed()), cursor: newestCursor)
     }
     public func open(_ id: String) async throws {
+        openCounts[id, default: 0] += 1
         openSessions.insert(id); lru.removeAll { $0 == id }; lru.append(id)
         // Release the victim before suspending or attaching another window. Concurrent
         // opens must not resurrect a cache read that was evicted while it was in flight.
@@ -253,7 +254,12 @@ extension ReadStore {
             try await cache.flush()
         }
     }
-    public func close(_ id: String) { openSessions.remove(id) }
+    /// A session open in two windows stays open until both close it.
+    public func close(_ id: String) {
+        let count = (openCounts[id] ?? 1) - 1
+        openCounts[id] = count > 0 ? count : nil
+        if count <= 0 { openSessions.remove(id) }
+    }
     public func loadOlder(_ id: String) async throws {
         guard let t = sessions[id]?.transcript, !t.loadingOlder, let cursor = t.olderCursor, let client else { return }
         t.loadingOlder = true; defer { t.loadingOlder = false }

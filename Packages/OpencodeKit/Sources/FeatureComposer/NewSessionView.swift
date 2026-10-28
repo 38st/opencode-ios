@@ -13,6 +13,7 @@ public struct NewSessionView: View {
     let initialProject: String?
     let servers: [ServerStore]
     let selectServer: (ServerStore) -> Void
+    let ownsCommands: Bool
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var directory = ""
     @State private var projectID = ""
@@ -34,10 +35,11 @@ public struct NewSessionView: View {
     ///   - directory: restores a failed creation's directory, and says so.
     ///   - project: the project to start on, such as the one picked in Home; else the most recently active one.
     ///   - servers: shown as a server selector when there is more than one.
+    ///   - ownsCommands: whether the menu bar's composer commands act here.
     public init(server: ServerStore, directory: String? = nil, project: String? = nil, servers: [ServerStore] = [],
-                selectServer: @escaping (ServerStore) -> Void = { _ in }, opened: @escaping (String) -> Void) {
+                selectServer: @escaping (ServerStore) -> Void = { _ in }, ownsCommands: Bool = true, opened: @escaping (String) -> Void) {
         self.server = server; self.initialDirectory = directory; self.initialProject = project; self.opened = opened
-        self.servers = servers; self.selectServer = selectServer
+        self.servers = servers; self.selectServer = selectServer; self.ownsCommands = ownsCommands
     }
     private var project: Project? { server.projects.first { $0.id == projectID } }
     private var draftDirectory: String { worktree.isEmpty || worktree == "new" ? directory : worktree }
@@ -47,7 +49,7 @@ public struct NewSessionView: View {
                 VStack(spacing: OCSpacing.xxl) {
                     Text("New session").font(OCType.title).accessibilityAddTraits(.isHeader)
                     if !draftDirectory.isEmpty {
-                        ComposerDock(store: server.readPath, model: server.readPath.composer(directory: draftDirectory), start: start, opened: opened)
+                        ComposerDock(store: server.readPath, model: server.readPath.composer(directory: draftDirectory), start: start, opened: opened, ownsCommands: ownsCommands)
                             .id(draftDirectory)
                     } else { ProgressView("Loading projects…") }
                     if creatingWorktree { ProgressView("Creating worktree").font(OCType.small) }

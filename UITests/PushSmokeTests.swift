@@ -10,8 +10,13 @@ nonisolated final class PushSmokeTests: SmokeTestCase {
             app.launchEnvironment[name] = try XCTUnwrap(env[name])
         }
         try launchFreshApp(suffix: "-push")
-        // Runs before the app is terminated, also after a failure: no activity may outlive the test.
-        addTeardownBlock { @MainActor [self] in try? await command(["operation": "activityClear", "id": "activity-clear-teardown"]) }
+        // Runs before the app is terminated, also after a failure: no activity may outlive the test. The app runs
+        // this command at once, outside its command queue, so a command still in progress cannot delay it.
+        addTeardownBlock { @MainActor [self] in
+            try await command(["operation": "activityClear", "id": "activity-clear-teardown"])
+            let cleared = try await waitReport("activity-clear-teardown", timeout: 15) { _ in true }
+            XCTAssertEqual(cleared["remaining"] as? Int, 0, "The test must not leave a Live Activity on the device")
+        }
         app.buttons["addFirstServer"].tap()
         let pair = try await api("/api/pair", method: "POST")
         let link = try XCTUnwrap(env["OPENCODE_UI_URL"]) + "/auth/connect/" + XCTUnwrap(pair["code"] as? String)
@@ -205,10 +210,13 @@ nonisolated final class PushSmokeTests: SmokeTestCase {
     }
     @MainActor private func waitActivity(_ session: String, timeout: TimeInterval = 30, _ predicate: ([String: Any]) -> Bool) async throws -> [String: Any] {
         let deadline = Date().addingTimeInterval(timeout)
+        // Each call asks under IDs of its own: waitReport takes the newest report with an ID, which would otherwise be
+        // an earlier call's answer until the driver replies.
+        let call = UUID().uuidString.prefix(8)
         var attempt = 0
         repeat {
             attempt += 1
-            let id = "activity-\(session)-\(attempt)"
+            let id = "activity-\(session)-\(call)-\(attempt)"
             try await command(["operation": "activityState", "id": id])
             let report = try await waitReport(id) { _ in true }
             if let found = (report["activities"] as? [[String: Any]] ?? []).first(where: { $0["sessionID"] as? String == session && predicate($0) }) { return found }

@@ -8,19 +8,17 @@ import OCShared
 import UIKit
 import UserNotifications
 
-/// Shared initialization also supports an action or LiveActivityIntent cold-starting the app.
+/// Shared initialization also supports an action or LiveActivityIntent cold-starting the app. Every window shares
+/// the one registry, however many scenes connect at once.
 @MainActor public enum ApplicationServices {
-    private static var task: Task<ServerRegistry, any Error>?
-    public static func registry() async throws -> ServerRegistry {
-        if let task { return try await task.value }
-        let created = Task { @MainActor in
-            let registry = try await ServerRegistry.live()
-            await registry.load()
-            return registry
-        }
-        task = created
-        do { return try await created.value } catch { task = nil; throw error }
+    private static let shared = SharedOnce<ServerRegistry> {
+        let registry = try await ServerRegistry.live()
+        await registry.load()
+        return registry
     }
+    public static func registry() async throws -> ServerRegistry { try await shared.value() }
+    /// The windows of this process: deep-link routing, key-window gating and the app-wide scene phase.
+    public static let windows = WindowCoordinator()
 }
 
 @MainActor public final class MobileAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {

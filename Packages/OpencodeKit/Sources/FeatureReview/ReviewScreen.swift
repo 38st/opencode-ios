@@ -11,7 +11,7 @@ public struct ReviewScreen: View {
     let composer: ComposerModel
     let openFile: (ReviewPath, Int?) -> Void
     @AppStorage("reviewShowAll") private var showAll = false
-    @AppStorage("reviewSplit") private var split = true
+    @AppStorage(OCWorkspaceLayout.reviewSplitKey) private var split = true
     @AppStorage("wrapLines") private var wrap = true
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.scenePhase) private var phase
@@ -20,7 +20,6 @@ public struct ReviewScreen: View {
     @State private var renderLarge = false
     @State private var regularWidth = false
     @State private var diffWidth: CGFloat = 0
-    @State private var dragWidth: Double?
     public init(model: ReviewModel, composer: ComposerModel, openFile: @escaping (ReviewPath, Int?) -> Void) {
         self.model = model; self.composer = composer; self.openFile = openFile
     }
@@ -45,18 +44,8 @@ public struct ReviewScreen: View {
                     HStack(spacing: 0) {
                         if model.sidebarVisible {
                             sidebar.frame(width: min(model.sidebarWidth, geometry.size.width - 200))
-                            Rectangle().fill(OCColor.border).frame(width: 6)
-                                .contentShape(Rectangle().inset(by: -19))
-                                .gesture(DragGesture().onChanged { value in
-                                    if dragWidth == nil { dragWidth = model.sidebarWidth }
-                                    model.sidebarWidth = min(480, max(200, (dragWidth ?? 240) + value.translation.width))
-                                }.onEnded { _ in dragWidth = nil })
-                                .onTapGesture(count: 2) { model.sidebarWidth = 240 }
-                                .accessibilityLabel("Resize file tree")
-                                .accessibilityValue("\(Int(model.sidebarWidth)) points")
-                                .accessibilityAdjustableAction { direction in
-                                    model.sidebarWidth = min(480, max(200, model.sidebarWidth + (direction == .increment ? 20 : -20)))
-                                }
+                            OCResizeHandle("Resize file tree", value: $model.sidebarWidth, range: WorkspaceWidths.reviewTreeMinimum...WorkspaceWidths.reviewTreeMaximum,
+                                           reset: WorkspaceWidths.reviewTreeDefault)
                         }
                         preview
                     }
@@ -110,9 +99,14 @@ public struct ReviewScreen: View {
                                     if model.isReviewed(file) { OCIcon("check") }
                                     if file.status == "added" || file.status == "deleted" { Text(file.status == "added" ? "A" : "D").font(OCType.micro).foregroundStyle(file.status == "added" ? OCColor.success : OCColor.danger) }
                                 }.padding(.leading, CGFloat(entry.depth) * 16 + OCSpacing.sm).padding(.trailing, OCSpacing.sm).frame(minHeight: OCLayout.touchTarget).contentShape(Rectangle())
-                                    .background(model.selected?.file == file.file ? OCColor.pressed : .clear).background(OCColor.background)
+                                    .background(model.selected?.file == file.file ? OCColor.pressed : .clear).background(OCColor.background).ocHover(Rectangle())
                             }.buttonStyle(.plain).accessibilityIdentifier("reviewFile-" + file.file)
                                 .accessibilityValue(model.selected?.file == file.file ? "Selected" : "")
+                                .contextMenu {
+                                    Button("Open file") { open(file) }
+                                    Button("Mention in composer") { if let path = model.path(file.file) { composer.mentionFile(path.absolute, focus: true) } }
+                                    Button(model.isReviewed(file) ? "Mark as not reviewed" : "Mark as reviewed") { model.mark(file, reviewed: !model.isReviewed(file)) }
+                                }
                         } else { OCLabel(entry.name, icon: "folder").font(OCType.small).padding(.leading, CGFloat(entry.depth) * 16 + OCSpacing.sm).frame(maxWidth: .infinity, minHeight: OCLayout.touchTarget, alignment: .leading) }
                     }
                     if model.filteredFiles.isEmpty { Text("No results found").font(OCType.small).padding() }
@@ -138,8 +132,8 @@ public struct ReviewScreen: View {
             HStack(spacing: OCSpacing.xxs) {
                 OCIconButton("Toggle file tree", icon: "file-tree") { model.sidebarVisible.toggle() }
                 if !model.sidebarVisible { sourceMenu; totals; Text("\((model.orderedFiles.firstIndex { $0.file == model.selected?.file } ?? 0) + 1)/\(model.files.count)").font(OCType.micro) }
-                OCIconButton("Previous file", icon: "chevron-left") { model.move(-1) }.keyboardShortcut(.leftArrow, modifiers: [])
-                OCIconButton("Next file", icon: "chevron-right") { model.move(1) }.keyboardShortcut(.rightArrow, modifiers: [])
+                OCIconButton("Previous file", icon: "chevron-left") { model.move(-1) }
+                OCIconButton("Next file", icon: "chevron-right") { model.move(1) }
                 OCIconButton(showAll ? "Hide non-diff lines" : "Show all lines", icon: "code-lines") { showAll.toggle() }
                 Menu { Button("Unified") { split = false }; if diffWidth >= 560 { Button("Split") { split = true } }; Toggle("Wrap lines", isOn: $wrap) } label: { OCIcon(split && diffWidth >= 560 ? "split" : "unified").frame(width: 44, height: 44) }.accessibilityLabel("Diff view")
                 if let file = model.selected { OCToggleRow("Reviewed", isOn: Binding(get: { model.isReviewed(file) }, set: { model.mark(file, reviewed: $0) })).fixedSize() }
@@ -180,8 +174,8 @@ public struct ReviewScreen: View {
                 if !typeSize.isAccessibilitySize { Spacer() }
                 HStack {
                 if case .turn = model.source {
-                    OCIconButton("Previous file", icon: "chevron-left") { model.move(-1) }.keyboardShortcut(.leftArrow, modifiers: [])
-                    OCIconButton("Next file", icon: "chevron-right") { model.move(1) }.keyboardShortcut(.rightArrow, modifiers: [])
+                    OCIconButton("Previous file", icon: "chevron-left") { model.move(-1) }
+                    OCIconButton("Next file", icon: "chevron-right") { model.move(1) }
                 }
                 Menu {
                     Toggle("Show all lines", isOn: $showAll)
