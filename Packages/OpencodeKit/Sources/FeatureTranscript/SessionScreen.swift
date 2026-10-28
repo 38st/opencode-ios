@@ -109,7 +109,8 @@ public struct SessionScreen: View {
             .background(OCColor.background).clipShape(RoundedRectangle(cornerRadius: OCRadius.xl))
             .navigationTitle(server.sessions[sessionID]?.info.title ?? "Session").navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $review) {
-                WorkspaceReviewPanel(server: server, sessionID: sessionID, openSession: openSession)
+                // Close the sheet first, as the context sheet does, so the session does not open beneath it.
+                WorkspaceReviewPanel(server: server, sessionID: sessionID, openSession: { id in review = false; openSession(id) })
                     .safeAreaInset(edge: .top) { HStack { Spacer(); OCIconButton("Close review", icon: "close") { review = false }.accessibilityIdentifier("closeReview") }.padding(.horizontal, OCSpacing.sm) }.ocSheet()
             }
             .sheet(isPresented: $context) {

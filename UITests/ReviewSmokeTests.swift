@@ -35,6 +35,8 @@ nonisolated final class ReviewSmokeTests: SmokeTestCase {
         XCTAssertTrue(button.waitForExistence(timeout: 5)); button.tap()
     }
     @MainActor func testReviewAndFiles() async throws {
+        // A retried attempt reuses the seeded session and the comment text; only this attempt's messages count.
+        let started = Date().timeIntervalSince1970 * 1_000
         let fixture = try await setupReview(); let session = try XCTUnwrap(fixture["session"])
         let commentText = ipad ? "Simplify this iPad review selection" : "Simplify this review selection"
         openSession(session); openReview()
@@ -57,7 +59,7 @@ nonisolated final class ReviewSmokeTests: SmokeTestCase {
         XCTAssertTrue(chips.waitForExistence(timeout: 5)); screenshot("review-comment")
         _ = try await api("/admin/scenario", method: "POST", body: ["name": "plain-text"], mock: true)
         let send = app.buttons["composerSend"]; XCTAssertTrue(send.waitForExistence(timeout: 5)); send.tap()
-        let user = try await sentComment(session, text: commentText)
+        let user = try await sentComment(session, text: commentText, after: started)
         let metadata = try XCTUnwrap(user["metadata"] as? [String: Any])
         let comments = try XCTUnwrap(metadata["comments"] as? [[String: Any]])
         XCTAssertEqual(comments.first?["comment"] as? String, commentText)
@@ -82,7 +84,7 @@ nonisolated final class ReviewSmokeTests: SmokeTestCase {
             app.buttons["Comment"].tap(); app.buttons["closeReview"].tap()
             _ = try await api("/admin/scenario", method: "POST", body: ["name": "plain-text"], mock: true)
             app.buttons["composerSend"].tap()
-            let fileUser = try await sentComment(session, text: "Document this file line")
+            let fileUser = try await sentComment(session, text: "Document this file line", after: started)
             let fileComments = (fileUser["metadata"] as? [String: Any])?["comments"] as? [[String: Any]]
             XCTAssertEqual(fileComments?.first?["origin"] as? String, "file")
             let proof = XCTAttachment(data: try JSONSerialization.data(withJSONObject: fileUser, options: [.sortedKeys]), uniformTypeIdentifier: "public.json")
@@ -104,11 +106,14 @@ nonisolated final class ReviewSmokeTests: SmokeTestCase {
             screenshot("review-created-git")
         }
     }
-    @MainActor private func sentComment(_ session: String, text: String) async throws -> [String: Any] {
+    /// The user message carrying the comment, created at or after `started` (milliseconds; the sandbox shares this clock).
+    @MainActor private func sentComment(_ session: String, text: String, after started: Double) async throws -> [String: Any] {
         for _ in 0..<200 {
             let messages = try await api("/api/session/\(session)/message?limit=200&order=asc")
             if let user = (messages["data"] as? [[String: Any]])?.last(where: { item in
-                ((item["metadata"] as? [String: Any])?["comments"] as? [[String: Any]])?.contains { $0["comment"] as? String == text } == true
+                let created = ((item["time"] as? [String: Any])?["created"] as? NSNumber)?.doubleValue ?? 0
+                return created >= started &&
+                    ((item["metadata"] as? [String: Any])?["comments"] as? [[String: Any]])?.contains { $0["comment"] as? String == text } == true
             }) { return user }
             try await Task.sleep(for: .milliseconds(100))
         }

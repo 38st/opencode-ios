@@ -11,6 +11,8 @@ import OCSecurity
     @ObservationIgnored var activityProgress = ActivityProgress()
     @ObservationIgnored var pushChanged: @MainActor () -> Void = {}
     @ObservationIgnored var phonePromptSent: @MainActor (String) -> Void = { _ in }
+    /// A session was opened on screen; New prompt starts in the last one's project.
+    @ObservationIgnored var sessionOpened: @MainActor (String) -> Void = { _ in }
     public let serverID: String
     public var projects: [Project] = []
     public var sessions: [String: SessionModel] = [:]
@@ -18,6 +20,9 @@ import OCSecurity
     public var localMeta: [String: SessionLocalMeta] = [:]
     public var rootCursor: String?
     public private(set) var lastStatusSync: Date?
+    /// Set once a resync has also fetched the waiting requests. Before that, after a cold launch, the cache knows the
+    /// sessions but not their permissions and questions.
+    public internal(set) var requestsSynced = false
     /// True while the server is unreachable, so running and sending states are only last known.
     public internal(set) var offline = false
     public var shells: [String: [String: ShellInfo]] = [:]
@@ -271,7 +276,12 @@ import OCSecurity
         persistTask = nil
         do { try await flush() } catch { self.error = "Could not save the cache." }
     }
-    public func resume() { stopped = false }
+    public func resume() {
+        stopped = false
+        // A composer that appeared while the store was paused, as when a link opens a session while the app comes
+        // forward, could not load its draft; it loads now.
+        for composer in composers.values where !composer.loaded { Task { await composer.load() } }
+    }
 }
 
 @MainActor final class FetchOverlay {

@@ -81,9 +81,9 @@ public struct FilesScreen: View {
                 .focused($filterFocused)
                 .onChange(of: model.query) { _, _ in resultIndex = 0 }
                 .onSubmit { openResult() }
-                .onKeyPress(.upArrow) { resultIndex = max(0, resultIndex - 1); return .handled }
-                .onKeyPress(.downArrow) { resultIndex = min(max(0, model.results.count - 1), resultIndex + 1); return .handled }
-                .onKeyPress(.escape) { model.query = ""; return .handled }
+                .ocKeyPress(WorkspaceKeys.FilesFilter.previous) { resultIndex = max(0, resultIndex - 1) }
+                .ocKeyPress(WorkspaceKeys.FilesFilter.next) { resultIndex = min(max(0, model.results.count - 1), resultIndex + 1) }
+                .ocKeyPress(WorkspaceKeys.FilesFilter.clear) { model.query = "" }
             ScrollView {
                 LazyVStack(spacing: 0) {
                     if model.query.isEmpty {

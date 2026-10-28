@@ -19,6 +19,12 @@ import UserNotifications
     public static func registry() async throws -> ServerRegistry { try await shared.value() }
     /// The windows of this process: deep-link routing, key-window gating and the app-wide scene phase.
     public static let windows = WindowCoordinator()
+    /// Links from Shortcuts, Spotlight and the controls, for the windows to route.
+    public static let links = LinkInbox()
+    /// The intents' work in this process; a cold start by an intent loads the registry first.
+    static let intents = IntentActions(registry: { try await ApplicationServices.registry() }, links: links)
+    /// Refreshes Siri's parameter phrases; the app sets it to its App Shortcuts provider's update.
+    public static var appShortcutsChanged: @MainActor () -> Void = {}
 }
 
 @MainActor public final class MobileAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
@@ -28,6 +34,7 @@ import UserNotifications
     public func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         NotificationCategories.register()
         UNUserNotificationCenter.current().delegate = self
+        IntentEnvironment.app = ApplicationServices.intents
         SessionIntentHandler.stop = { serverID, sessionID in
             let registry = try await ApplicationServices.registry()
             guard let server = registry.servers.first(where: { $0.id.rawValue.uuidString == serverID }),

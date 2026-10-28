@@ -268,3 +268,21 @@ private actor RevertTrace {
     #expect(!invalidated.withLock { $0 })
     await store.stop()
 }
+
+@Test @MainActor func aComposerOpenedWhileTheStoreIsPausedLoadsItsDraftOnResume() async throws {
+    let writer = try PersistenceWriter(), drafts = DraftStore(writer: writer)
+    let store = ReadStore(serverID: "server", cache: CacheStore(writer: writer), drafts: drafts)
+    await drafts.save(try Draft(serverID: "server", sessionID: "s", attributedText: AttributedString("saved")))
+    await store.stop()
+    // A link opens the session as the app comes forward, before the registry resumes the store.
+    let composer = store.composer(sessionID: "s", directory: "/project")
+    await composer.load()
+    #expect(!composer.loaded)
+    #expect(composer.error == ComposerModel.loadFailed)
+    store.resume()
+    for _ in 0..<500 where !composer.loaded { try? await Task.sleep(for: .milliseconds(2)) }
+    #expect(composer.loaded)
+    #expect(composer.text == AttributedString("saved"))
+    #expect(composer.error == nil)
+    await store.stop()
+}

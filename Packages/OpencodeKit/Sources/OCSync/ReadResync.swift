@@ -78,6 +78,7 @@ extension ReadStore {
             for id in openSessions { group.addTask { try await self.refreshSession(id) } }
             try await group.waitForAll()
         }
+        requestsSynced = true
         for catalog in catalogs.values { catalog.invalidate() }
         for directory in Set(openSessions.compactMap { sessions[$0]?.info.location.directory }) { try await refreshCatalogs(directory) }
         updateAttention(); try await flush()
@@ -221,6 +222,7 @@ extension ReadStore {
         return .init(rows: Array(newest.data.reversed()), cursor: newestCursor)
     }
     public func open(_ id: String) async throws {
+        sessionOpened(id)
         openCounts[id, default: 0] += 1
         openSessions.insert(id); lru.removeAll { $0 == id }; lru.append(id)
         // Release the victim before suspending or attaching another window. Concurrent

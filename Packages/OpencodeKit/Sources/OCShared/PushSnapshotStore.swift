@@ -87,6 +87,14 @@ public struct PushSnapshotStore: Sendable {
         try transaction { try write(max(0, count), to: file("pending", server)); return try sum() }
     }
     public func badge() throws -> Int { try transaction { try sum() } }
+    /// Each server's waiting permissions and questions, as the app or the NSE last wrote them.
+    public func pendingCounts() throws -> [String: Int] {
+        try transaction {
+            try files("pending").reduce(into: [:]) { counts, url in
+                counts[url.deletingPathExtension().lastPathComponent] = max(0, (try read(url) as Int?) ?? 0)
+            }
+        }
+    }
     public func record(_ shown: ShownNotification, pending: Int) throws -> Int {
         try transaction {
             guard try read(file("keys", shown.keyID)) as String? == shown.server else { throw CocoaError(.fileReadNoPermission) }

@@ -17,14 +17,16 @@ extension ReadStore {
             phonePromptSent(session)
         }
         guard inserted else { return false }
-        // The background notification is allowed to drain this durable admission without opening SSE.
-        if let client, let outboxDrain {
-            guard let api = try? await client() else { return true }
-            // A failed opportunistic send leaves the original bytes in the durable outbox.
-            _ = try? await withActionDeadline(seconds: .seconds(3)) { [weak self] in
-                try await outboxDrain.drain(using: api) { [weak self] id, result in await self?.acknowledgeResponse(id, result: result) }
-            }
-        }
+        await drainNow(deadline: .seconds(3))
         return true
+    }
+    /// Sends the outbox now, without the event stream: a notification action or an intent can run while the app is in
+    /// the background and its servers are suspended. A failed attempt leaves the admissions, bytes unchanged, in the
+    /// outbox for the next pass.
+    func drainNow(deadline: Duration, clock: NetworkClock = .init()) async {
+        guard let client, let outboxDrain, let api = try? await client() else { return }
+        _ = try? await withActionDeadline(seconds: deadline, clock: clock) { [weak self] in
+            try await outboxDrain.drain(using: api) { [weak self] id, result in await self?.acknowledgeResponse(id, result: result) }
+        }
     }
 }

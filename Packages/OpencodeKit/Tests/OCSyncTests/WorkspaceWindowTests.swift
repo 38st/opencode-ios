@@ -138,3 +138,24 @@ private func path(_ ids: String...) -> [SessionRef] { ids.map { SessionRef(serve
     #expect(String(composer.text.characters).hasSuffix("hello! @readme.md "), "Without an offset the mention goes at the end")
     await store.stop()
 }
+
+@Test @MainActor func aDroppedSessionAnotherWindowShowsBringsThatWindowForward() {
+    let windows = WindowCoordinator(), shown = UUID(), dropped = UUID()
+    windows.register(shown) {}; windows.register(dropped) {}
+    windows.update(shown, path: path("ses_a", "ses_child"))
+    let ref = SessionRef(serverID: server, sessionID: "ses_a")
+    #expect(windows.drop(ref, into: dropped, parked: false) == .bringForward(shown))
+    #expect(windows.drop(ref, into: dropped, parked: true) == .bringForward(shown), "A live window wins over a parked one")
+    #expect(windows.drop(SessionRef(serverID: server, sessionID: "ses_child"), into: dropped, parked: false) == .bringForward(shown))
+    #expect(windows.drop(ref, into: shown, parked: false) == .open, "The window showing it opens it again")
+    let free = SessionRef(serverID: server, sessionID: "ses_free")
+    #expect(windows.drop(free, into: dropped, parked: true) == .activateParked, "A window iPadOS keeps without connecting it")
+    #expect(windows.drop(free, into: dropped, parked: false) == .open)
+}
+
+@Test func aRedundantDroppedWindowClosesOnceItsSceneAttaches() {
+    #expect(WindowCoordinator.closeTiming(pathEmpty: true, attached: true) == .now)
+    #expect(WindowCoordinator.closeTiming(pathEmpty: true, attached: false) == .onAttach, "The activity arrived before the scene")
+    #expect(WindowCoordinator.closeTiming(pathEmpty: false, attached: true) == .never, "A window with a session is never closed")
+    #expect(WindowCoordinator.closeTiming(pathEmpty: false, attached: false) == .never)
+}

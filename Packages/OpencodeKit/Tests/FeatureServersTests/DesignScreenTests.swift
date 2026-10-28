@@ -102,14 +102,21 @@ import OCSync
         let server = try await registry.add(.init(name: "Studio Mac", endpoints: [endpoint], lastInfo: .init(version: "2.0.32")), credential: .password("fixture"))
         server.readPath.client = nil
         server.readPath.projects = [.init(raw: .object(["id": .string("project"), "name": .string("Design system"), "canonical": .string("/work/project")]))]
+        // The real window at regular widths: Home and review open on a session whose review shows the Context tab,
+        // which is drawn from local data only. Times are fixed, and in the past, so the dates in Home and the tab never
+        // move: Home calls a date today or yesterday by the device's clock.
+        let created = 1_790_000_000_000.0
+        let info = SessionInfo(raw: .object(["id": .string("ses_workspace"), "projectID": .string("project"), "title": .string("Polish the workspace"),
+            "location": .object(["directory": .string("/work/project")]), "time": .object(["created": .number(created), "updated": .number(created)])]))
+        server.readPath.seed(info: info, messages: [])
+        var state = WindowState(owner: "")
+        state.path = [SessionRef(serverID: server.id, sessionID: info.id)]
+        state.homeOpen = true; state.reviewOpen = true; state.reviewTab = "Context"
         for size in [CGSize(width: 507, height: 1180), CGSize(width: 694, height: 1180), CGSize(width: 820, height: 1180), CGSize(width: 1180, height: 820),
                      CGSize(width: 1032, height: 1376), CGSize(width: 1376, height: 1032)] {
             let regular = size.width >= 600
-            let view: AnyView = regular ? AnyView(OCWorkspaceShell(layout: .constant(OCWorkspaceLayout(homeOpen: true, reviewOpen: true))) {
-                WorkspaceSidebar(registry: registry, selectedServer: .constant(nil), selectedProject: .constant(nil), openSettings: {}, newSession: {}, selectSession: { _ in })
-            } tabs: {
-                OCProjectTabs(projects: [.init(id: "project", title: "Design system")], selection: .constant("project"))
-            } main: { WorkspacePlaceholder(title: "Design system") } panel: { OCWorkspacePanel() }) : AnyView(ServerRootView(registry: registry))
+            let view = ServerRootView(registry: registry, initialState: regular ? state : nil)
+                .environment(\.locale, Locale(identifier: "en_US")).environment(\.timeZone, TimeZone(secondsFromGMT: 0)!)
             let controller = UIHostingController(rootView: view.environment(\.colorScheme, .light))
             controller.overrideUserInterfaceStyle = .light
             assertSnapshot(of: controller, as: .image(size: size, traits: UITraitCollection { traits in

@@ -3,6 +3,11 @@ import Observation
 import OCModels
 import OCShared
 
+nonisolated public enum DroppedSession: Equatable, Sendable {
+    case open, bringForward(UUID), activateParked
+}
+nonisolated public enum DropClose: Equatable, Sendable { case never, now, onAttach }
+
 /// The app's windows. It is the only caller of the registry's scene phase, so backgrounding one window never pauses
 /// the servers another window shows; it sends each deep link to one window; and it names the key window, the one in
 /// use, which alone presents app-wide prompts such as Settings for a server that needs repair.
@@ -81,6 +86,20 @@ import OCShared
         return target
     }
     public func take(_ id: UUID) -> DeepLink? { routes.removeValue(forKey: id) }
+    /// What a window made by dropping a Home row at the edge of the screen does with the dropped session: open it,
+    /// or bring forward the window that already shows it, live or parked by iPadOS (`parked`: a window iPadOS keeps
+    /// but has not connected shows this root session).
+    public func drop(_ ref: SessionRef, into window: UUID, parked: Bool) -> DroppedSession {
+        if let other = self.window(showing: ref), other != window { return .bringForward(other) }
+        if self.window(showing: ref) == nil && parked { return .activateParked }
+        return .open
+    }
+    /// When a dropped window that another window's session made redundant closes: only an empty window closes, and
+    /// one whose scene has not attached yet closes once it does.
+    nonisolated public static func closeTiming(pathEmpty: Bool, attached: Bool) -> DropClose {
+        guard pathEmpty else { return .never }
+        return attached ? .now : .onAttach
+    }
     /// Links for a window that is not connected yet, keyed by its scene's persistent identifier; it takes them
     /// when it connects.
     @ObservationIgnored private var parked: [String: DeepLink] = [:]

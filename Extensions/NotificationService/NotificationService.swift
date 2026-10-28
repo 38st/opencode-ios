@@ -3,6 +3,7 @@ import OCPushCore
 import OCSecurity
 import OCShared
 import UserNotifications
+import WidgetKit
 
 // UNNotificationServiceExtension callbacks are nonisolated. The lock owns all mutable state;
 // cancellation and normal completion compete for the same one-shot handler.
@@ -47,6 +48,12 @@ nonisolated final class NotificationService: UNNotificationServiceExtension, @un
         if let (handler, content) = delivery {
             if presentation?.clearsBadge == true { UNUserNotificationCenter.current().setBadgeCount(0) }
             handler(content)
+        }
+        // A verified push wrote its server's waiting count: the Lock Screen count and Review approval follow it while
+        // the app is closed.
+        if presentation?.badge != nil {
+            WidgetCenter.shared.reloadTimelines(ofKind: WidgetKind.needsYou.rawValue)
+            ControlCenter.shared.reloadControls(ofKind: ControlKind.reviewApproval.rawValue)
         }
     }
     deinit { task?.cancel() }

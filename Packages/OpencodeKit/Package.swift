@@ -21,7 +21,7 @@ let features = [
 ]
 let modules = [
     "OCFoundation", "OCModels", "OCNetworking", "OCSecurity", "OCPersistence", "OCShared",
-    "OCPushCore", "OCSync", "OCRender", "OCDesign", "OCActivity", "OCIntents",
+    "OCPushCore", "OCSync", "OCRender", "OCDesign", "OCActivity", "OCIntents", "OCAppIntents",
 ] + features
 
 let grammarNames = ["swift", "typescript", "tsx", "javascript", "python", "json", "bash", "go", "rust", "markdown", "yaml", "html", "css"]
@@ -54,15 +54,16 @@ let package = Package(
         .target(name: "OCPushCore", dependencies: ["OCFoundation", "OCModels", "OCSecurity", "OCShared"], resources: [.copy("Resources/Contracts")], swiftSettings: coreSettings),
         .target(
             name: "OCSync",
-            dependencies: ["OCModels", "OCFoundation", "OCNetworking", "OCPersistence", "OCSecurity", "OCShared", "OCPushCore", "OCActivity", "OCIntents"],
+            dependencies: ["OCModels", "OCFoundation", "OCNetworking", "OCPersistence", "OCSecurity", "OCShared", "OCPushCore", "OCActivity", "OCIntents", "OCAppIntents"],
             swiftSettings: uiSettings
         ),
         .target(name: "OCRender", dependencies: ["OCModels", "OCFoundation", .product(name: "Markdown", package: "swift-markdown"), .product(name: "SwiftTreeSitter", package: "swift-tree-sitter")] + grammarNames.map { .byName(name: "Grammar_" + $0) }, swiftSettings: coreSettings),
         .target(name: "OCDesign", dependencies: ["OCRender", .product(name: "Textual", package: "textual")], resources: [.process("Resources")], swiftSettings: uiSettings),
         .target(name: "OCActivity", dependencies: ["OCShared"], swiftSettings: coreSettings),
-        // App-process intent implementations will receive OCSync through injection.
-        // Widgets must be able to link this shared target without networking or sync.
-        .target(name: "OCIntents", dependencies: ["OCShared"], swiftSettings: uiSettings),
+        // The app process injects the intents' implementations (OCSync); the Widgets extension links this target
+        // without networking or sync, so its intents there only read the App Group snapshot.
+        .target(name: "OCIntents", dependencies: ["OCShared"], swiftSettings: coreSettings),
+        .target(name: "OCAppIntents", dependencies: ["OCIntents", "OCShared"], swiftSettings: coreSettings),
     ] + grammarTargets + features.map {
         .target(name: $0, dependencies: ["OCModels", "OCFoundation", "OCSync", "OCDesign", "OCRender"] + ($0 == "FeatureServers" ? [.byName(name: "FeatureInbox"), .byName(name: "FeatureTranscript"), .byName(name: "FeatureComposer"), .byName(name: "FeatureReview"), .byName(name: "OCShared"), .byName(name: "FeatureSettings")] : []) + ($0 == "FeatureTranscript" ? [.byName(name: "FeatureApprovals"), .byName(name: "FeatureComposer"), .byName(name: "FeatureReview")] : []) + (["FeatureReview", "FeatureApprovals"].contains($0) ? [.byName(name: "FeatureFiles")] : []) + ($0 == "FeatureApprovals" ? [.byName(name: "OCPushCore"), .byName(name: "OCSecurity")] : []) + (["FeatureSettings", "FeatureInbox"].contains($0) ? [.byName(name: "OCShared")] : []), swiftSettings: uiSettings)
     } + [
@@ -70,7 +71,8 @@ let package = Package(
         .testTarget(name: "OCNetworkingLiveTests", dependencies: ["OCNetworking", "OCSecurity", "OCSync", "OCModels", "OCFoundation", "OCPersistence"], swiftSettings: coreSettings),
         .testTarget(name: "OCPushCoreTests", dependencies: ["OCPushCore", "OCFoundation", "OCModels", "OCShared", "OCSecurity"], swiftSettings: coreSettings),
         .testTarget(name: "OCPersistenceTests", dependencies: ["OCPersistence", "OCModels", "OCFoundation", .product(name: "Clocks", package: "swift-clocks")], swiftSettings: coreSettings),
-        .testTarget(name: "OCSyncTests", dependencies: ["OCSync", "OCActivity", "OCPushCore", "OCRender", "OCShared", "OCNetworking", "OCSecurity", "OCModels", .product(name: "Clocks", package: "swift-clocks")], swiftSettings: coreSettings),
+        .testTarget(name: "OCSyncTests", dependencies: ["OCSync", "OCActivity", "OCPushCore", "OCRender", "OCShared", "OCNetworking", "OCSecurity", "OCModels", "OCIntents", .product(name: "Clocks", package: "swift-clocks")], swiftSettings: coreSettings),
+        .testTarget(name: "OCIntentsTests", dependencies: ["OCIntents", "OCAppIntents", "OCShared"], swiftSettings: coreSettings),
         .testTarget(name: "FeatureServersTests", dependencies: ["OCFoundation", "FeatureServers", "OCSync", "OCModels", "OCDesign", "OCNetworking", "OCSecurity", .product(name: "SnapshotTesting", package: "swift-snapshot-testing")], exclude: ["__Snapshots__"], swiftSettings: uiSettings),
     ] + ["OCFoundation", "OCModels", "OCSecurity", "OCRender", "OCShared", "OCActivity"].map {
         .testTarget(name: "\($0)Tests", dependencies: [.byName(name: $0)], swiftSettings: coreSettings)

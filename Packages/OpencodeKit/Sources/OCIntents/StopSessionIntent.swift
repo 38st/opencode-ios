@@ -10,6 +10,8 @@ public struct StopSessionIntent: LiveActivityIntent {
     public static let title: LocalizedStringResource = "Stop session"
     public static let description = IntentDescription("Interrupt this opencode session.")
     public static let openAppWhenRun = false
+    /// The Live Activity's button; its raw server and session IDs are no Shortcuts action.
+    public static let isDiscoverable = false
     @Parameter(title: "Server") public var server: String
     @Parameter(title: "Session") public var session: String
     public init() {}

@@ -287,6 +287,35 @@ drop the window that is not on screen.
 The iPhone stage's `SwitcherSmokeTests` opens the switcher from Home's toolbar button and the
 context sheet from the session header.
 
+## Shortcuts, Spotlight and widgets
+
+```sh
+node Tools/ui-smoke/index.mjs --system-only                               # every system test on the iPhone
+node Tools/ui-smoke/index.mjs --system-test testShortcutsRunTheIntents    # one of them
+```
+
+The full run's iPhone stage includes `SystemSmokeTests`. Each test pairs the sandbox and
+creates a session with a unique title, then leaves the app for the system:
+
+- `testShortcutsRunTheIntents` runs Send a prompt from the app's page in the Shortcuts app. A
+  simulator build is not signed with a team, so the system refuses to run it ("Unable to run
+  App Shortcut"); the test records the outcome, then performs Send a prompt and Get session
+  status in the app through a DEBUG-only link (`opencodeios://debug-intent/send` and
+  `/status`), which calls each intent's own `perform()` with the values Shortcuts would pass.
+  It checks on the server that exactly one prompt with that text arrived and that the status
+  matches the server's.
+- `testSpotlightOpensASession` checks that the Spotlight switch in Settings is on, searches
+  Spotlight for the app's name (its App Shortcuts) and for the session's title, and opens the
+  session from the result.
+- `testWidgetOnTheHomeScreen` makes the session wait for an approval, adds the Needs you widget
+  from the widget gallery, checks that its top row is that session, opens it from the widget
+  and removes the widget again, also when the test fails.
+
+The DEBUG app handles the intent link only under a `ui-` test identity. Under a test identity
+it also exposes an `intentTrace` element: each intent records in the App Group which process
+ran it and what it answered, and the test reads the answers there. What each system app
+exposed to XCUITest is attached as `finding-*` and copied next to the result bundle.
+
 ## Server UI smoke and snapshots (M1b)
 
 ```sh
@@ -306,10 +335,13 @@ the UI tests. When UI tests fail, their stage runs the failed tests again togeth
 twice, on the same build (`xcodebuild test-without-building` with an `-only-testing:` for each,
 into `Smoke-attempt-2.xcresult` and `test-attempt-2.log`, and so on); a test passes when any
 attempt passes or ends in an expected failure. Before each retry the fault proxy's faults are
-cleared and the no-Git review fixture loses the repository a failed attempt may have created;
-other server state stays, so a retried test sees the sessions and messages its earlier attempt
-left. UI stages pass `-test-timeouts-enabled YES`, so a test that hangs fails at its
-`executionTimeAllowance` (600 seconds when it sets none) and is retried like any other failure.
+cleared and the no-Git review fixture loses the repository a failed attempt may have created,
+after which `GET /api/vcs` must report no provider for it (the server could otherwise keep
+the repository it saw); other server state stays, so a retried test sees the sessions and
+messages its earlier attempt left. `ReviewSmokeTests` and `SystemSmokeTests`, which look for
+their own messages on the server, count only those created after the test started. UI stages
+pass `-test-timeouts-enabled YES`, so a test that hangs fails at its `executionTimeAllowance`
+(600 seconds when it sets none) and is retried like any other failure.
 A crash during a test is that test's failure and is retried. A failure that belongs to no
 failed test (a test runner lost outside any test, a summary that disagrees with the result
 tree, an unknown result) fails the stage without a retry. The tool
@@ -325,12 +357,10 @@ a later attempt prints `RETRIED <test> (attempt n of 3)`; one that failed every 
 `FAILED <test> (3 of 3)` and fails the stage. `retried.json` next to the result bundles lists
 both per stage. A test that passed on a later attempt contributes only that attempt's
 screenshots, findings and measurements, such as the approval latency and the review scroll
-metrics; if that attempt attached none, the stage's checks for them fail. The test's own
-checks are not isolated the same way: a retried `testReviewAndFiles` can match the comment
-message its failed attempt sent, because the session and the text are the same on every
-attempt. The full run's last
+metrics; if that attempt attached none, the stage's checks for them fail. The full run's last
 stage, the simulator push tests (`Tools/push-e2e/simulator.mjs`), runs its one test once with no
-retry; the snapshot check covers it too.
+retry, also with `-test-timeouts-enabled YES`, so a hung push test fails instead of holding the
+run; the snapshot check covers it too.
 Debug builds use a separate JSON file and Keychain service for each test run.
 Production storage is not reset. UI tests use XCTest because XCUITest requires it;
 package and snapshot tests use Swift Testing.

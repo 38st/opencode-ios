@@ -103,7 +103,8 @@ await audit(path.join(repository, '.build/opencode-sandbox/audits', runID), asyn
     try {
       const running = exec('xcodebuild', ['-project', 'Opencode.xcodeproj', '-scheme', 'Opencode', '-destination', `platform=iOS Simulator,id=${device.udid}`,
         '-derivedDataPath', '.build/DerivedData', '-resultBundlePath', path.join(directory, 'tests.xcresult'),
-        '-parallel-testing-enabled', 'NO', '-only-testing:OpencodeUITests/PushSmokeTests', '-collect-test-diagnostics', 'never', 'test'], { cwd: repository, env, maxBuffer: 64 * 1024 * 1024 });
+        // A hung test fails at its execution time allowance instead of holding the run, as in the UI stages.
+        '-parallel-testing-enabled', 'NO', '-test-timeouts-enabled', 'YES', '-only-testing:OpencodeUITests/PushSmokeTests', '-collect-test-diagnostics', 'never', 'test'], { cwd: repository, env, maxBuffer: 64 * 1024 * 1024 });
       running.child.stdout.pipe(outputLog, { end: false });
       running.child.stderr.pipe(outputLog, { end: false });
       await running;

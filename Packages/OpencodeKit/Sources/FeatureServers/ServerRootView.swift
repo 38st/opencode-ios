@@ -1,4 +1,5 @@
 #if os(iOS)
+import CoreSpotlight
 import SwiftUI
 import UIKit
 import OCDesign
@@ -15,6 +16,8 @@ import FeatureReview
 public struct ServerRootView: View {
     @Bindable var registry: ServerRegistry
     let windows: WindowCoordinator
+    /// Links from Shortcuts, Spotlight and the controls.
+    let links: LinkInbox
     @Binding private var windowValue: SessionRef?
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -36,6 +39,8 @@ public struct ServerRootView: View {
     /// The session New session was started from, and a server picked in New session itself.
     @State private var newSessionOrigin: SessionRef?
     @State private var newSessionServer: ServerID?
+    /// The project a New prompt link chose, `"<server UUID>:<project ID>"`.
+    @State private var newSessionProject: String?
     @State private var homeDismissal: UUID?
     @State private var announcedConnections: [ServerID: String] = [:]
     @State private var localExplanation = false
@@ -44,14 +49,21 @@ public struct ServerRootView: View {
     @State private var sceneSession: UISceneSession?
     @State private var registered = false
     @State private var resetsOtherWindows = false
+    /// A dropped session that another window shows arrived before this window's scene attached.
+    @State private var closeOnAttach = false
     @State private var layout = OCWorkspaceLayout()
     @State private var paletteOpen = false
     @State private var homeToggle: UUID?
     @State private var reviewToggle: UUID?
     @State private var homeSearch = ""
     @State private var homeShowsHidden = false
-    public init(registry: ServerRegistry, windows: WindowCoordinator = WindowCoordinator(), window: Binding<SessionRef?> = .constant(nil)) {
-        self.registry = registry; self.windows = windows; _windowValue = window
+    /// A window state to open with instead of the saved one; snapshots use it to draw the regular layouts.
+    private let initialState: WindowState?
+    public init(registry: ServerRegistry, windows: WindowCoordinator = WindowCoordinator(), links: LinkInbox = LinkInbox(), window: Binding<SessionRef?> = .constant(nil)) {
+        self.init(registry: registry, windows: windows, links: links, window: window, initialState: nil)
+    }
+    init(registry: ServerRegistry, windows: WindowCoordinator = WindowCoordinator(), links: LinkInbox = LinkInbox(), window: Binding<SessionRef?> = .constant(nil), initialState: WindowState?) {
+        self.registry = registry; self.windows = windows; self.links = links; _windowValue = window; self.initialState = initialState
     }
     public var body: some View {
         status(presentations(routing(lifecycle(workspace))))
@@ -140,13 +152,23 @@ public struct ServerRootView: View {
             // A Home row dropped at the edge of the screen opens here, in the window it created.
             .onContinueUserActivity(SessionActivity.type) { activity in
                 guard let url = SessionActivity.url(activity), let link = DeepLink(url: url) else { return }
-                if let ref = link.sessionID.map({ SessionRef(serverID: ServerID(rawValue: link.serverID), sessionID: $0) }), let other = windows.window(showing: ref), other != windowID {
-                    windows.bringForward(other)
-                    // The drop made this window, but the session already has one: this one closes.
-                    if sessionPath.isEmpty, let sceneSession { WindowScenes.close(sceneSession) }
-                    return
+                let ref = link.sessionID.map { SessionRef(serverID: ServerID(rawValue: link.serverID), sessionID: $0) }
+                // As `open(_:)` does: a root session shown by a window iPadOS keeps but has not connected.
+                let parked = ref.flatMap { ref in rootRef(ref).flatMap { $0.sessionID == ref.sessionID ? WindowScenes.session(showing: $0, except: sceneSession) : nil } }
+                switch ref.map({ windows.drop($0, into: windowID, parked: parked != nil) }) ?? .open {
+                case .open: pendingLink = link; routeLink(); return
+                case .bringForward(let other): windows.bringForward(other)
+                case .activateParked:
+                    // If iPadOS does not bring that window back, the session opens in a window of its own instead.
+                    WindowScenes.activate(parked) { if let ref { openWindow(value: rootRef(ref) ?? ref) } }
                 }
-                pendingLink = link; routeLink()
+                // The drop made this window, but the session already has one: this one closes, at once or when its
+                // scene attaches (the activity can arrive before the probe reports the scene).
+                switch WindowCoordinator.closeTiming(pathEmpty: sessionPath.isEmpty, attached: sceneSession != nil) {
+                case .now: if let sceneSession { WindowScenes.close(sceneSession) }
+                case .onAttach: closeOnAttach = true
+                case .never: break
+                }
             }
             .onChange(of: windows.routes[windowID]) { _, _ in
                 guard let link = windows.take(windowID) else { return }
@@ -156,6 +178,18 @@ public struct ServerRootView: View {
                 // Every window sees the change; the first one takes it and the coordinator picks the window.
                 guard let url, registry.notifications?.incomingURL == url else { return }
                 registry.notifications?.incomingURL = nil
+                route(url)
+            }
+            .onChange(of: links.url, initial: true) { _, url in
+                guard let url, links.url == url else { return }
+                links.url = nil
+                route(url)
+            }
+            // A session found in Spotlight, when iOS continues its item rather than running Open a session.
+            .onContinueUserActivity(CSSearchableItemActionType) { activity in
+                guard let id = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
+                      let separator = id.firstIndex(of: ":"), let server = UUID(uuidString: String(id[..<separator])),
+                      let url = DeepLink.url(serverID: server, sessionID: String(id[id.index(after: separator)...])) else { return }
                 route(url)
             }
             .onChange(of: registry.isLoaded) { _, _ in routeLink() }
@@ -229,13 +263,19 @@ public struct ServerRootView: View {
         guard registry.servers.contains(where: { $0.id == id }) else {
             routingError = "This server is not saved. Add it in Settings first."; return
         }
-        // Home's filters stay as the user left them; a server-only link starts New session on that server.
+        // Home's filters stay as the user left them; a server-only link starts New session on that server, and a
+        // New prompt link opens the composer, in its project when it names one.
         newSessionOrigin = nil; newSessionServer = id
+        newSessionProject = link.projectID.map { id.rawValue.uuidString + ":" + $0 }
         creatingSession = false; paletteOpen = false
         sessionPath = link.sessionID.map { [.init(serverID: id, sessionID: $0, requestID: link.requestID)] } ?? []
+        if link.compose && sizeClass != .regular { creatingSession = true }
     }
     /// Sends a link to the window already showing its session, or else to the key window.
     private func route(_ url: URL) {
+        #if DEBUG
+        if DebugIntentHook.handle(url) { return }
+        #endif
         guard let link = DeepLink(url: url) else { return }
         let ref = link.sessionID.map { SessionRef(serverID: ServerID(rawValue: link.serverID), sessionID: $0) }
         let root = ref.flatMap(rootRef)
@@ -255,7 +295,7 @@ public struct ServerRootView: View {
     }
     private func beginSession() {
         recoveredDirectory = nil
-        newSessionOrigin = sessionPath.last; newSessionServer = nil
+        newSessionOrigin = sessionPath.last; newSessionServer = nil; newSessionProject = nil
         homeDismissal = UUID()
         if sizeClass == .regular { sessionPath = [] } else { creatingSession = true }
     }
@@ -289,12 +329,12 @@ public struct ServerRootView: View {
             NewSessionTarget(serverID: ref.serverID, projectID: registry.servers.first { $0.id == ref.serverID }?.sessions[ref.sessionID]?.info.projectID)
         }
         return NewSessionTarget.resolve(servers: registry.servers.map(\.id), chosenServer: newSessionServer, homeServer: selectedServer,
-                                        homeProject: selectedProject, origin: origin)
+                                        homeProject: newSessionProject ?? selectedProject, origin: origin)
     }
     @ViewBuilder private func newSessionView(ownsCommands: Bool) -> some View {
         if let target = newSessionTarget, let server = registry.servers.first(where: { $0.id == target.serverID }) {
             NewSessionView(server: server, directory: recoveredDirectory, project: target.projectID, servers: registry.servers,
-                           selectServer: { newSessionServer = $0.id; recoveredDirectory = nil }, ownsCommands: ownsCommands) { id in
+                           selectServer: { newSessionServer = $0.id; newSessionProject = nil; recoveredDirectory = nil }, ownsCommands: ownsCommands) { id in
                 creatingSession = false; sessionPath = [.init(serverID: server.id, sessionID: id)]
             }
             // A new target (Home's project, a project tab, or another server) starts a fresh New session.
@@ -458,17 +498,21 @@ public struct ServerRootView: View {
         #else
         _ = first
         #endif
+        if let initialState { apply(initialState); return }
         guard supportsMultipleWindows else { return }
         if let state = WindowState.restore(storedState, owner: Self.owner, servers: Set(registry.servers.map(\.id))) {
-            sessionPath = state.path; selectedServer = state.server; selectedProject = state.project
-            layout = OCWorkspaceLayout(homeOpen: state.homeOpen, reviewOpen: state.reviewOpen, chatWidth: state.chatWidth, homeWidth: state.homeWidth)
-            if let ref = state.path.last, let server = registry.servers.first(where: { $0.id == ref.serverID }), let session = server.sessions[ref.sessionID] {
-                let review = server.readPath.review(sessionID: ref.sessionID, directory: session.info.location.directory)
-                review.sidebarWidth = state.reviewTreeWidth
-                if state.reviewOpen, let tab = state.reviewTab { review.present(tab) }
-            }
+            apply(state)
         } else if let value = windowValue {
             sessionPath = [value]
+        }
+    }
+    private func apply(_ state: WindowState) {
+        sessionPath = state.path; selectedServer = state.server; selectedProject = state.project
+        layout = OCWorkspaceLayout(homeOpen: state.homeOpen, reviewOpen: state.reviewOpen, chatWidth: state.chatWidth, homeWidth: state.homeWidth)
+        if let ref = state.path.last, let server = registry.servers.first(where: { $0.id == ref.serverID }), let session = server.sessions[ref.sessionID] {
+            let review = server.readPath.review(sessionID: ref.sessionID, directory: session.info.location.directory)
+            review.sidebarWidth = state.reviewTreeWidth
+            if state.reviewOpen, let tab = state.reviewTab { review.present(tab) }
         }
     }
     private var probe: WindowSceneProbe {
@@ -477,6 +521,7 @@ public struct ServerRootView: View {
     }
     private func sceneAttached(_ session: UISceneSession) {
         sceneSession = session
+        if closeOnAttach { closeOnAttach = false; WindowScenes.close(session); return }
         if resetsOtherWindows { resetsOtherWindows = false; WindowScenes.closeOthers(keeping: session) }
         if supportsMultipleWindows { WindowScenes.mark(session, root: sessionPath.first.flatMap(rootRef)) }
         if let link = windows.takeParked(scene: session.persistentIdentifier) { pendingLink = link; routeLink() }
@@ -495,10 +540,16 @@ public struct ServerRootView: View {
             VStack(spacing: 0) {
                 Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityLabel("Windows")
                     .accessibilityValue("this=\(windowID.uuidString)\n" + windows.diagnostics).accessibilityIdentifier("windowInventory")
-                // UIKit does not publish scene changes to SwiftUI; read them every second.
+                // UIKit does not publish scene changes to SwiftUI, nor do the intents their App Group trace (which
+                // process ran each intent, and what it answered); read them every second.
                 TimelineView(.periodic(from: .now, by: 1)) { _ in
-                    Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityLabel("Scenes")
-                        .accessibilityValue(WindowScenes.inventory).accessibilityIdentifier("sceneInventory")
+                    VStack(spacing: 0) {
+                        Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityLabel("Scenes")
+                            .accessibilityValue(WindowScenes.inventory).accessibilityIdentifier("sceneInventory")
+                        Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityLabel("Intents")
+                            .accessibilityValue(((try? SystemSnapshotStore.appGroup())?.intentTrace() ?? []).joined(separator: "\n"))
+                            .accessibilityIdentifier("intentTrace")
+                    }
                 }
                 Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityLabel("Commands")
                     .accessibilityValue(OCCommandTrace.shared.summary).accessibilityIdentifier("commandTrace")

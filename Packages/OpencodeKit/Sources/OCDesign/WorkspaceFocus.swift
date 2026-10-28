@@ -86,6 +86,18 @@ public extension KeyChord {
         return KeyboardShortcut(key, modifiers: modifiers)
     }
 }
+public extension View {
+    /// Runs `action` for a chord from the key table while this view has focus. Only the chord's own modifiers match,
+    /// so the text field keeps the rest (Shift-arrow selection, for example).
+    func ocKeyPress(_ chord: KeyChord, action: @escaping () -> Void) -> some View {
+        let shortcut = chord.keyboardShortcut
+        return onKeyPress(keys: [shortcut.key]) { press in
+            guard press.modifiers.intersection([.command, .shift, .option, .control]) == shortcut.modifiers else { return .ignored }
+            action()
+            return .handled
+        }
+    }
+}
 public extension FocusedValues {
     @Entry var ocWindowCommands: OCWindowCommands?
     @Entry var ocComposerCommands: OCComposerCommands?

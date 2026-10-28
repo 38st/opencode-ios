@@ -12,6 +12,8 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
     #if os(iOS)
     public var notifications: PushController?
     #endif
+    /// Widgets, controls, intents and Spotlight; nil where the app has no App Group (and in most tests).
+    public var system: SystemIntegration?
     public private(set) var servers: [ServerStore] = []
     public private(set) var isLoaded = false
     public private(set) var isLoading = false
@@ -84,6 +86,9 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
             registry.uiTestDefaults = defaults
             #if os(iOS)
             registry.installPush()
+            // A reset launch also starts the widgets' snapshot over; Spotlight rebuilds from the new cache folder.
+            if storage.resetsOnLaunch { try? SystemSnapshotStore.appGroup().resetUITestState() }
+            registry.installSystem(directory: cacheDirectory, defaults: defaults)
             #endif
             return registry
         }
@@ -96,6 +101,9 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
                        rememberLocalNetwork: { UserDefaults.standard.set(true, forKey: "localNetworkExplained") })
         #if os(iOS)
         registry.installPush()
+        // Beside the cache (`PersistenceWriter.applicationSupport`).
+        let support = try? FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        registry.installSystem(directory: support?.appending(path: "Opencode"), defaults: .standard)
         #endif
         return registry
     }
@@ -112,6 +120,7 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
             servers = stores
             isLoaded = true
             error = nil
+            system?.start(self)
             if phase == .active {
                 for server in servers where mayConnect(server) { await server.start() }
             }
@@ -143,10 +152,17 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
         store.readPath.pushChanged = { [weak self, weak store] in
             if let store { self?.notifications?.changed(store) }
         }
-        store.readPath.phonePromptSent = { [weak self, weak store] sessionID in
-            if let store { self?.notifications?.promptSent(store, sessionID: sessionID) }
-        }
         #endif
+        store.readPath.phonePromptSent = { [weak self, weak store] sessionID in
+            guard let store else { return }
+            #if os(iOS)
+            self?.notifications?.promptSent(store, sessionID: sessionID)
+            #endif
+            self?.system?.used(store, sessionID: sessionID)
+        }
+        store.readPath.sessionOpened = { [weak self, weak store] sessionID in
+            if let store { self?.system?.used(store, sessionID: sessionID) }
+        }
         try await store.readPath.loadCache()
         return store
     }
@@ -200,6 +216,7 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
         await server.dispose()
         await FileCache.shared.removeServer(server.readPath.serverID)
         servers.removeAll { $0.id == server.id }
+        await system?.remove(server.id)
         try await persist()
     }
     public func acknowledgeLocalNetwork() async {
@@ -248,6 +265,8 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
                 await server.readPath.flushWrites()
                 await server.suspend()
             }
+            // The widgets show the servers paused from now, before the app is suspended.
+            system?.flush()
         case .active:
             #if os(iOS)
             await notifications?.phase(.active)
@@ -305,6 +324,12 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
         #endif
         return ""
     }
+    /// The App Group snapshot and Spotlight; the Spotlight manifest lives beside the cache, so a new cache rebuilds it.
+    private func installSystem(directory: URL?, defaults: UserDefaults) {
+        system = SystemIntegration(store: try? SystemSnapshotStore.appGroup(), index: CoreSpotlightIndex(),
+                                   manifest: directory?.appending(path: "spotlight.json"), defaults: defaults,
+                                   reload: SystemReloads.apply, shortcutsChanged: SystemReloads.shortcutsChanged)
+    }
     private func installPush() {
         guard let store = try? PushSnapshotStore.appGroup() else { return }
         notifications = PushController(registry: self, store: store,
@@ -323,6 +348,7 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
         notifications?.debugDriver?.stop()
         #endif
         pathTask?.cancel(); debounceTask?.cancel()
+        system?.stop()
         await lifecycleTask?.value
         for server in servers { await server.dispose() }
         _ = try? await saveTask?.value

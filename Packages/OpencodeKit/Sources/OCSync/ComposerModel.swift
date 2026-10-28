@@ -57,8 +57,12 @@ public enum ComposerError: Error, LocalizedError, Equatable {
     public var pendingSelection: Bool { session != nil && ((options.agent != nil && options.agent != session?.info.agent) || (options.model != nil && !ComposerPickers.sameSelection(options.model, session?.info.model))) }
     public func load() async {
         guard !loaded else { return }
-        do { try await reload() } catch { self.error = "Could not load your saved draft." }
+        do {
+            try await reload()
+            if error == Self.loadFailed { error = nil }
+        } catch { self.error = Self.loadFailed }
     }
+    static let loadFailed = "Could not load your saved draft."
     public func reload() async throws {
         let store = try availableStore()
         await saving?.value

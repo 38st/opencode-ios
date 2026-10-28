@@ -139,7 +139,7 @@ public enum WorkspaceCommand: Hashable, Sendable {
 
 /// Keys that belong to a focused view rather than the menu bar, and keys the system keeps.
 public enum WorkspaceKeys {
-    public enum Scope: String, CaseIterable, Sendable { case promptEditor, commentEditor, codeList, commandPalette, filesViewer }
+    public enum Scope: String, CaseIterable, Sendable { case promptEditor, commentEditor, codeList, commandPalette, filesViewer, filesFilter }
     /// The views build their key commands from these, so the ownership checks cover what ships.
     public enum PromptEditor {
         public static let send = KeyChord(.return), escape = KeyChord(.escape)
@@ -156,8 +156,10 @@ public enum WorkspaceKeys {
         public static let open = KeyChord(.return), openInNewWindow = KeyChord(.return, .option)
     }
     public enum FilesViewer { public static let find = WorkspaceCommand.find.chord }
+    /// The Files filter field: move through the matches and clear the filter.
+    public enum FilesFilter { public static let previous = KeyChord(.up), next = KeyChord(.down), clear = KeyChord(.escape) }
     /// Each scope's keys are live only while that view is the first responder; the Files viewer's while it shows a
-    /// text file.
+    /// text file, the Files filter's while its field has focus.
     public static func local(_ scope: Scope) -> [KeyChord] {
         switch scope {
         case .promptEditor: [PromptEditor.send, PromptEditor.escape] + PromptEditor.suggestions
@@ -165,6 +167,7 @@ public enum WorkspaceKeys {
         case .codeList: [CodeList.previous, CodeList.next]
         case .commandPalette: [Palette.up, Palette.down, Palette.open, Palette.openInNewWindow, Palette.cancel]
         case .filesViewer: [FilesViewer.find]
+        case .filesFilter: [FilesFilter.previous, FilesFilter.next, FilesFilter.clear]
         }
     }
     /// Menu keys a focused view takes first and forwards to the menu's own command, which then runs once. UIKit gives
@@ -173,7 +176,7 @@ public enum WorkspaceKeys {
     public static func forwarded(_ scope: Scope) -> [WorkspaceCommand] {
         switch scope {
         case .promptEditor: [.send]
-        case .commentEditor, .codeList, .commandPalette, .filesViewer: []
+        case .commentEditor, .codeList, .commandPalette, .filesViewer, .filesFilter: []
         }
     }
     /// iPadOS and its text system keep these: app switching, screenshots, the Dock, Spotlight, the pasteboard, undo,

@@ -50,6 +50,7 @@ struct ServerSettingsView: View {
                     OCToggleRow("Show agent", detail: "Switch between agents in the composer. When hidden, defaults to Build agent.", isOn: $showAgent)
                         .accessibilityIdentifier("showAgent")
                 }
+                if let system = registry.system { SystemIntegrationSection(system: system) }
             }
             .ocNavigationTitle("Settings")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() }.accessibilityIdentifier("closeSettings") } }

@@ -4,7 +4,14 @@ import SwiftUI
 import WidgetKit
 
 @main struct OpencodeWidgets: WidgetBundle {
-    var body: some Widget { SessionActivity() }
+    var body: some Widget {
+        SessionActivity()
+        NeedsYouWidget()
+        RunningWidget()
+        RecentWidget()
+        NewPromptControl()
+        ReviewApprovalControl()
+    }
 }
 struct SessionActivity: Widget {
     var body: some WidgetConfiguration {

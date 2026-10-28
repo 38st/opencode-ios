@@ -91,6 +91,17 @@ nonisolated final class ReadSmokeTests: SmokeTestCase {
         XCTAssertTrue(app.staticTexts["Subagent · read only"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Fixture child result")).firstMatch.waitForExistence(timeout: 10))
         screenshot("subagent")
+        if UIDevice.current.userInterfaceIdiom != .pad {
+            // From the review sheet's Context tab, the parent opens in place of the sheet, not beneath it.
+            let review = app.buttons["sessionReview"]
+            XCTAssertTrue(review.waitForExistence(timeout: 5)); review.tap()
+            let contextTab = app.buttons["Context"].firstMatch
+            XCTAssertTrue(contextTab.waitForExistence(timeout: 5)); contextTab.tap()
+            let parent = app.buttons["contextParent"]
+            XCTAssertTrue(parent.waitForExistence(timeout: 10)); parent.tap()
+            XCTAssertTrue(app.buttons["closeReview"].waitForNonExistence(timeout: 5), "The review sheet closes before the session opens")
+            XCTAssertTrue(app.buttons["openSubagent"].waitForExistence(timeout: 10), "The parent session is on top")
+        }
         if UIDevice.current.userInterfaceIdiom == .pad {
             screenshot("ipad-split")
             rotate(to: .portrait)

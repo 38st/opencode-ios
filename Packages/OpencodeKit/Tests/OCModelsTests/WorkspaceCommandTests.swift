@@ -6,6 +6,7 @@ import OCModels
     let menu = WorkspaceCommand.all.filter(\.menuOwnsKey).map(\.chord)
     #expect(WorkspaceCommand.all.filter { !$0.menuOwnsKey } == [.find], "Only Find leaves its key to a view")
     #expect(WorkspaceKeys.local(.filesViewer) == [WorkspaceCommand.find.chord], "The Files viewer owns ⌘F")
+    #expect(WorkspaceKeys.local(.filesFilter) == [KeyChord(.up), KeyChord(.down), KeyChord(.escape)], "The Files filter's keys come from the table")
     #expect(Set(menu).count == menu.count, "Two menu commands share a key")
     let reserved = Set(WorkspaceKeys.reserved)
     #expect(Set(menu).isDisjoint(with: reserved), "A menu command takes a key iPadOS keeps")

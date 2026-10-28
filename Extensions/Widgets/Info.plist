@@ -29,5 +29,9 @@
 	<string>$(APP_GROUP_ID)</string>
 	<key>OCKeychainGroup</key>
 	<string>$(SHARED_KEYCHAIN_GROUP)</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Inter.ttf</string>
+	</array>
 </dict>
 </plist>
