@@ -38,6 +38,7 @@ extension ReadStore {
     }
     func handleCatalog(_ event: ServerEvent) {
         guard let type = event.header?.type else { return }
+        adminModel?.handle(type: type, payload: event.payload)
         let all = ["credential.updated", "credential.switched", "models-dev.refreshed"].contains(type)
         let locations = all ? Array(catalogs.keys) : [Location(raw: event.header?.location ?? .object([:])).key]
         for key in locations {

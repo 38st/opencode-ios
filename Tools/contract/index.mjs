@@ -10,6 +10,7 @@ import { startMock } from '../mock-llm/server.mjs';
 import { runScenario } from '../fixture-recorder/scenarios.mjs';
 import { runPluginChecks } from '../push-e2e/plugin-checks.mjs';
 import { ptyContract } from './pty.mjs';
+import { adminContract } from './admin.mjs';
 
 const { values } = parseArgs({ options: { version: { type: 'string' }, 'write-flows-only': { type: 'boolean' } } });
 const version = await resolveVersion(values.version);
@@ -42,6 +43,9 @@ await audit(auditDir, async () => {
     const buffer = await ptyContract(server);
     await writeFile(path.join(auditDir, 'pty-buffer.json'), JSON.stringify(buffer, null, 2) + '\n');
     console.log(`PASS PTY routes, Basic upgrade, UTF-16 cursor, -1, tickets, close 1000/4404, 404 and shell paging; buffer ${JSON.stringify(buffer)}`);
+    const admin = await adminContract(server);
+    await writeFile(path.join(auditDir, 'admin.json'), JSON.stringify(admin, null, 2) + '\n');
+    console.log('PASS server settings: accounts by key, runtime MCP, saved permissions, catalogs, projects, worktrees, configuration and locations');
     v1 = await startSandbox({ version: V1_VERSION, v1: true, mockURL: mock.url });
     await runScenario(v1, mock, 'v1-probe');
     console.log('PASS V1 detection');

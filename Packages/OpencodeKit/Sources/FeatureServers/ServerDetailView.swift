@@ -4,6 +4,7 @@ import OCDesign
 import UIKit
 import OCModels
 import OCSync
+import FeatureSettings
 
 struct ServerDetailView: View {
     let registry: ServerRegistry
@@ -73,6 +74,7 @@ struct ServerDetailView: View {
                         if !server.capabilities.pairing { Text(ServerCapabilities.pairingRequirement).font(OCType.small) }
                         LabeledContent("Persistent terminal", value: server.capabilities.persistentPty ? "Available" : "Unavailable")
                     }
+                    ServerAdminLinks(server: server)
                     OCSection {
                         NavigationLink("Connection diagnostics") { DiagnosticsView(server: server) }
                             .buttonStyle(OCButtonStyle(.ghost))

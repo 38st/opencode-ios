@@ -377,6 +377,8 @@ targets:
         product: OCDesign
       - package: OpencodeKit
         product: FeatureSettings
+      - package: OpencodeKit
+        product: OCSecurity
       - package: SnapshotTesting
         product: SnapshotTesting
   TerminalSnapshots:

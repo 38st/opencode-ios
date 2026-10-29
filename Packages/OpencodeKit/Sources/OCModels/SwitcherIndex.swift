@@ -9,6 +9,8 @@ public struct SwitcherEntry: Identifiable, Equatable, Sendable {
         case session(SessionRef)
         /// A Home project filter value, `<server UUID>:<project ID>`.
         case project(String)
+        /// A server's settings section, `<server UUID>:<section>`.
+        case settings(String)
     }
     public var id: String
     public var kind: Kind
@@ -46,6 +48,16 @@ public enum SwitcherIndex {
             self.filter = filter; self.name = name; self.path = path; self.server = server
         }
     }
+    /// One server's settings section.
+    public struct Setting: Equatable, Sendable {
+        public var server: String
+        public var serverName: String
+        public var section: ServerSettingsSection
+        public init(server: String, serverName: String, section: ServerSettingsSection) {
+            self.server = server; self.serverName = serverName; self.section = section
+        }
+        public var value: String { server + ":" + section.rawValue }
+    }
     public static let recentLimit = 5
     /// The palette opens with these, in this order (desktop `COMMON_COMMAND_IDS` and `COMMON_VIEW_COMMAND_IDS`).
     public static let preferred: [WorkspaceCommand] = [.newSession, .previousSession, .nextSession, .toggleReview]
@@ -53,7 +65,8 @@ public enum SwitcherIndex {
     public static func looksLikeSessionID(_ value: String) -> Bool { value.count > 20 && value.hasPrefix("ses_") }
 
     /// `commands` are the enabled ones; the desktop leaves disabled commands out of its palette.
-    public static func groups(query: String, commands: [WorkspaceCommand], sessions: [Session], projects: [Project]) -> [SwitcherGroup] {
+    public static func groups(query: String, commands: [WorkspaceCommand], sessions: [Session], projects: [Project],
+                              settings: [Setting] = []) -> [SwitcherGroup] {
         let search = query.trimmingCharacters(in: .whitespacesAndNewlines)
         let recent = sessions.sorted(by: newer)
         guard !search.isEmpty else {
@@ -67,9 +80,11 @@ public enum SwitcherIndex {
         let matchedSessions = rank(recent.filter { !exact.contains($0) }, value) { $0.title + " " + $0.project }
         let matchedCommands = rank(commands, value) { $0.title + " " + $0.menu.rawValue }
         let matchedProjects = rank(projects, value) { $0.name + " " + $0.path }
+        let matchedSettings = rank(settings, value) { $0.section.title + " settings " + $0.section.keywords + " " + $0.serverName }
         return [SwitcherGroup(title: "Commands", entries: matchedCommands.map(entry)),
                 SwitcherGroup(title: "Sessions", entries: (exact + matchedSessions).map(entry)),
-                SwitcherGroup(title: "Projects", entries: matchedProjects.map(entry))].filter { !$0.entries.isEmpty }
+                SwitcherGroup(title: "Projects", entries: matchedProjects.map(entry)),
+                SwitcherGroup(title: "Settings", entries: matchedSettings.map(entry))].filter { !$0.entries.isEmpty }
     }
     /// Substring matches first, in the given order, then subsequence matches by score.
     static func rank<Item>(_ items: [Item], _ value: String, text: (Item) -> String) -> [Item] {
@@ -102,6 +117,9 @@ public enum SwitcherIndex {
     }
     static func entry(_ session: Session) -> SwitcherEntry {
         .init(id: "session:" + session.ref.id, kind: .session(session.ref), title: session.title, detail: session.project)
+    }
+    static func entry(_ setting: Setting) -> SwitcherEntry {
+        .init(id: "settings:" + setting.value, kind: .settings(setting.value), title: setting.section.title, detail: setting.serverName)
     }
     static func entry(_ project: Project) -> SwitcherEntry {
         .init(id: "project:" + project.filter, kind: .project(project.filter), title: project.name, detail: project.server)

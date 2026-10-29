@@ -79,7 +79,7 @@ extension ReadStore {
             } else { shells[key]?.removeValue(forKey: p.string("id")) }
             return
         }
-        if type == "worktree.resolved" { adoptWorktree(p); return }
+        if type == "worktree.resolved" { adoptWorktree(p); adminModel?.handle(type: type, payload: event.payload); return }
         if hiddenSessions.contains(id) { return }
         if type == "session.execution.started" { running.insert(id) }
         if ["session.execution.succeeded", "session.execution.failed", "session.execution.interrupted"].contains(type) { running.remove(id) }

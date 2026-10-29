@@ -5,6 +5,7 @@ import { changedSnapshots, mergeAttempts, passes, retriedLines, retryable, snaps
 import { startFaultProxy } from './fault-proxy.mjs';
 import { configureComposer } from './composer-config.mjs';
 import { seedReadScreens } from './read-screens.mjs';
+import { seedAdmin } from './admin-fixture.mjs';
 import { vcsProvider, waitForNoProvider } from './vcs-reset.mjs';
 import path from 'node:path';
 import { mkdir, writeFile, readFile, copyFile, rm, readdir, stat } from 'node:fs/promises';
@@ -15,7 +16,7 @@ import { audit } from '../opencode-sandbox/isolation.mjs';
 import { stopAll, run } from '../opencode-sandbox/process.mjs';
 import { startMock } from '../mock-llm/server.mjs';
 
-const { values } = parseArgs({ options: { version: { type: 'string' }, 'skip-snapshots': { type: 'boolean' }, 'review-only': { type: 'boolean' }, 'review-test': { type: 'string' }, 'ipad-only': { type: 'boolean' }, 'read-flows-only': { type: 'boolean' }, 'composer-only': { type: 'boolean' }, 'worktree-only': { type: 'boolean' }, 'composer-test': { type: 'string' }, 'workspace-only': { type: 'boolean' }, 'workspace-test': { type: 'string' }, 'system-only': { type: 'boolean' }, 'system-test': { type: 'string' }, 'terminal-only': { type: 'boolean' }, 'terminal-test': { type: 'string' } } });
+const { values } = parseArgs({ options: { version: { type: 'string' }, 'skip-snapshots': { type: 'boolean' }, 'review-only': { type: 'boolean' }, 'review-test': { type: 'string' }, 'ipad-only': { type: 'boolean' }, 'read-flows-only': { type: 'boolean' }, 'composer-only': { type: 'boolean' }, 'worktree-only': { type: 'boolean' }, 'composer-test': { type: 'string' }, 'workspace-only': { type: 'boolean' }, 'workspace-test': { type: 'string' }, 'system-only': { type: 'boolean' }, 'system-test': { type: 'string' }, 'admin-only': { type: 'boolean' }, 'admin-test': { type: 'string' }, 'terminal-only': { type: 'boolean' }, 'terminal-test': { type: 'string' } } });
 const workspaceTests = ['testMenuNavigationAndSwitcher', 'testMenuComposerCommands', 'testReviewNextApproval', 'testTwoWindows', 'testDragFileIntoComposer'];
 const workspaceTest = values['workspace-test'];
 if (workspaceTest) assert.ok(workspaceTests.includes(workspaceTest), 'Unknown workspace test');
@@ -37,6 +38,10 @@ const systemTests = ['testShortcutsRunTheIntents', 'testSpotlightOpensASession',
 const systemTest = values['system-test'];
 if (systemTest) assert.ok(systemTests.includes(systemTest), 'Unknown system test');
 const systemOnly = values['system-only'] || Boolean(systemTest);
+const adminTests = ['testProvidersAndMCP', 'testSavedPermissionAndConfiguration', 'testWorktreeRemovalAsksFirst', 'testSwitcherOpensSettings'];
+const adminTest = values['admin-test'];
+if (adminTest) assert.ok(adminTests.includes(adminTest), 'Unknown admin test');
+const adminOnly = values['admin-only'] || Boolean(adminTest);
 // The iPhone system flow's captures: Shortcuts, Spotlight, the widget and Settings.
 const systemScreens = ['system-shortcuts-send', 'system-shortcuts-status', 'system-spotlight', 'system-widget', 'system-settings'];
 const terminalTests = ['testTerminalPrograms', 'testResumeLosesNoOutput', 'testRunACommandAndStopIt'];
@@ -56,7 +61,7 @@ const attemptsAllowed = 3;
 // A UI test that hangs ends at its `executionTimeAllowance` (600 seconds when it sets none) and fails like any other,
 // so it can run again; without this XCTest waits for it forever.
 const timeouts = ['-test-timeouts-enabled', 'YES'];
-const full = !reviewOnly && !composerOnly && !workspaceOnly && !systemOnly && !terminalOnly && !values['ipad-only'] && !values['read-flows-only'] && !values['skip-snapshots'];
+const full = !reviewOnly && !composerOnly && !workspaceOnly && !systemOnly && !adminOnly && !terminalOnly && !values['ipad-only'] && !values['read-flows-only'] && !values['skip-snapshots'];
 const version = await resolveVersion(values.version);
 const runID = `ui-${Date.now()}`;
 const output = path.join(repository, '.build/ui-smoke', runID);
@@ -186,6 +191,7 @@ await audit(path.join(repository, '.build/opencode-sandbox/audits', runID), asyn
     await run('/usr/bin/git', ['init', '--quiet', worktreeDirectory], { env: server.env, cwd: server.root });
     await run('/usr/bin/git', ['add', 'README.md'], { env: server.env, cwd: worktreeDirectory });
     await run('/usr/bin/git', ['-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '--quiet', '-m', 'Fixture'], { env: server.env, cwd: worktreeDirectory });
+    const admin = await seedAdmin(server);
     v1 = await startSandbox({ version: V1_VERSION, v1: true, mockURL: mock.url });
     const screens = await seedReadScreens(server, mock);
     const review = await seedReviewRepository(server, mock);
@@ -198,6 +204,7 @@ await audit(path.join(repository, '.build/opencode-sandbox/audits', runID), asyn
       TEST_RUNNER_OPENCODE_UI_MOCK_URL: mock.url,
       TEST_RUNNER_OPENCODE_UI_DIRECTORY: server.project,
       TEST_RUNNER_OPENCODE_UI_WORKTREE_DIRECTORY: worktreeDirectory,
+      TEST_RUNNER_OPENCODE_UI_ADMIN: JSON.stringify(admin),
       TEST_RUNNER_OPENCODE_UI_URL: server.baseURL,
       TEST_RUNNER_OPENCODE_UI_PROXY_URL: proxy.url,
       TEST_RUNNER_OPENCODE_UI_PROXY_TOKEN: proxy.adminToken,
@@ -232,9 +239,10 @@ await audit(path.join(repository, '.build/opencode-sandbox/audits', runID), asyn
     const iphoneStage = async () => {
       const attachments = path.join(output, 'attachments');
       const manifest = await uiStage(values['ipad-only'] || workspaceOnly ? 'iPad' : 'iPhone', destination, result, 'test.log', attachments, ['-skip-testing:OpencodeUITests/PushSmokeTests',
-        ...(workspaceOnly ? ['-only-testing:OpencodeUITests/WorkspaceSmokeTests' + (workspaceTest ? '/' + workspaceTest : '')] : terminalOnly ? ['-only-testing:OpencodeUITests/TerminalSmokeTests' + (terminalTest ? '/' + terminalTest : '')] : systemOnly ? ['-only-testing:OpencodeUITests/SystemSmokeTests' + (systemTest ? '/' + systemTest : '')] : reviewOnly ? ['-only-testing:OpencodeUITests/ReviewSmokeTests' + (reviewTest ? '/' + reviewTest : '')] : composerOnly ? ['-only-testing:OpencodeUITests/ComposerSmokeTests' + (composerTest ? '/' + composerTest : '')] : values['ipad-only'] || values['read-flows-only'] ? ['-only-testing:OpencodeUITests/ReadSmokeTests'] : ['-only-testing:OpencodeUITests', '-skip-testing:OpencodeUITests/WorkspaceSmokeTests'])],
+        ...(adminOnly ? ['-only-testing:OpencodeUITests/AdminSmokeTests' + (adminTest ? '/' + adminTest : '')] : workspaceOnly ? ['-only-testing:OpencodeUITests/WorkspaceSmokeTests' + (workspaceTest ? '/' + workspaceTest : '')] : terminalOnly ? ['-only-testing:OpencodeUITests/TerminalSmokeTests' + (terminalTest ? '/' + terminalTest : '')] : systemOnly ? ['-only-testing:OpencodeUITests/SystemSmokeTests' + (systemTest ? '/' + systemTest : '')] : reviewOnly ? ['-only-testing:OpencodeUITests/ReviewSmokeTests' + (reviewTest ? '/' + reviewTest : '')] : composerOnly ? ['-only-testing:OpencodeUITests/ComposerSmokeTests' + (composerTest ? '/' + composerTest : '')] : values['ipad-only'] || values['read-flows-only'] ? ['-only-testing:OpencodeUITests/ReadSmokeTests'] : ['-only-testing:OpencodeUITests', '-skip-testing:OpencodeUITests/WorkspaceSmokeTests'])],
         environment, beforeRetry);
-      if (!reviewOnly && !composerOnly && !workspaceOnly && !systemOnly && !terminalOnly) assert.ok(manifest.some(test => test.testIdentifier?.includes('ReadSmokeTests/testReadScreens')), 'Read smoke test must run; regenerate the Xcode project after adding test sources');
+      if (full || adminOnly) assert.ok(manifest.some(test => test.testIdentifier?.includes('AdminSmokeTests/')), 'Server settings smoke tests must run; regenerate the Xcode project after adding test sources');
+      if (!reviewOnly && !composerOnly && !workspaceOnly && !systemOnly && !adminOnly && !terminalOnly) assert.ok(manifest.some(test => test.testIdentifier?.includes('ReadSmokeTests/testReadScreens')), 'Read smoke test must run; regenerate the Xcode project after adding test sources');
       const captured = new Set();
       for (const test of manifest) for (const attachment of test.attachments ?? []) {
         // Findings the tests record about the simulator, kept next to the result bundle.
@@ -251,10 +259,10 @@ await audit(path.join(repository, '.build/opencode-sandbox/audits', runID), asyn
         }
       }
       if ((full || terminalOnly) && !values['ipad-only']) for (const name of terminalScreens()) assert.ok(captured.has(name), `Missing terminal screenshot: ${name}`);
-      if (!reviewOnly && !composerOnly && !workspaceOnly && !systemOnly && !terminalOnly) for (const name of ['inbox', 'session-list', 'transcript-tools', 'transcript-live', 'subagent']) assert.ok(captured.has(name), `Missing read screenshot: ${name}`);
+      if (!reviewOnly && !composerOnly && !workspaceOnly && !systemOnly && !adminOnly && !terminalOnly) for (const name of ['inbox', 'session-list', 'transcript-tools', 'transcript-live', 'subagent']) assert.ok(captured.has(name), `Missing read screenshot: ${name}`);
       if (workspaceOnly && !workspaceTest) for (const name of workspaceScreens) assert.ok(captured.has(name), `Missing iPad workspace screenshot: ${name}`);
       if ((full || systemOnly) && !systemTest) for (const name of systemScreens) assert.ok(captured.has(name), `Missing system screenshot: ${name}`);
-      if (!reviewOnly && !composerOnly && !workspaceOnly && !systemOnly && !terminalOnly) {
+      if (!reviewOnly && !composerOnly && !workspaceOnly && !systemOnly && !adminOnly && !terminalOnly) {
       assert.ok(manifest.some(test => test.testIdentifier?.includes('ReadSmokeTests/testApprovals')), 'Approval smoke test must run');
       const latencyAttachment = manifest.flatMap(test => test.attachments ?? []).find(item => item.suggestedHumanReadableName?.startsWith('approval-latency'));
       assert.ok(latencyAttachment, 'Missing approval latency measurement');
@@ -266,9 +274,9 @@ await audit(path.join(repository, '.build/opencode-sandbox/audits', runID), asyn
       console.log('PASS permission allow once, question answer, reject with note; ' + latency.trim());
       console.log(`PASS live transcript, jump to latest, subagent, viewed state and deep link; ${result}`);
       }
-      if (!reviewOnly && !values['ipad-only'] && !values['read-flows-only'] && !composerOnly && !workspaceOnly && !systemOnly && !terminalOnly) for (const name of ['onboarding', 'server-list', 'update']) assert.ok(captured.has(name));
+      if (!reviewOnly && !values['ipad-only'] && !values['read-flows-only'] && !composerOnly && !workspaceOnly && !systemOnly && !adminOnly && !terminalOnly) for (const name of ['onboarding', 'server-list', 'update']) assert.ok(captured.has(name));
       if (full) for (const name of ['palette-iphone', 'context-sheet']) assert.ok(captured.has(name), `Missing switcher screenshot: ${name}`);
-      if (!composerOnly && !workspaceOnly && !systemOnly && !terminalOnly && !values['read-flows-only'] && !values['ipad-only']) {
+      if (!composerOnly && !workspaceOnly && !systemOnly && !adminOnly && !terminalOnly && !values['read-flows-only'] && !values['ipad-only']) {
         for (const name of reviewScreens()) assert.ok(captured.has(name), `Missing review screenshot: ${name}`);
         for (const test of manifest) for (const attachment of test.attachments ?? []) {
           for (const name of ['review-scroll', 'review-comment-server', 'file-comment-server']) if (attachment.suggestedHumanReadableName?.startsWith(name)) await copyFile(path.join(attachments, attachment.exportedFileName), path.join(output, name + '.json'));
@@ -290,7 +298,8 @@ await audit(path.join(repository, '.build/opencode-sandbox/audits', runID), asyn
       const ipadAttachments = path.join(output, 'ipad-attachments');
       const ipadFilters = terminalOnly ? ['-only-testing:OpencodeUITests/TerminalSmokeTests' + (terminalTest ? '/' + terminalTest : '')]
         : [...(reviewOnly ? [] : ['-only-testing:OpencodeUITests/ReadSmokeTests/testReadScreens', '-only-testing:OpencodeUITests/ComposerSmokeTests/testComposerQueueAndSessionActions',
-          '-only-testing:OpencodeUITests/WorkspaceSmokeTests', '-only-testing:OpencodeUITests/TerminalSmokeTests']), '-only-testing:OpencodeUITests/ReviewSmokeTests' + (reviewTest ? '/' + reviewTest : '')];
+          '-only-testing:OpencodeUITests/WorkspaceSmokeTests', '-only-testing:OpencodeUITests/TerminalSmokeTests',
+          '-only-testing:OpencodeUITests/AdminSmokeTests/testSwitcherOpensSettings']), '-only-testing:OpencodeUITests/ReviewSmokeTests' + (reviewTest ? '/' + reviewTest : '')];
       const ipadScreens = terminalOnly ? terminalScreens(true) : [...(reviewOnly ? [] : ['ipad-split', 'ipad-portrait', 'ipad-composer-queue', 'ipad-composer-new', ...workspaceScreens, ...terminalScreens(true)]), ...reviewScreens(true)];
       const ipadManifest = await uiStage('iPad', `platform=iOS Simulator,id=${ipad.udid}`, ipadResult, 'ipad.log', ipadAttachments, ipadFilters,
         environment, beforeRetry, options);
@@ -314,7 +323,7 @@ await audit(path.join(repository, '.build/opencode-sandbox/audits', runID), asyn
       }
       console.log(terminalOnly ? 'PASS iPad terminals' : 'PASS iPad read flows, split-view captures, menu bar, switcher, two windows, drag and drop and terminals');
     };
-    const ipadRun = ipad && !values['ipad-only'] && !composerOnly && !workspaceOnly && !systemOnly;
+    const ipadRun = ipad && !values['ipad-only'] && !composerOnly && !workspaceOnly && !systemOnly && !adminOnly;
     xctestrun = await building;
     if (full && ipadRun) {
       // The snapshot and unit stage needs the iPhone simulator, whose screen scale its references use, and the iPad UI

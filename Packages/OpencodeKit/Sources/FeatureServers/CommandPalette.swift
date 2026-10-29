@@ -104,6 +104,7 @@ struct CommandPalette: View {
         case .command: "console"
         case .session: "bubble-5"
         case .project: "folder"
+        case .settings(let value): ServerSettingsSection(rawValue: String(value.split(separator: ":").last ?? "")).map(\.icon) ?? "settings-gear"
         }
     }
 }

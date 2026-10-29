@@ -9,6 +9,8 @@ import FeatureTerminal
 struct ServerSettingsView: View {
     let registry: ServerRegistry
     var addOnOpen = false
+    /// Opens straight into one server's settings section.
+    var section: (ServerID, ServerSettingsSection)?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
     @AppStorage("followUpBehavior") private var followUp = "steer"
@@ -21,6 +23,8 @@ struct ServerSettingsView: View {
     @State private var repairing: ServerStore?
     @State private var shownRepair: Set<ServerID> = []
     @State private var selection: ServerID?
+    @State private var sectionRoute: SectionRoute?
+    private struct SectionRoute: Hashable { let server: ServerID; let section: ServerSettingsSection }
     var body: some View {
         NavigationStack {
             OCForm {
@@ -67,6 +71,11 @@ struct ServerSettingsView: View {
                     ServerDetailView(registry: registry, server: server) { repairing = server }
                 }
             }
+            .navigationDestination(item: $sectionRoute) { route in
+                if let server = registry.servers.first(where: { $0.id == route.server }) {
+                    ServerAdminView(server: server, section: route.section)
+                }
+            }
             .refreshable { await registry.refresh() }
         }.ocTheme().uiTestConnectionDiagnostics(registry)
             .sheet(isPresented: $adding, onDismiss: presentRepair) {
@@ -79,7 +88,11 @@ struct ServerSettingsView: View {
                 AddServerView(registry: registry, repairing: server) { _ in repairing = nil }
             }
             .onChange(of: registry.servers.filter { $0.needsRepair }.map { $0.id }) { _, _ in presentRepair() }
-            .task { if addOnOpen { adding = true } else { presentRepair() } }
+            .task {
+                if addOnOpen { adding = true }
+                else if let section { sectionRoute = .init(server: section.0, section: section.1) }
+                else { presentRepair() }
+            }
     }
     /// A menu Picker outside a Form draws no label, so the title and explanation sit beside it.
     private var followUpRow: some View {

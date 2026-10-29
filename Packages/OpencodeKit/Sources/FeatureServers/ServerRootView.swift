@@ -25,9 +25,11 @@ public struct ServerRootView: View {
     @Environment(\.supportsMultipleWindows) private var supportsMultipleWindows
     @Environment(\.openWindow) private var openWindow
     @SceneStorage("workspace.window") private var storedState: Data?
-    private enum SettingsDestination: String, Identifiable {
+    private enum SettingsDestination: Hashable, Identifiable {
         case settings, addServer
-        var id: String { rawValue }
+        /// A server's settings section, from the switcher.
+        case section(ServerID, ServerSettingsSection)
+        var id: Self { self }
     }
     @State private var settingsDestination: SettingsDestination?
     @State private var sessionPath: [SessionRef] = []
@@ -222,7 +224,10 @@ public struct ServerRootView: View {
                 palette.presentationDetents([.large]).ocSheet()
             }
             .sheet(item: $settingsDestination) { destination in
-                ServerSettingsView(registry: registry, addOnOpen: destination == .addServer).ocSheet()
+                ServerSettingsView(registry: registry, addOnOpen: destination == .addServer, section: {
+                    if case .section(let server, let section) = destination { return (server, section) }
+                    return nil
+                }()).ocSheet()
             }
             .sheet(isPresented: $localExplanation) {
                 LocalNetworkExplanation {
@@ -469,7 +474,10 @@ public struct ServerRootView: View {
                                       path: project.canonical, server: server.record.name))
             }
         }
-        return SwitcherIndex.groups(query: query, commands: commands, sessions: sessions, projects: projects)
+        let settings = registry.servers.flatMap { server in
+            ServerSettingsSection.allCases.map { SwitcherIndex.Setting(server: server.id.rawValue.uuidString, serverName: server.record.name, section: $0) }
+        }
+        return SwitcherIndex.groups(query: query, commands: commands, sessions: sessions, projects: projects, settings: settings)
     }
     @FocusedValue(\.ocComposerCommands) private var composerCommands
     @FocusedValue(\.ocFindCommand) private var findCommand
@@ -481,6 +489,11 @@ public struct ServerRootView: View {
         case .project(let filter):
             selectedServer = registry.servers.first { filter.hasPrefix($0.id.rawValue.uuidString + ":") }?.id
             selectedProject = filter; layout.homeOpen = true
+        case .settings(let value):
+            let parts = value.split(separator: ":").map(String.init)
+            guard parts.count == 2, let server = registry.servers.first(where: { $0.id.rawValue.uuidString == parts[0] }),
+                  let section = ServerSettingsSection(rawValue: parts[1]) else { return }
+            settingsDestination = .section(server.id, section)
         case .command(let command):
             var window = commandState; window.modal = false
             let performed = WorkspaceCommandRouter.perform(command, window: window, composer: composerCommands?.state, find: findCommand != nil,

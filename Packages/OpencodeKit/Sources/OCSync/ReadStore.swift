@@ -50,6 +50,7 @@ import OCSecurity
     @ObservationIgnored var fileModels: [String: FilesModel] = [:]
     @ObservationIgnored var terminalLists: [String: TerminalListModel] = [:]
     @ObservationIgnored var shellRuns: [String: ShellRunModel] = [:]
+    @ObservationIgnored var adminModel: ServerAdminModel?
     /// Opens PTY sockets; tests replace it.
     @ObservationIgnored public var webSockets: any WebSocketConnecting = URLSessionWebSockets()
     @ObservationIgnored var composers: [String: ComposerModel] = [:]
@@ -275,6 +276,7 @@ import OCSecurity
         // Terminals save their screens and close their sockets; they reconnect from the saved cursor after the next resync.
         for list in terminalLists.values { await list.suspend() }
         for run in shellRuns.values { run.cancel() }
+        adminModel?.suspend()
         await outboxDrain?.stop()
         await persistence?.value
         for task in refreshes { await task.value }
@@ -285,6 +287,7 @@ import OCSecurity
     }
     public func resume() {
         stopped = false
+        adminModel?.resume()
         // A composer that appeared while the store was paused, as when a link opens a session while the app comes
         // forward, could not load its draft; it loads now.
         for composer in composers.values where !composer.loaded { Task { await composer.load() } }
