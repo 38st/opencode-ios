@@ -138,6 +138,51 @@ serialization casts in the Python/YAML scanners for warning-free Apple builds.
 The model-output cleanup and session indicator implementations are original code,
 informed by the ideas documented in research/09. No grapeot source was copied.
 
+## SwiftTerm — MIT
+
+The terminal renders with SwiftTerm 1.99.1 (https://github.com/migueldeicaza/SwiftTerm/tree/v1.99.1), pinned exactly in
+`Packages/OpencodeKit/Package.swift`. Its package also resolves swift-argument-parser, swift-png and its `h` dependency
+(Apache 2.0 and MIT), which build only SwiftTerm's command-line tools and its graphics on Linux, Windows and WASI; none
+of them is linked into the app.
+
+```
+Copyright (c) 2019-2026 Miguel de Icaza (https://github.com/migueldeicaza)
+Copyright (c) 2017-2019, The xterm.js authors (https://github.com/xtermjs/xterm.js)
+Copyright (c) 2014-2016, SourceLair Private Company (https://www.sourcelair.com)
+Copyright (c) 2012-2013, Christopher Jeffrey (https://github.com/chjj/)
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
+
+SwiftTerm compiles in material from other projects, credited here:
+
+- Character width and grapheme tables generated from the Unicode Character Database 17.0.0 — Unicode License v3, copyright
+  Unicode, Inc.; https://www.unicode.org/license.txt
+- Sixel colour conversion ported from libsixel — MIT, copyright Hayaki Saito and the libsixel contributors;
+  https://github.com/libsixel/libsixel/blob/master/LICENSE
+- The terminal capability entry it answers XTGETTCAP from, based on Ghostty's `xterm-ghostty` — MIT, copyright Mitchell
+  Hashimoto and the Ghostty contributors; https://github.com/ghostty-org/ghostty/blob/main/LICENSE
+
+The terminal's screen serializer follows OpenCode's `serialize.ts`, itself a port of xterm.js's serialize addon (MIT,
+the xterm.js authors); it is original Swift code over SwiftTerm's public snapshots.
+
 ## Push plugin and relay dependencies — MIT
 
 The push plugin and relay under `server/` are MIT-licensed, each with its own `LICENSE`. They are

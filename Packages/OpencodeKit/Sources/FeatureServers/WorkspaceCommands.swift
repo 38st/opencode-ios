@@ -11,6 +11,7 @@ public struct WorkspaceCommands: Commands {
     @FocusedValue(\.ocComposerCommands) private var composer
     @FocusedValue(\.ocFindCommand) private var find
     @FocusedValue(\.ocCommenting) private var commenting
+    @FocusedValue(\.ocTerminalCommand) private var terminal
     public init() {}
     public var body: some Commands {
         #if DEBUG
@@ -41,12 +42,15 @@ public struct WorkspaceCommands: Commands {
         CommandMenu(WorkspaceMenu.model.rawValue) {
             item(.chooseModel); item(.cycleVariant)
         }
+        CommandMenu(WorkspaceMenu.terminal.rawValue) {
+            item(.newTerminal); item(.closeTerminal)
+        }
     }
     private var composerState: ComposerCommandState? {
         composer.map { var state = $0.state; state.commenting = commenting ?? false; return state }
     }
     private func enabled(_ command: WorkspaceCommand) -> Bool {
-        WorkspaceCommandRouter.isEnabled(command, window: window?.state, composer: composerState, find: find != nil)
+        WorkspaceCommandRouter.isEnabled(command, window: window?.state, composer: composerState, find: find != nil, terminal: terminal != nil)
     }
     private func item(_ command: WorkspaceCommand) -> some View {
         Button(title(command)) { run(command) }
@@ -62,8 +66,9 @@ public struct WorkspaceCommands: Commands {
         }
     }
     private func run(_ command: WorkspaceCommand) {
-        let performed = WorkspaceCommandRouter.perform(command, window: window?.state, composer: composerState, find: find != nil,
-            windowAction: { window?.perform($0) }, composerAction: { composer?.perform($0) }, findAction: { find?.perform() })
+        let performed = WorkspaceCommandRouter.perform(command, window: window?.state, composer: composerState, find: find != nil, terminal: terminal != nil,
+            windowAction: { window?.perform($0) }, composerAction: { composer?.perform($0) }, findAction: { find?.perform() },
+            terminalAction: { terminal?.perform() })
         #if DEBUG
         if performed { OCCommandTrace.shared.record("menu." + command.id) }
         #else

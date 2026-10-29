@@ -215,6 +215,7 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
         }
         await server.dispose()
         await FileCache.shared.removeServer(server.readPath.serverID)
+        try? await server.readPath.cache?.writer.forgetTerminals(serverID: server.readPath.serverID)
         servers.removeAll { $0.id == server.id }
         await system?.remove(server.id)
         try await persist()

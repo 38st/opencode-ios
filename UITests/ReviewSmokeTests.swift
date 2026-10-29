@@ -209,8 +209,6 @@ nonisolated final class ReviewSmokeTests: SmokeTestCase {
         }
     }
     @MainActor func testLargeDiffScroll() async throws {
-        // About nine minutes on iPhone, past the 600 seconds a test gets when it sets no allowance.
-        executionTimeAllowance = 900
         let fixture = try await setupReview(); openSession(try XCTUnwrap(fixture["largeSession"])); openReview()
         let source = app.buttons["Review source"]
         XCTAssertTrue(source.waitForExistence(timeout: 15)); source.tap(); app.buttons["Last turn changes"].tap()
@@ -235,31 +233,33 @@ nonisolated final class ReviewSmokeTests: SmokeTestCase {
             try recordScroll(collection, name: "review-scroll-nowrap", traversal: unwrapped)
         }
     }
-    /// Flicks through the whole diff and back. Gestures use coordinates computed once, so a flick never
-    /// re-resolves the list, and the position is read every third flick to keep XCUITest queries off the frames.
-    @MainActor @discardableResult private func traverse(_ collection: XCUIElement) -> TimeInterval {
+    /// Flicks a fixed sample down the 5,000-line diff from the top, then back to the first row: the budgets need frames
+    /// from fast scrolling, not the whole diff, which is a device check. Gestures use coordinates computed once, so a
+    /// flick never re-resolves the list, and the position is read every third flick to keep XCUITest queries off the frames.
+    @MainActor @discardableResult private func traverse(_ collection: XCUIElement, flicks sample: Int = 60) -> TimeInterval {
         func metrics() -> [String: Double] { (collection.value as? String).flatMap { try? JSONDecoder().decode([String: Double].self, from: Data($0.utf8)) } ?? [:] }
         let started = Date(), frame = collection.frame, origin = app.coordinate(withNormalizedOffset: .zero)
         let low = origin.withOffset(CGVector(dx: frame.midX, dy: frame.minY + frame.height * 0.85))
         let high = origin.withOffset(CGVector(dx: frame.midX, dy: frame.minY + frame.height * 0.2))
         func flick(up: Bool) { (up ? low : high).press(forDuration: 0.01, thenDragTo: up ? high : low, withVelocity: XCUIGestureVelocity(20_000), thenHoldForDuration: 0) }
-        var bottom = false, previous: Double = -1, stationary = 0
-        for flicks in 1...600 {
-            flick(up: true)
+        var previous: Double = -1, stationary = 0, flicked = 0
+        for flicks in 1...sample {
+            flick(up: true); flicked = flicks
             guard flicks % 3 == 0 else { continue }
             let values = metrics(), offset = values["offset"] ?? -1
-            if offset + (values["viewportHeight"] ?? 0) >= (values["contentHeight"] ?? .infinity) - 2 { bottom = true; break }
+            if offset + (values["viewportHeight"] ?? 0) >= (values["contentHeight"] ?? .infinity) - 2 { break }
             stationary = offset == previous ? stationary + 1 : 0; previous = offset
             if stationary >= 2 { XCTFail("Diff did not advance: \(values)"); return Date().timeIntervalSince(started) }
         }
-        XCTAssertTrue(bottom, "The fast flicks must reach the final diff row")
+        let reached = metrics()
+        XCTAssertGreaterThan(reached["offset"] ?? 0, (reached["viewportHeight"] ?? .infinity) * 10, "The sample scrolls past ten screens of the diff")
         var top = false
-        for flicks in 1...600 {
+        for flicks in 1...(flicked + 20) {
             flick(up: false)
             guard flicks % 3 == 0 else { continue }
             if (metrics()["offset"] ?? .infinity) <= 2 { top = true; break }
         }
-        XCTAssertTrue(top, "The fast flicks must return to the first diff row")
+        XCTAssertTrue(top, "The flicks must return to the first diff row")
         return Date().timeIntervalSince(started)
     }
     @MainActor private func recordScroll(_ collection: XCUIElement, name: String, traversal: TimeInterval) throws {

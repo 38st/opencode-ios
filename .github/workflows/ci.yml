@@ -40,9 +40,9 @@ jobs:
         run: swift test --package-path Packages/OpencodeKit
       - name: Build app
         # The hosted image has iPhone 18 Pro / iOS 27; local verification uses 17 Pro / 26.5.
-        run: xcodebuild -project Opencode.xcodeproj -scheme Opencode -destination 'platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0' -derivedDataPath .build/DerivedData build
+        run: xcodebuild -project Opencode.xcodeproj -scheme Opencode -destination 'platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0' -derivedDataPath .build/DerivedData -skipPackagePluginValidation build
       - name: Test composer editor
-        run: xcodebuild -project Opencode.xcodeproj -scheme Opencode -destination 'platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0' -derivedDataPath .build/DerivedData -only-testing:ComposerEditorTests -parallel-testing-enabled NO test
+        run: xcodebuild -project Opencode.xcodeproj -scheme Opencode -destination 'platform=iOS Simulator,name=iPhone 18 Pro,OS=27.0' -derivedDataPath .build/DerivedData -skipPackagePluginValidation -only-testing:ComposerEditorTests -parallel-testing-enabled NO test
 
   paths:
     name: No home directory paths

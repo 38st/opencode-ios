@@ -50,7 +50,8 @@ public actor PersistenceWriter {
         } else { database = try DatabaseQueue() }
         try database.writeWithoutTransaction { try $0.execute(sql: "PRAGMA auto_vacuum = INCREMENTAL") }
         try Self.migrator().migrate(database)
-        if metadataOnly { try database.write { try $0.execute(sql: "DELETE FROM message; DELETE FROM transcript_window") } }
+        if metadataOnly { try database.write { try $0.execute(sql: "DELETE FROM message; DELETE FROM transcript_window; DELETE FROM pty_cursor") } }
+        try database.write { try Self.dropExpiredTerminals($0, now: date()) }
     }
     deinit { task?.cancel() }
     public static func applicationSupport() throws -> PersistenceWriter {

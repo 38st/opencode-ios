@@ -14,6 +14,8 @@ extension ReadStore {
         let api = try await client()
         // A write transport failure must not prevent read-side recovery.
         await flushWrites()
+        for list in terminalLists.values { list.connected() }
+        for run in shellRuns.values { run.resumePaging() }
         let token = UUID(), overlay = FetchOverlay()
         overlays[token] = overlay
         defer { overlays.removeValue(forKey: token) }

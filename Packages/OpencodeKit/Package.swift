@@ -42,6 +42,7 @@ let package = Package(
         .package(url: "https://github.com/groue/GRDB.swift", exact: "7.8.0"),
         .package(url: "https://github.com/pointfreeco/swift-clocks", exact: "1.1.1"),
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", exact: "1.18.7"),
+        .package(url: "https://github.com/migueldeicaza/SwiftTerm", exact: "1.99.1"),
     ],
     targets: [
         .target(name: "OCFoundation", swiftSettings: coreSettings),
@@ -65,7 +66,7 @@ let package = Package(
         .target(name: "OCIntents", dependencies: ["OCShared"], swiftSettings: coreSettings),
         .target(name: "OCAppIntents", dependencies: ["OCIntents", "OCShared"], swiftSettings: coreSettings),
     ] + grammarTargets + features.map {
-        .target(name: $0, dependencies: ["OCModels", "OCFoundation", "OCSync", "OCDesign", "OCRender"] + ($0 == "FeatureServers" ? [.byName(name: "FeatureInbox"), .byName(name: "FeatureTranscript"), .byName(name: "FeatureComposer"), .byName(name: "FeatureReview"), .byName(name: "OCShared"), .byName(name: "FeatureSettings")] : []) + ($0 == "FeatureTranscript" ? [.byName(name: "FeatureApprovals"), .byName(name: "FeatureComposer"), .byName(name: "FeatureReview")] : []) + (["FeatureReview", "FeatureApprovals"].contains($0) ? [.byName(name: "FeatureFiles")] : []) + ($0 == "FeatureApprovals" ? [.byName(name: "OCPushCore"), .byName(name: "OCSecurity")] : []) + (["FeatureSettings", "FeatureInbox"].contains($0) ? [.byName(name: "OCShared")] : []), swiftSettings: uiSettings)
+        .target(name: $0, dependencies: ["OCModels", "OCFoundation", "OCSync", "OCDesign", "OCRender"] + ($0 == "FeatureServers" ? [.byName(name: "FeatureInbox"), .byName(name: "FeatureTranscript"), .byName(name: "FeatureComposer"), .byName(name: "FeatureReview"), .byName(name: "OCShared"), .byName(name: "FeatureSettings")] : []) + ($0 == "FeatureTranscript" ? [.byName(name: "FeatureApprovals"), .byName(name: "FeatureComposer"), .byName(name: "FeatureReview")] : []) + (["FeatureReview", "FeatureApprovals"].contains($0) ? [.byName(name: "FeatureFiles")] : []) + ($0 == "FeatureApprovals" ? [.byName(name: "OCPushCore"), .byName(name: "OCSecurity")] : []) + (["FeatureSettings", "FeatureInbox"].contains($0) ? [.byName(name: "OCShared")] : []) + (["FeatureReview", "FeatureTranscript", "FeatureServers"].contains($0) ? [.byName(name: "FeatureTerminal")] : []) + ($0 == "FeatureTerminal" ? [.product(name: "SwiftTerm", package: "SwiftTerm")] : []), swiftSettings: uiSettings)
     } + [
         .testTarget(name: "OCNetworkingTests", dependencies: ["OCNetworking", "OCSecurity", .product(name: "Clocks", package: "swift-clocks")], swiftSettings: coreSettings),
         .testTarget(name: "OCNetworkingLiveTests", dependencies: ["OCNetworking", "OCSecurity", "OCSync", "OCModels", "OCFoundation", "OCPersistence"], swiftSettings: coreSettings),

@@ -4,6 +4,7 @@ import OCDesign
 import OCModels
 import OCSync
 import FeatureSettings
+import FeatureTerminal
 
 struct ServerSettingsView: View {
     let registry: ServerRegistry
@@ -14,6 +15,8 @@ struct ServerSettingsView: View {
     @AppStorage("wrapLines") private var wrapLines = true
     @AppStorage("changedFiles") private var changedFiles = true
     @AppStorage("showAgent") private var showAgent = false
+    @AppStorage(TerminalSettings.fontSizeKey) private var terminalFontSize = TerminalSettings.defaultFontSize
+    @AppStorage(TerminalSettings.optionAsMetaKey) private var optionAsMeta = true
     @State private var adding = false
     @State private var repairing: ServerStore?
     @State private var shownRepair: Set<ServerID> = []
@@ -49,6 +52,11 @@ struct ServerSettingsView: View {
                     OCToggleRow("Changed files", detail: "List the files each turn changed when it finishes.", isOn: $changedFiles)
                     OCToggleRow("Show agent", detail: "Switch between agents in the composer. When hidden, defaults to Build agent.", isOn: $showAgent)
                         .accessibilityIdentifier("showAgent")
+                }
+                OCSection("Terminal") {
+                    terminalFontRow
+                    OCToggleRow("Option as Meta", detail: "With a hardware keyboard, Option sends Escape before the key, as shell and editor shortcuts expect. Turn it off to type the characters your keyboard puts on Option.",
+                                isOn: $optionAsMeta).accessibilityIdentifier("terminalOptionAsMeta")
                 }
                 if let system = registry.system { SystemIntegrationSection(system: system) }
             }
@@ -91,6 +99,15 @@ struct ServerSettingsView: View {
                 .accessibilityHint("While the agent is working, Steer adds your message to the current run; Queue sends it after the run finishes.")
                 .accessibilityIdentifier("followUpBehavior")
         }
+    }
+    /// The terminal's own size: it does not follow the system text size, so programs keep their columns.
+    private var terminalFontRow: some View {
+        Stepper(value: $terminalFontSize, in: TerminalSettings.fontSizes, step: 1) {
+            VStack(alignment: .leading, spacing: OCSpacing.xs) {
+                Text("Font size").font(OCType.body)
+                Text("\(Int(terminalFontSize)) points, in terminals only.").font(OCType.small).foregroundStyle(OCColor.textMuted)
+            }
+        }.frame(minHeight: OCLayout.touchTarget).accessibilityIdentifier("terminalFontSize")
     }
     private func presentRepair() {
         guard !adding, repairing == nil,

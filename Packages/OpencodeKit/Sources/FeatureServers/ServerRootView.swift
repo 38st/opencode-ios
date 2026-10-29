@@ -10,6 +10,7 @@ import FeatureInbox
 import FeatureTranscript
 import FeatureComposer
 import FeatureReview
+import FeatureTerminal
 
 /// One window's workspace. Every window shares the registry; navigation, panels and widths belong to the window,
 /// restore with it on iPad, and the window coordinator decides which window takes a link.
@@ -56,6 +57,9 @@ public struct ServerRootView: View {
     @State private var homeToggle: UUID?
     @State private var reviewToggle: UUID?
     @State private var homeSearch = ""
+    /// iPhone: a project's terminals, opened from Home's project menu, and the terminal that screen opens.
+    @State private var homeTerminals: TerminalPlace?
+    @State private var homeTerminal: String?
     @State private var homeShowsHidden = false
     /// A window state to open with instead of the saved one; snapshots use it to draw the regular layouts.
     private let initialState: WindowState?
@@ -106,6 +110,12 @@ public struct ServerRootView: View {
                         .navigationDestination(for: SessionRef.self) { ref in
                             // Only the screen on top takes the menu bar's composer commands and Toggle review.
                             sessionView(ref, ownsCommands: ref == sessionPath.last && !creatingSession).toolbar(.visible, for: .navigationBar)
+                        }
+                        .navigationDestination(item: $homeTerminals) { place in
+                            if let server = registry.servers.first(where: { $0.id == place.server }) {
+                                TerminalsScreen(list: server.readPath.terminals(directory: place.directory), shells: server.readPath.shellRuns(directory: place.directory),
+                                                open: $homeTerminal).toolbar(.visible, for: .navigationBar)
+                            }
                         }
                 }
             }
@@ -389,7 +399,9 @@ public struct ServerRootView: View {
                                 openSettings: { settingsDestination = .settings }, newSession: beginSession,
                                 selectedSession: sizeClass == .regular ? sessionPath.first : nil,
                                 openInNewWindow: newWindow, openPalette: { paletteOpen = true }, shortcut: { shortcuts[$0.id] },
-                                search: $homeSearch, showHidden: $homeShowsHidden, selectSession: { ref in open(ref) })
+                                search: $homeSearch, showHidden: $homeShowsHidden,
+                                openTerminals: sizeClass == .regular ? nil : { homeTerminals = TerminalPlace(server: $0, directory: $1) },
+                                selectSession: { ref in open(ref) })
             .uiTestConnectionDiagnostics(registry)
     }
 
@@ -418,6 +430,11 @@ public struct ServerRootView: View {
         case .toggleSidebar: homeToggle = UUID()
         case .toggleReview: reviewToggle = UUID()
         case .commandPalette: paletteOpen = true
+        case .newTerminal:
+            // The terminal starts in the open session's folder and shows in the review panel's Terminal tab.
+            guard let review = currentReview, let ref = sessionPath.last, let server = registry.servers.first(where: { $0.id == ref.serverID }) else { return }
+            server.readPath.terminals(directory: review.directory).create()
+            review.present("Terminal")
         case .reviewNextApproval:
             guard let ref = WorkspaceCommandRouter.nextApproval(state) else { return }
             registry.servers.first { $0.id == ref.serverID }?.readPath.reviewRequest = ref.requestID
@@ -437,7 +454,9 @@ public struct ServerRootView: View {
     private func paletteGroups(_ query: String) -> [SwitcherGroup] {
         var window = commandState; window.modal = false
         let composer = composerCommands?.state
-        let commands = WorkspaceCommand.all.filter { $0 != .commandPalette && WorkspaceCommandRouter.isEnabled($0, window: window, composer: composer, find: findCommand != nil) }
+        let commands = WorkspaceCommand.all.filter {
+            $0 != .commandPalette && WorkspaceCommandRouter.isEnabled($0, window: window, composer: composer, find: findCommand != nil, terminal: terminalCommand != nil)
+        }
         var sessions: [SwitcherIndex.Session] = [], projects: [SwitcherIndex.Project] = []
         for server in registry.servers {
             for session in server.sessions.values where session.info.parentID == nil && session.info.time.archived == nil {
@@ -454,6 +473,7 @@ public struct ServerRootView: View {
     }
     @FocusedValue(\.ocComposerCommands) private var composerCommands
     @FocusedValue(\.ocFindCommand) private var findCommand
+    @FocusedValue(\.ocTerminalCommand) private var terminalCommand
     private func selectPaletteEntry(_ entry: SwitcherEntry, newWindow: Bool) {
         paletteOpen = false
         switch entry.kind {
@@ -464,7 +484,8 @@ public struct ServerRootView: View {
         case .command(let command):
             var window = commandState; window.modal = false
             let performed = WorkspaceCommandRouter.perform(command, window: window, composer: composerCommands?.state, find: findCommand != nil,
-                                                           windowAction: perform, composerAction: { composerCommands?.perform($0) }, findAction: { findCommand?.perform() })
+                                                           terminal: terminalCommand != nil, windowAction: perform, composerAction: { composerCommands?.perform($0) },
+                                                           findAction: { findCommand?.perform() }, terminalAction: { terminalCommand?.perform() })
             #if DEBUG
             if performed { OCCommandTrace.shared.record("palette." + command.id) }
             #else
@@ -602,5 +623,10 @@ struct LocalNetworkExplanation: View {
             }.ocNavigationTitle("Local Network").navigationBarTitleDisplayMode(.inline).ocTheme()
         }
     }
+}
+/// A location whose terminals Home's project menu opens.
+struct TerminalPlace: Hashable {
+    let server: ServerID
+    let directory: String
 }
 #endif

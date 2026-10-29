@@ -44,8 +44,12 @@ node Tools/contract/index.mjs --version 2.0.32
 This starts the real npm V2 server and the V1 detection server, checks 401/200
 authentication, single-use pairing and token authentication, the first SSE event
 and a heartbeat within 20 seconds, a prompt and title round trip, PTY echo/resize/
-cursor resume/deletion, V1 health detection, and the push plugin live checks (see
-"Push (M5a)"). Failures exit nonzero. This is
+cursor resume/deletion, the terminal contract (`Tools/contract/pty.mjs`: PTY routes and events,
+the upgrade with the Authorization header, replay frames and the one 0x00 control frame, the
+UTF-16 cursor across a reconnection, cursor -1, single-use tickets, the 2 MiB retained buffer
+and the gap a stale cursor sees, close codes 1000 and 4404, 404 before an upgrade, and shell
+output paging and removal; the buffer numbers are written to `pty-buffer.json` in the audit
+folder), V1 health detection, and the push plugin live checks (see "Push (M5a)"). Failures exit nonzero. This is
 separate from ordinary `swift test`, which reads checked-in files and skips live cases.
 
 The contract also runs `OCNetworkingLiveTests` through `swift test --filter
@@ -281,11 +285,41 @@ flow first sends ⌘J, which no command owns; `testReviewNavigation` checks that
 itself. XCUITest on this simulator delivers no Return chord or Escape, neither to the menu bar
 nor to a focused text view or field, so the composer flow runs Send from the switcher and the
 switcher flow opens an entry with a typed newline; ⌘↩, Return and Escape in the editor and the
-switcher are covered by unit tests instead. Deep links go through
+switcher are covered by unit tests instead. Before a chord after a tap on the composer or a
+switcher field, and after the switcher closes, the flow waits until the software keyboard stops
+moving: XCUITest waits for the app to idle after every event, and a chord sent while the keyboard
+was still appearing once left the app without its animations-complete signal, so every later
+event waited 60 seconds. Deep links go through
 `XCUIDevice.shared.system.open`, because `XCUIApplication.open` relaunches the app and would
 drop the window that is not on screen.
 The iPhone stage's `SwitcherSmokeTests` opens the switcher from Home's toolbar button and the
 context sheet from the session header.
+
+## Terminals
+
+```sh
+node Tools/ui-smoke/index.mjs --terminal-only                            # every terminal test, on the iPhone and the iPad
+node Tools/ui-smoke/index.mjs --terminal-test testResumeLosesNoOutput    # one of them
+```
+
+`TerminalSmokeTests` runs in the full run's iPhone and iPad stages. Each test pairs the sandbox,
+creates a session in its project and opens its terminals: the session menu's Terminals screen on
+the iPhone, the review panel's Terminal tab on the iPad. `testTerminalPrograms` edits a new file
+in `vim` (Escape comes from the key bar; when a hardware keyboard hides the bar on the iPad, from
+the keyboard, with Ctrl-[ after it if the simulator dropped that key) and reads it back through the
+server's `fs.read`, runs `nettop` and pages with `less`, then checks `stty size` against the
+terminal's size before and after Home is shown beside it (iPad only: the iPhone simulator
+neither rotates the app under XCUITest nor keeps the software keyboard away reliably, so iPhone
+resizing is checked on a device).
+`testResumeLosesNoOutput` prints numbered `OCSEQ-<n>` lines while the app is in the background,
+then while it is not running at all, and checks that every number arrives once and in order.
+`testRunACommandAndStopIt` runs a command from the Run a command sheet and stops a second one,
+which the server then no longer lists. Only under a `ui-` test identity, the DEBUG app exposes
+the terminal's visible rows (`terminalScreen`), its size (`terminalSize`) and the marker lines of
+its whole buffer (`terminalSequence`); the resume and size findings are copied next to the result
+bundles as `terminal-resume-*.txt` and `terminal-size-*.txt`. A live full-screen program is
+`nettop`: macOS refuses the sandboxed server's processes the set-user-ID `/usr/bin/top`, and `htop`
+is not installed on this Mac.
 
 ## Shortcuts, Spotlight and widgets
 
@@ -326,12 +360,20 @@ node Tools/ui-smoke/index.mjs --version 2.0.32 --skip-snapshots
 ```
 
 The harness uses only `opencode-sandbox` and the scripted model, creates a fresh
-single-use link with `POST /api/pair`, and runs `xcodebuild test` on iPhone 17 Pro
-(iOS 26.5). `TEST_RUNNER_OPENCODE_UI_*` environment variables carry the sandbox
+single-use link with `POST /api/pair`, builds once with `xcodebuild build-for-testing`
+(`build.log`, while the sandbox starts) and runs every stage with `test-without-building`
+against that build's `.xctestrun`, on iPhone 17 Pro (iOS 26.5) and the "opencode-ios iPad"
+simulator. `-skipPackagePluginValidation` lets the build run SwiftTerm's build plugin without
+trusting it in Xcode's settings. `TEST_RUNNER_OPENCODE_UI_*` environment variables carry the sandbox
 URLs, passwords and link into XCUITest. Only an isolated test identifier reaches
 the app's launch environment; the tests type the connection inputs through the UI.
-A full run first runs the unit and snapshot tests once (`Units.xcresult`, `units.log`), then
-the UI tests. When UI tests fail, their stage runs the failed tests again together, up to
+A full run runs the unit and snapshot tests once on the iPhone (`Units.xcresult`, `units.log`;
+their reference images are 3x) while the iPad UI stage runs on the iPad (`iPad.xcresult`,
+`ipad.log`), then the iPhone UI stage (`Smoke.xcresult`, `test.log`). Without the iPad
+simulator the stages run one after another. Beside the iPad stage, the read performance budgets
+are left out of the unit stage and run on their own once both stages end (`Performance.xcresult`,
+`performance.log`), and the reference-image check spans both stages. `timings.json` records each
+stage's start, end and minutes. When UI tests fail, their stage runs the failed tests again together, up to
 twice, on the same build (`xcodebuild test-without-building` with an `-only-testing:` for each,
 into `Smoke-attempt-2.xcresult` and `test-attempt-2.log`, and so on); a test passes when any
 attempt passes or ends in an expected failure. Before each retry the fault proxy's faults are
@@ -349,8 +391,10 @@ retries itself because Xcode's `-retry-tests-on-failure` does not:
 since Xcode 26 a failure in an async test whose class sets `continueAfterFailure = false`
 relaunches the test runner, which drops the retry (a known Xcode issue). A
 regression still fails every attempt; a burst of load on a shared host no longer fails the
-whole run. The large-diff scroll test logs its worst frame but never fails on it; its hitch
-rate, first rows and memory checks still fail the test. Snapshot tests never retry, because a snapshot test records a
+whole run. The large-diff scroll test flicks a fixed sample, 60 flicks down the 5,000-line diff
+from the top and back to its first row, rather than the whole diff (a device check); it logs its
+worst frame but never fails on it, and its frames, hitch rate, first rows and memory checks
+still fail the test. Snapshot tests never retry, because a snapshot test records a
 missing reference image and would pass on its next attempt; any stage that adds or changes a
 file under a `__Snapshots__` folder fails and prints `RECORDED <file>`. A test that passed on
 a later attempt prints `RETRIED <test> (attempt n of 3)`; one that failed every attempt prints
@@ -380,7 +424,7 @@ snapshot library is pinned to 1.18.7. Run it independently with:
 ```sh
 xcodebuild -project Opencode.xcodeproj -scheme Opencode \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
-  -derivedDataPath .build/DerivedData -parallel-testing-enabled NO \
+  -derivedDataPath .build/DerivedData -parallel-testing-enabled NO -skipPackagePluginValidation \
   -only-testing:ServerSnapshots test
 ```
 

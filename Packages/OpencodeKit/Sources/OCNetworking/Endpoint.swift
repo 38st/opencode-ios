@@ -16,6 +16,8 @@ public struct Endpoint<Response: Sendable>: Sendable {
     /// VCS routes answer 503 with a user-facing message ("Choose a review base").
     /// Everywhere else a 503 means the service is starting or stopping.
     public var reports503Message = false
+    /// Headers this route needs beyond the client's own (`x-opencode-ticket` for a PTY ticket).
+    public var headers: [String: String] = [:]
     public var decode: @Sendable (Data, HTTPURLResponse) throws -> Response
     public init(method: HTTPMethod = .get, path: String, query: [URLQueryItem] = [], scope: Scope = .global,
                 body: Data? = nil, settled: @escaping @Sendable (Int, JSONValue) -> Bool = { _, _ in false },
@@ -51,9 +53,9 @@ public enum APIError: Error, Sendable {
 }
 
 public actor APIClient {
-    private let baseURL: URL
-    private let credential: Credential?
-    private let headers: [String: String]
+    let baseURL: URL
+    let credential: Credential?
+    let headers: [String: String]
     private let transport: any HTTPTransport
     private let clock: NetworkClock
     private let serverClock: ServerClock?
@@ -68,7 +70,7 @@ public actor APIClient {
         do {
             request = try Self.request(baseURL: baseURL, path: endpoint.path, method: endpoint.method,
                                        query: endpoint.query, scope: endpoint.scope, body: endpoint.body,
-                                       credential: credential, headers: headers)
+                                       credential: credential, headers: headers.merging(endpoint.headers) { _, route in route })
         } catch let error as APIError { throw error } catch { throw .refused(.invalidURL) }
         for attempt in 0...2 {
             do {

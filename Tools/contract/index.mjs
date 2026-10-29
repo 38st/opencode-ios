@@ -9,6 +9,7 @@ import { stopAll, run } from '../opencode-sandbox/process.mjs';
 import { startMock } from '../mock-llm/server.mjs';
 import { runScenario } from '../fixture-recorder/scenarios.mjs';
 import { runPluginChecks } from '../push-e2e/plugin-checks.mjs';
+import { ptyContract } from './pty.mjs';
 
 const { values } = parseArgs({ options: { version: { type: 'string' }, 'write-flows-only': { type: 'boolean' } } });
 const version = await resolveVersion(values.version);
@@ -38,6 +39,9 @@ await audit(auditDir, async () => {
     console.log('PASS reasoning stream and snapshot capture');
     await runScenario(server, mock, 'pty');
     console.log('PASS PTY echo, resize, binary marker, cursor resume and deletion');
+    const buffer = await ptyContract(server);
+    await writeFile(path.join(auditDir, 'pty-buffer.json'), JSON.stringify(buffer, null, 2) + '\n');
+    console.log(`PASS PTY routes, Basic upgrade, UTF-16 cursor, -1, tickets, close 1000/4404, 404 and shell paging; buffer ${JSON.stringify(buffer)}`);
     v1 = await startSandbox({ version: V1_VERSION, v1: true, mockURL: mock.url });
     await runScenario(v1, mock, 'v1-probe');
     console.log('PASS V1 detection');
@@ -60,6 +64,7 @@ await audit(auditDir, async () => {
       } });
     console.log(swift);
     assert.match(swift, /PASS M3a store projection equals snapshot: compact/, 'Swift write contracts must run through compact');
+    assert.match(swift, /PASS M7 PTY socket/, 'The Swift PTY socket contract must run');
     console.log('PASS Swift networking, projection and M3a write contracts');
     // The push plugin in its own sandboxes: installed by configuration and by `opencode plugin add`.
     const push = await runPluginChecks({ version, mock });

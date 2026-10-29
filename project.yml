@@ -379,6 +379,36 @@ targets:
         product: FeatureSettings
       - package: SnapshotTesting
         product: SnapshotTesting
+  TerminalSnapshots:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Packages/OpencodeKit/Tests/TerminalSnapshots
+        excludes: [__Snapshots__]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_PREFIX).terminal-snapshots
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/ComposerSnapshotHost.app/ComposerSnapshotHost
+        BUNDLE_LOADER: $(TEST_HOST)
+    dependencies:
+      - target: ComposerSnapshotHost
+      - package: OpencodeKit
+        product: OCFoundation
+      - package: OpencodeKit
+        product: OCModels
+      - package: OpencodeKit
+        product: OCDesign
+      - package: OpencodeKit
+        product: OCNetworking
+      - package: OpencodeKit
+        product: OCPersistence
+      - package: OpencodeKit
+        product: OCSync
+      - package: OpencodeKit
+        product: FeatureTerminal
+      - package: SnapshotTesting
+        product: SnapshotTesting
   ComposerEditorTests:
     type: bundle.unit-test
     platform: iOS
@@ -463,6 +493,7 @@ schemes:
         - ComposerEditorTests
         - ReviewSnapshots
         - PushSnapshots
+        - TerminalSnapshots
         - SystemSnapshots
       gatherCoverageData: false
   ComposerEditor:

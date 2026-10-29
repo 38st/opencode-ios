@@ -1,5 +1,5 @@
 {
-  "originHash" : "8931b02965b74e349610b49b8024e052f136d03ff6e4bb134a1e93dd7b4bb824",
+  "originHash" : "09af2c19c1e9b88cc6e3d6a0601ead054603c1b328e1ba1302e0c6297c6b0668",
   "pins" : [
     {
       "identity" : "grdb.swift",
@@ -8,6 +8,24 @@
       "state" : {
         "revision" : "18497b68fdbb3a09528d260a0a0e1e7e61c8c53d",
         "version" : "7.8.0"
+      }
+    },
+    {
+      "identity" : "h",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/rarestype/h",
+      "state" : {
+        "revision" : "aa3626829160917d4378330617971977cbd78f5b",
+        "version" : "1.0.1"
+      }
+    },
+    {
+      "identity" : "swift-argument-parser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-argument-parser",
+      "state" : {
+        "revision" : "6a52f3251125d74daf04fcbd5e6f08a75d074382",
+        "version" : "1.8.2"
       }
     },
     {
@@ -65,6 +83,15 @@
       }
     },
     {
+      "identity" : "swift-png",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/tayloraswift/swift-png",
+      "state" : {
+        "revision" : "2d17c6c51c098628574c0383f1119892655a73a2",
+        "version" : "4.5.2"
+      }
+    },
+    {
       "identity" : "swift-snapshot-testing",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/pointfreeco/swift-snapshot-testing",
@@ -89,6 +116,15 @@
       "state" : {
         "revision" : "f97df585296977d8fcaf644cbde567151d1367b8",
         "version" : "0.10.0"
+      }
+    },
+    {
+      "identity" : "swiftterm",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/migueldeicaza/SwiftTerm",
+      "state" : {
+        "revision" : "2f573f73af5e768d90847dce20c97fa9535d7164",
+        "version" : "1.99.1"
       }
     },
     {

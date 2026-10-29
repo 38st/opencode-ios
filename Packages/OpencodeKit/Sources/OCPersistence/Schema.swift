@@ -41,6 +41,12 @@ extension PersistenceWriter {
         migrator.registerMigration("v5-notification-replies") { db in
             try db.execute(sql: "CREATE TABLE notification_reply(server_id TEXT NOT NULL,notification_id TEXT NOT NULL,input_id TEXT NOT NULL,PRIMARY KEY(server_id,notification_id))")
         }
+        // A terminal's resume point: the cursor, the screen it matches (escape sequences) and its size.
+        migrator.registerMigration("v6-terminal-resume") { db in
+            for column in ["directory TEXT", "cols INTEGER", "rows INTEGER", "screen BLOB", "updated_at REAL"] {
+                try db.execute(sql: "ALTER TABLE pty_cursor ADD COLUMN " + column)
+            }
+        }
         return migrator
     }
 }

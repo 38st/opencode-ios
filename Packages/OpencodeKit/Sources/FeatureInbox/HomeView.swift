@@ -16,6 +16,8 @@ public struct HomeView: View {
     /// iPad only: the session in another window. Nil hides the menu item.
     let openInNewWindow: ((SessionRef) -> Void)?
     let openPalette: (() -> Void)?
+    /// iPhone: the selected project's terminals, by server and directory. Nil hides the menu item.
+    let openTerminals: ((ServerID, String) -> Void)?
     /// ⌘1–9 follow Home's order; the hint shows a row's number.
     let shortcut: (SessionRef) -> String?
     /// The session open beside Home; its root row is highlighted.
@@ -36,10 +38,12 @@ public struct HomeView: View {
     public init(registry: ServerRegistry, selectedServer: Binding<ServerID?>, selectedProject: Binding<String?>,
                 openSettings: @escaping () -> Void, newSession: @escaping () -> Void = {}, selectedSession: SessionRef? = nil,
                 openInNewWindow: ((SessionRef) -> Void)? = nil, openPalette: (() -> Void)? = nil, shortcut: @escaping (SessionRef) -> String? = { _ in nil },
-                search: Binding<String>? = nil, showHidden: Binding<Bool>? = nil, selectSession: @escaping (SessionRef) -> Void) {
+                search: Binding<String>? = nil, showHidden: Binding<Bool>? = nil, openTerminals: ((ServerID, String) -> Void)? = nil,
+                selectSession: @escaping (SessionRef) -> Void) {
         self.registry = registry; _selectedServer = selectedServer; _selectedProject = selectedProject
         self.openSettings = openSettings; self.selectSession = selectSession; self.newSession = newSession
         self.selectedSession = selectedSession; self.openInNewWindow = openInNewWindow; self.openPalette = openPalette; self.shortcut = shortcut
+        self.openTerminals = openTerminals
         searchBinding = search; showHiddenBinding = showHidden
     }
     /// A subagent is shown in its root session's row, so highlight the root.
@@ -158,6 +162,10 @@ public struct HomeView: View {
                         }
                     }
                 }
+                if let openTerminals, let (server, project) = selectedProjectEntry {
+                    Divider()
+                    Button("Terminals") { openTerminals(server.id, project.canonical) }.accessibilityIdentifier("projectTerminals")
+                }
             } label: {
                 HStack {
                     OCIcon("folder")
@@ -171,6 +179,12 @@ public struct HomeView: View {
             }.padding(.horizontal, OCSpacing.md).frame(minHeight: OCLayout.touchTarget)
                 .background(OCColor.layer1, in: RoundedRectangle(cornerRadius: OCRadius.md))
         }
+    }
+    private var selectedProjectEntry: (ServerStore, Project)? {
+        for server in servers {
+            if let project = server.projects.first(where: { server.id.rawValue.uuidString + ":" + $0.id == selectedProject }) { return (server, project) }
+        }
+        return nil
     }
     private var projectTitle: String {
         for server in servers {

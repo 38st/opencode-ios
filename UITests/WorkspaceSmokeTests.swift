@@ -177,6 +177,23 @@ nonisolated final class WorkspaceSmokeTests: SmokeTestCase {
     @MainActor private func focusComposer(file: StaticString = #filePath, line: UInt = #line) {
         XCTAssertTrue(editor.waitForExistence(timeout: 10), "The session's composer", file: file, line: line)
         editor.tap()
+        waitForKeyboard(shown: true, file: file, line: line)
+    }
+    /// Waits until the software keyboard has finished appearing or leaving. XCUITest waits for the app to idle after
+    /// every event; a chord sent while the keyboard was still animating in (0.8 s after the tap on the composer) once
+    /// left the app without its "animations complete" signal, and every later event then waited 60 seconds for it,
+    /// past the test's time allowance (once, on the iPad).
+    @MainActor private func waitForKeyboard(shown: Bool, file: StaticString = #filePath, line: UInt = #line) {
+        let keyboard = app.keyboards.firstMatch
+        if shown { XCTAssertTrue(keyboard.waitForExistence(timeout: 5), "The software keyboard appears", file: file, line: line) }
+        var last = CGRect.null, still = 0
+        let deadline = Date().addingTimeInterval(5)
+        while still < 3 && Date() < deadline {
+            let frame = keyboard.exists ? keyboard.frame : .zero
+            still = frame == last ? still + 1 : 0; last = frame
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        }
+        XCTAssertEqual(still, 3, "The software keyboard stops moving", file: file, line: line)
     }
 
     @MainActor func testMenuNavigationAndSwitcher() async throws {
@@ -235,6 +252,7 @@ nonisolated final class WorkspaceSmokeTests: SmokeTestCase {
         key("k", .command)
         let search = app.textFields["paletteSearch"]
         XCTAssertTrue(search.waitForExistence(timeout: 5))
+        waitForKeyboard(shown: true)
         screenshot("palette")
         search.typeText("Workspace")
         let sessionRows = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "palette-session:"))
@@ -249,10 +267,13 @@ nonisolated final class WorkspaceSmokeTests: SmokeTestCase {
         // With the simulator's software keyboard up, XCUITest delivers Return to a text field only as typed text, which
         // reaches the field's delegate as a hardware Return does. Escape cannot reach a focused text field here at all:
         // the field's keys are unit tests and a device check.
+        waitForKeyboard(shown: true)
         search.typeText("\n")
         XCTAssertTrue(search.waitForNonExistence(timeout: 5))
         waitPath([target], "Return opens the active entry")
+        waitForKeyboard(shown: false)
         key("k", .command); XCTAssertTrue(search.waitForExistence(timeout: 5))
+        waitForKeyboard(shown: true)
         // A tap on the dimmed window beside the switcher closes it.
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.05, dy: 0.3)).tap()
         XCTAssertTrue(search.waitForNonExistence(timeout: 5), "A tap outside closes the switcher")

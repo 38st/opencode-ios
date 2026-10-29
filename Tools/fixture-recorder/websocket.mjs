@@ -6,7 +6,8 @@ import assert from 'node:assert/strict';
 import { until } from './transport.mjs';
 import { basic } from '../opencode-sandbox/index.mjs';
 
-export async function connectWS(capture, path, connection) {
+/** `auth: false` sends no Authorization header, for a connection a ticket authenticates. */
+export async function connectWS(capture, path, connection, { auth = true } = {}) {
   const key = randomBytes(16).toString('base64');
   let socket, buffer = Buffer.alloc(0), failure, closed = false;
   const received = [], frames = capture.frames;
@@ -47,7 +48,7 @@ export async function connectWS(capture, path, connection) {
       }
     } catch (error) { failure = error; socket.destroy(); }
   }
-  const request = http.request(capture.sandbox.baseURL + path, { headers: { connection: 'Upgrade', upgrade: 'websocket', 'sec-websocket-version': '13', 'sec-websocket-key': key, authorization: basic(capture.sandbox.password) } });
+  const request = http.request(capture.sandbox.baseURL + path, { headers: { connection: 'Upgrade', upgrade: 'websocket', 'sec-websocket-version': '13', 'sec-websocket-key': key, ...(auth ? { authorization: basic(capture.sandbox.password) } : {}) } });
   let timer;
   try {
     await new Promise((resolve, reject) => {

@@ -63,7 +63,12 @@ extension ReadStore {
             if type == "form.created", !(hiddenForms[owner]?.contains(formID) ?? false), let raw = p["form"] { forms[owner, default: []].append(.init(raw: raw)) }
             updateAttention(); return
         }
+        if type.hasPrefix("pty.") {
+            terminalLists[Location(raw: header.location ?? .object([:])).directory]?.handle(type: type, payload: event.payload)
+            return
+        }
         if type.hasPrefix("shell.") {
+            shellRuns[Location(raw: header.location ?? .object([:])).directory]?.handle(type: type, payload: event.payload)
             let key = Location(raw: header.location ?? .object([:])).key
             if type == "shell.created", let raw = p["info"] {
                 let shell = ShellInfo(raw: raw); shells[key, default: [:]][shell.id] = shell

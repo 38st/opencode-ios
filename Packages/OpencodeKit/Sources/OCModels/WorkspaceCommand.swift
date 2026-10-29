@@ -42,7 +42,7 @@ public struct KeyChord: Hashable, Sendable, CustomStringConvertible {
 }
 
 /// The menus, in the desktop's command categories.
-public enum WorkspaceMenu: String, CaseIterable, Sendable { case file = "File", edit = "Edit", view = "View", session = "Session", model = "Model" }
+public enum WorkspaceMenu: String, CaseIterable, Sendable { case file = "File", edit = "Edit", view = "View", session = "Session", model = "Model", terminal = "Terminal" }
 
 public enum WorkspaceCommand: Hashable, Sendable {
     case newSession, newWindow, addFiles
@@ -52,10 +52,11 @@ public enum WorkspaceCommand: Hashable, Sendable {
     /// The Nth session in Home's order, 1 to 9.
     case session(Int)
     case chooseModel, cycleVariant
+    case newTerminal, closeTerminal
 
     public static let all: [WorkspaceCommand] = [.newSession, .newWindow, .addFiles, .find, .toggleSidebar, .toggleReview, .commandPalette,
         .send, .stop, .reviewNextApproval, .previousSession, .nextSession, .previousUnread, .nextUnread]
-        + (1...9).map(WorkspaceCommand.session) + [.chooseModel, .cycleVariant]
+        + (1...9).map(WorkspaceCommand.session) + [.chooseModel, .cycleVariant, .newTerminal, .closeTerminal]
     /// The desktop's command ID where it has one.
     public var id: String {
         switch self {
@@ -76,6 +77,8 @@ public enum WorkspaceCommand: Hashable, Sendable {
         case .session(let index): "session.\(index)"
         case .chooseModel: "model.choose"
         case .cycleVariant: "model.variant.cycle"
+        case .newTerminal: "terminal.new"
+        case .closeTerminal: "terminal.close"
         }
     }
     public var title: String {
@@ -97,6 +100,8 @@ public enum WorkspaceCommand: Hashable, Sendable {
         case .session(let index): "Session \(index)"
         case .chooseModel: "Choose model"
         case .cycleVariant: "Cycle thinking effort"
+        case .newTerminal: "New terminal"
+        case .closeTerminal: "Close terminal"
         }
     }
     public var menu: WorkspaceMenu {
@@ -106,6 +111,7 @@ public enum WorkspaceCommand: Hashable, Sendable {
         case .toggleSidebar, .toggleReview, .commandPalette: .view
         case .send, .stop, .reviewNextApproval, .previousSession, .nextSession, .previousUnread, .nextUnread, .session: .session
         case .chooseModel, .cycleVariant: .model
+        case .newTerminal, .closeTerminal: .terminal
         }
     }
     /// Whether the menu item carries the key. A menu item's ⌘F does not run on iPadOS, whose own Edit ▸ Find menu
@@ -133,13 +139,16 @@ public enum WorkspaceCommand: Hashable, Sendable {
         case .session(let index): KeyChord(Character(String(index)))
         case .chooseModel: KeyChord("'")
         case .cycleVariant: KeyChord("d", [.command, .shift])
+        // The desktop's ⌃⌥T and ⌘W: a focused terminal sends every chord without ⌘ to its program, and iPadOS keeps ⌘W.
+        case .newTerminal: KeyChord("t")
+        case .closeTerminal: KeyChord("w", [.command, .shift])
         }
     }
 }
 
 /// Keys that belong to a focused view rather than the menu bar, and keys the system keeps.
 public enum WorkspaceKeys {
-    public enum Scope: String, CaseIterable, Sendable { case promptEditor, commentEditor, codeList, commandPalette, filesViewer, filesFilter }
+    public enum Scope: String, CaseIterable, Sendable { case promptEditor, commentEditor, codeList, commandPalette, filesViewer, filesFilter, terminal }
     /// The views build their key commands from these, so the ownership checks cover what ships.
     public enum PromptEditor {
         public static let send = KeyChord(.return), escape = KeyChord(.escape)
@@ -158,6 +167,11 @@ public enum WorkspaceKeys {
     public enum FilesViewer { public static let find = WorkspaceCommand.find.chord }
     /// The Files filter field: move through the matches and clear the filter.
     public enum FilesFilter { public static let previous = KeyChord(.up), next = KeyChord(.down), clear = KeyChord(.escape) }
+    /// A focused terminal sends these to its program, as it does every other chord without ⌘.
+    public enum Terminal {
+        public static let keys = [KeyChord(.escape), KeyChord(.tab), KeyChord(.return), KeyChord(.up), KeyChord(.down), KeyChord(.left), KeyChord(.right)]
+            + "abcdefghijklmnopqrstuvwxyz".map { KeyChord($0, .control) }
+    }
     /// Each scope's keys are live only while that view is the first responder; the Files viewer's while it shows a
     /// text file, the Files filter's while its field has focus.
     public static func local(_ scope: Scope) -> [KeyChord] {
@@ -168,6 +182,7 @@ public enum WorkspaceKeys {
         case .commandPalette: [Palette.up, Palette.down, Palette.open, Palette.openInNewWindow, Palette.cancel]
         case .filesViewer: [FilesViewer.find]
         case .filesFilter: [FilesFilter.previous, FilesFilter.next, FilesFilter.clear]
+        case .terminal: Terminal.keys
         }
     }
     /// Menu keys a focused view takes first and forwards to the menu's own command, which then runs once. UIKit gives
@@ -176,7 +191,7 @@ public enum WorkspaceKeys {
     public static func forwarded(_ scope: Scope) -> [WorkspaceCommand] {
         switch scope {
         case .promptEditor: [.send]
-        case .commentEditor, .codeList, .commandPalette, .filesViewer, .filesFilter: []
+        case .commentEditor, .codeList, .commandPalette, .filesViewer, .filesFilter, .terminal: []
         }
     }
     /// iPadOS and its text system keep these: app switching, screenshots, the Dock, Spotlight, the pasteboard, undo,
@@ -239,15 +254,18 @@ public struct ComposerCommandState: Equatable, Sendable {
 }
 
 public enum WorkspaceCommandRouter {
-    public enum Target: Equatable, Sendable { case window, composer, find }
+    public enum Target: Equatable, Sendable { case window, composer, find, terminal }
     public static func target(_ command: WorkspaceCommand) -> Target {
         switch command {
         case .send, .stop, .addFiles, .chooseModel, .cycleVariant: .composer
         case .find: .find
+        case .closeTerminal: .terminal
         default: .window
         }
     }
-    public static func isEnabled(_ command: WorkspaceCommand, window: WindowCommandState?, composer: ComposerCommandState?, find: Bool) -> Bool {
+    /// `terminal`: a terminal is on screen in the key window, so Close terminal has a target.
+    public static func isEnabled(_ command: WorkspaceCommand, window: WindowCommandState?, composer: ComposerCommandState?, find: Bool,
+                                 terminal: Bool = false) -> Bool {
         guard let window, window.loaded, !window.modal else { return false }
         switch command {
         case .newSession: return window.canCreateSession
@@ -259,6 +277,8 @@ public enum WorkspaceCommandRouter {
         case .reviewNextApproval: return nextApproval(window) != nil
         case .previousSession, .nextSession, .previousUnread, .nextUnread, .session: return session(command, window: window) != nil
         case .send, .stop, .addFiles, .chooseModel, .cycleVariant: return composer.map { composerAllows(command, $0) } ?? false
+        case .newTerminal: return window.current != nil
+        case .closeTerminal: return terminal
         }
     }
     /// The composer's rules alone, for a key its editor forwards: while the editor is first responder the window is
@@ -300,12 +320,14 @@ public enum WorkspaceCommandRouter {
     /// Calls the one target that owns the command, and nothing when it is disabled.
     @discardableResult
     public static func perform(_ command: WorkspaceCommand, window: WindowCommandState?, composer: ComposerCommandState?, find: Bool,
-                               windowAction: (WorkspaceCommand) -> Void, composerAction: (WorkspaceCommand) -> Void, findAction: () -> Void) -> Bool {
-        guard isEnabled(command, window: window, composer: composer, find: find) else { return false }
+                               terminal: Bool = false, windowAction: (WorkspaceCommand) -> Void, composerAction: (WorkspaceCommand) -> Void,
+                               findAction: () -> Void, terminalAction: () -> Void = {}) -> Bool {
+        guard isEnabled(command, window: window, composer: composer, find: find, terminal: terminal) else { return false }
         switch target(command) {
         case .window: windowAction(command)
         case .composer: composerAction(command)
         case .find: findAction()
+        case .terminal: terminalAction()
         }
         return true
     }

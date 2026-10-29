@@ -8,6 +8,7 @@ import OCDesign
 import FeatureApprovals
 import FeatureComposer
 import FeatureReview
+import FeatureTerminal
 
 public struct SessionScreen: View {
     let server: ServerStore
@@ -28,6 +29,9 @@ public struct SessionScreen: View {
     @State private var informationOpen = false
     @State private var composerCommand: ComposerCommand?
     @State private var selection: Selection?
+    /// iPhone: the session's terminals on their own screen, and the terminal that screen opens.
+    @State private var terminals = false
+    @State private var terminalOpen: String?
     @Environment(\.scenePhase) private var phase
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -60,6 +64,9 @@ public struct SessionScreen: View {
                                 OCCopy.text("opencodeios://server/" + server.id.rawValue.uuidString + "/session/" + sessionID)
                             }
                             Button("Select text") { selection = Selection(text: selectionText(session)) }
+                            if sizeClass != .regular {
+                                Button("Terminals") { terminals = true }.accessibilityIdentifier("openTerminals")
+                            }
                         } label: {
                             if compactChrome { OCIcon("sliders").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
                             else { OCLabel(TimelineDetail(rawValue: detail)?.title ?? "Compact", icon: "sliders").font(OCType.small).padding(.horizontal, OCSpacing.md).frame(minHeight: OCLayout.touchTarget) }
@@ -110,7 +117,8 @@ public struct SessionScreen: View {
             .navigationTitle(server.sessions[sessionID]?.info.title ?? "Session").navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $review) {
                 // Close the sheet first, as the context sheet does, so the session does not open beneath it.
-                WorkspaceReviewPanel(server: server, sessionID: sessionID, openSession: { id in review = false; openSession(id) })
+                WorkspaceReviewPanel(server: server, sessionID: sessionID, openSession: { id in review = false; openSession(id) },
+                                     openTerminal: { id in review = false; terminalOpen = id; terminals = true })
                     .safeAreaInset(edge: .top) { HStack { Spacer(); OCIconButton("Close review", icon: "close") { review = false }.accessibilityIdentifier("closeReview") }.padding(.horizontal, OCSpacing.sm) }.ocSheet()
             }
             .sheet(isPresented: $context) {
@@ -128,6 +136,11 @@ public struct SessionScreen: View {
                 OCAnnouncer.post(text, priority: .high)
             }
             .sheet(item: $selection) { OCTextSelectionSheet(text: $0.text).ocSheet() }
+            .navigationDestination(isPresented: $terminals) {
+                if let directory = server.sessions[sessionID]?.info.location.directory {
+                    TerminalsScreen(list: server.readPath.terminals(directory: directory), shells: server.readPath.shellRuns(directory: directory), open: $terminalOpen)
+                }
+            }
             .task(id: sessionID) {
                 do {
                     try await server.readPath.open(sessionID)

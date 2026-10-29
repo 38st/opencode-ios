@@ -29,7 +29,7 @@ import OCModels
     let expected: [(WorkspaceCommand, String)] = [(.newSession, "⌘N"), (.send, "⌘↩"), (.stop, "⌘."), (.commandPalette, "⌘K"), (.find, "⌘F"),
         (.chooseModel, "⌘'"), (.reviewNextApproval, "⇧⌘A"), (.session(1), "⌘1"), (.session(9), "⌘9"), (.toggleSidebar, "⌘\\"),
         (.toggleReview, "⇧⌘R"), (.previousSession, "⌥⌘↑"), (.nextSession, "⌥⌘↓"), (.previousUnread, "⌥⇧⌘↑"), (.nextUnread, "⌥⇧⌘↓"),
-        (.newWindow, "⇧⌘N"), (.addFiles, "⌘U"), (.cycleVariant, "⇧⌘D")]
+        (.newWindow, "⇧⌘N"), (.addFiles, "⌘U"), (.cycleVariant, "⇧⌘D"), (.newTerminal, "⌘T"), (.closeTerminal, "⇧⌘W")]
     for (command, shortcut) in expected { #expect(command.chord.description == shortcut, "\(command)") }
     #expect(WorkspaceCommand.all.count == expected.count + 7)
     #expect(KeyChord(.return, [.command, .shift, .option, .control]).description == "⌃⌥⇧⌘↩")
@@ -138,4 +138,22 @@ private func ref(_ id: String, request: String? = nil) -> SessionRef { SessionRe
     #expect(run(.send)); #expect(run(.newSession)); #expect(run(.find, find: true))
     #expect(!run(.find)); #expect(!run(.stop)); #expect(!run(.reviewNextApproval))
     #expect(calls == ["composer:prompt.submit", "window:session.new", "find"])
+}
+
+@Test func terminalCommandsTakeChordsTheTerminalDoesNotSend() {
+    #expect(WorkspaceCommand.newTerminal.chord.description == "⌘T" && WorkspaceCommand.closeTerminal.chord.description == "⇧⌘W")
+    #expect(WorkspaceCommand.newTerminal.menu == .terminal && WorkspaceCommand.closeTerminal.menu == .terminal)
+    // A focused terminal sends every chord without ⌘ to its program, so no menu chord may lack it.
+    #expect(WorkspaceKeys.local(.terminal).allSatisfy { !$0.modifiers.contains(.command) })
+    #expect(WorkspaceCommand.all.filter(\.menuOwnsKey).allSatisfy { $0.chord.modifiers.contains(.command) })
+    let idle = WindowCommandState(loaded: true), open = WindowCommandState(loaded: true, current: ref("s"))
+    #expect(!WorkspaceCommandRouter.isEnabled(.newTerminal, window: idle, composer: nil, find: false), "New terminal starts in the open session's folder")
+    #expect(WorkspaceCommandRouter.isEnabled(.newTerminal, window: open, composer: nil, find: false))
+    #expect(!WorkspaceCommandRouter.isEnabled(.closeTerminal, window: open, composer: nil, find: false))
+    #expect(!WorkspaceCommandRouter.isEnabled(.closeTerminal, window: WindowCommandState(modal: true, loaded: true), composer: nil, find: false, terminal: true))
+    var closed = 0
+    let performed = WorkspaceCommandRouter.perform(.closeTerminal, window: open, composer: nil, find: false, terminal: true,
+        windowAction: { _ in Issue.record("Window") }, composerAction: { _ in Issue.record("Composer") }, findAction: { Issue.record("Find") },
+        terminalAction: { closed += 1 })
+    #expect(performed && closed == 1)
 }

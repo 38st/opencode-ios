@@ -98,7 +98,16 @@ public extension View {
         }
     }
 }
+/// Close terminal for the terminal on screen: `owner` names the terminal view, `id` its PTY.
+public struct OCTerminalCommand: Equatable {
+    public var owner: UUID
+    public var id: String
+    public var perform: @MainActor () -> Void
+    public init(owner: UUID, id: String, perform: @escaping @MainActor () -> Void) { self.owner = owner; self.id = id; self.perform = perform }
+    public static func == (a: Self, b: Self) -> Bool { a.owner == b.owner && a.id == b.id }
+}
 public extension FocusedValues {
+    @Entry var ocTerminalCommand: OCTerminalCommand?
     @Entry var ocWindowCommands: OCWindowCommands?
     @Entry var ocComposerCommands: OCComposerCommands?
     @Entry var ocFindCommand: OCFindCommand?

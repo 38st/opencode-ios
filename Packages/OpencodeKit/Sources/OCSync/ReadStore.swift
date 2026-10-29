@@ -48,6 +48,10 @@ import OCSecurity
     @ObservationIgnored var reviews: [String: ReviewModel] = [:]
     @ObservationIgnored var turnDiffs: [String: TurnDiffModel] = [:]
     @ObservationIgnored var fileModels: [String: FilesModel] = [:]
+    @ObservationIgnored var terminalLists: [String: TerminalListModel] = [:]
+    @ObservationIgnored var shellRuns: [String: ShellRunModel] = [:]
+    /// Opens PTY sockets; tests replace it.
+    @ObservationIgnored public var webSockets: any WebSocketConnecting = URLSessionWebSockets()
     @ObservationIgnored var composers: [String: ComposerModel] = [:]
     public internal(set) var replacingDraftSessionID: String?
     @ObservationIgnored var draftReplacementReply: CheckedContinuation<Bool, Never>?
@@ -268,6 +272,9 @@ import OCSecurity
         for review in reviews.values { await review.stop() }
         for model in turnDiffs.values { model.stop() }
         for model in fileModels.values { model.stop() }
+        // Terminals save their screens and close their sockets; they reconnect from the saved cursor after the next resync.
+        for list in terminalLists.values { await list.suspend() }
+        for run in shellRuns.values { run.cancel() }
         await outboxDrain?.stop()
         await persistence?.value
         for task in refreshes { await task.value }
