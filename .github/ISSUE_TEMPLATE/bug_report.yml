@@ -1,0 +1,82 @@
+name: Bug report
+description: Something in the app, the push plugin or the relay doesn't work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Report security problems privately through the **Security** tab instead. Leave out server passwords, pairing links and QR codes: a pairing link signs a device in to your server.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a session on …
+        2. Tap …
+        3. …
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Pairing and connection
+        - Home and sessions
+        - Transcript
+        - Composer and prompts
+        - Approvals and questions
+        - Review and files
+        - Terminal
+        - Notifications and Live Activities
+        - iPad workspace
+        - Shortcuts, Spotlight and widgets
+        - Settings and server administration
+        - Push plugin or relay
+        - Something else
+    validations:
+      required: true
+  - type: input
+    id: app-version
+    attributes:
+      label: App version
+      description: The version and build from TestFlight or the App Store, or the commit if you built it yourself.
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and OS
+      placeholder: iPhone 17 Pro, iOS 26.4
+    validations:
+      required: true
+  - type: input
+    id: server-version
+    attributes:
+      label: opencode version
+      description: The output of `opencode --version` on the server.
+    validations:
+      required: true
+  - type: dropdown
+    id: connection
+    attributes:
+      label: How the app reaches the server
+      multiple: true
+      options:
+        - Same network
+        - Tailscale
+        - HTTPS (reverse proxy or tunnel)
+        - OpenTunnel
+        - Other
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots, recordings or logs
+      description: Anything else that helps. Drag images or videos in here.
