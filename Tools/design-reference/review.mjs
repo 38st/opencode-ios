@@ -6,7 +6,7 @@ import { seedReviewRepository } from '../review-fixture/index.mjs';
 export async function captureReview({ server, mock, browser, output, manifest, sizes }) {
   const fixture = await seedReviewRepository(server, mock);
   const api = new Capture(server);
-  const empty = (await api.request('POST', '/api/session', { title: 'M4 No changes', location: { directory: fixture.directory }, model: { providerID: 'mock', id: 'mock-1' } })).data.id;
+  const empty = (await api.request('POST', '/api/session', { title: 'Review sample without changes', location: { directory: fixture.directory }, model: { providerID: 'mock', id: 'mock-1' } })).data.id;
   const base = `${server.baseURL}/server/${Buffer.from(server.baseURL).toString('base64url')}`;
   for (const [width, height] of sizes) for (const mode of ['light', 'dark']) {
     const session = (await api.request('POST', `/api/session/${fixture.session}/fork`, {})).data.id;
@@ -59,7 +59,7 @@ export async function captureReview({ server, mock, browser, output, manifest, s
       await page.getByRole('button', { name: 'Use password', exact: true }).click();
       await page.locator('input[type=password]').fill(server.password);
       await page.getByRole('button', { name: 'Connect', exact: true }).click();
-      await page.getByText('M4 Review changes', { exact: true }).first().waitFor();
+      await page.getByText('Review sample edits', { exact: true }).first().waitFor();
       await page.goto(`${server.baseURL}/settings`);
       await page.locator('[data-action=settings-show-turn-diffs] [data-slot=switch-control]').click();
       await goto(session);

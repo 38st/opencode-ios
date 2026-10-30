@@ -148,7 +148,7 @@ Text is not normalized: `café` written with U+00E9 and with `e` + U+0301 have d
 
 ## Risk rules
 
-`risk-rules.json` ports M3a's `PermissionRisk` exactly and adds the high-risk cases ARCHITECTURE §4.6 names that it lacked: `external_directory` as an explicit rule (M3a already rated it high as an unknown action) and force-push in any position after `git`, such as `git -C repo push --force`, which M3a's `git\s+push` missed. It also bounds the cost of a request: joined resources longer than `limits.maxLength` UTF-16 code units (8,192; JavaScript `length`, Swift `utf16.count`) are rated by `limits.rule` (`too-long`, high) before any pattern runs.
+`risk-rules.json` ports the app's original `PermissionRisk` rules exactly and adds the high-risk cases ARCHITECTURE §4.6 names that they lacked: `external_directory` as an explicit rule (the original rules already rated it high as an unknown action) and force-push in any position after `git`, such as `git -C repo push --force`, which the original `git\s+push` missed. It also bounds the cost of a request: joined resources longer than `limits.maxLength` UTF-16 code units (8,192; JavaScript `length`, Swift `utf16.count`) are rated by `limits.rule` (`too-long`, high) before any pattern runs.
 
 Classification of `(action, resources)`:
 
@@ -162,7 +162,7 @@ Patterns are written in a portable regular-expression dialect that ICU (`NSRegul
 - Quantified parts never overlap their neighbours, so no input makes a pattern backtrack catastrophically: a repeated group is `{ws}+{tok}+`, which has one way to split any text, and a token that must not be consumed is excluded with a lookahead. Force-push stops at the first `push` after `git` and never scans past a later `git`, and download-to-pipe never scans past a later `curl` or `wget` (the last one before a pipe matches anyway), so the time is linear in the text, not in the number of starting tokens times its length. `test/risk-rules.test.ts` times every rule on adversarial inputs at the length cap.
 - No `\b`, `\s`, `\w`, `\d`, `.`, anchors, flags, backreferences or Unicode properties; lookbehinds hold a single class; literals are printable ASCII and other characters are written as `\uXXXX`. `test/risk-rules.test.ts` enforces this.
 
-These spellings match everything M3a's ICU patterns matched, and a few more inputs: a command touching a non-ASCII letter, such as `ärm` (ICU treats `ä` as a word character, so its `\b` found no boundary), whitespace that ECMAScript counts and ICU does not (U+FEFF), and `curl … | …` across U+0085, at which ICU's `.` stops but `{line}` does not. ICU's `\s` matches U+000B and U+0085, so both are in `{ws}`. Lowercasing differences between the platforms (only Greek final sigma) cannot change a result, because every pattern is ASCII apart from the whitespace set.
+These spellings match everything the original ICU patterns matched, and a few more inputs: a command touching a non-ASCII letter, such as `ärm` (ICU treats `ä` as a word character, so its `\b` found no boundary), whitespace that ECMAScript counts and ICU does not (U+FEFF), and `curl … | …` across U+0085, at which ICU's `.` stops but `{line}` does not. ICU's `\s` matches U+000B and U+0085, so both are in `{ws}`. Lowercasing differences between the platforms (only Greek final sigma) cannot change a result, because every pattern is ASCII apart from the whitespace set.
 
 ## Vectors
 
@@ -175,5 +175,5 @@ All keys come from fixed labels in the generator; nothing in `vectors/` is a rea
 | `jcs.json` | Canonicalization of literals, integers, empty containers, nesting, ASCII and UTF-16 member order, escapes and Unicode |
 | `padding.json` | Padding at and across every bucket boundary, an oversized input, and valid and invalid unpadding |
 | `payload.json` | Drafts and their fitted payloads, exact plaintext, size and bucket, including oversized and control-character text |
-| `risk.json` | Classification of every rule, the M3a cases and the boundaries of each pattern |
+| `risk.json` | Classification of every rule, the cases of the original Swift rules and the boundaries of each pattern |
 | `rfc9180-a23.json` | The RFC 9180 test vector for this exact suite in auth mode (Appendix A.2.3), which checks both HPKE implementations independently of the generator |

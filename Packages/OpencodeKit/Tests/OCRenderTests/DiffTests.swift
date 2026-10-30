@@ -11,7 +11,7 @@ import Testing
 }
 
 @Test func diffFormatsHeadersAndRanges() throws {
-    let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Fixtures/source/m4")
+    let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Fixtures/source/review")
     for file in ["jsdiff.patch", "git.patch"] {
         let document = DiffParser.parse(try String(contentsOf: root.appendingPathComponent(file), encoding: .utf8))
         #expect(document.kind == .text)
@@ -83,14 +83,14 @@ import Testing
         runs.append(ms(start.duration(to: .now)))
         #expect(unified.count == 10_000 && split.count == 5_000)
         #expect(highlighted.lines.allSatisfy { !$0.words.isEmpty && !$0.syntax.isEmpty })
-        print("M4 run \(run) phases parse-word \(start.duration(to: parsed)) highlight \(parsed.duration(to: styled)) rows \(styled.duration(to: .now))")
+        print("Diff preparation run \(run) phases parse-word \(start.duration(to: parsed)) highlight \(parsed.duration(to: styled)) rows \(styled.duration(to: .now))")
     }
     let best = runs.min() ?? .infinity
     let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
     let output = root.appendingPathComponent(".build/performance")
     try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
-    try JSONEncoder().encode(["m4PreparationMilliseconds": best, "m4PreparationSlowestRunMilliseconds": runs.max() ?? best]).write(to: output.appendingPathComponent("m4-diff-host.json"))
-    #expect(best < 500, "M4 preparation took \(runs) ms")
+    try JSONEncoder().encode(["preparationMilliseconds": best, "preparationSlowestRunMilliseconds": runs.max() ?? best]).write(to: output.appendingPathComponent("diff-preparation-host.json"))
+    #expect(best < 500, "Diff preparation took \(runs) ms")
 }
 
 @Test func crlfHeadersAndMissingNewlineReconstructBothSides() {

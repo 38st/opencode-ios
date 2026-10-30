@@ -40,7 +40,7 @@ private enum Recordings {
     ]
 }
 
-/// Test-only SSE framing. The production incremental transport/parser belongs to M1.
+/// Test-only SSE framing. The app parses streams incrementally with `SSEParser` in OCNetworking.
 private func eventData(in bytes: Data) throws -> [Data] {
     let text = try #require(String(data: bytes, encoding: .utf8))
     let normalized = text.replacingOccurrences(of: "\r\n", with: "\n")

@@ -37,7 +37,7 @@ export async function seedReviewRepository(server, mock) {
     '.hidden': 'Dotfiles remain visible.\n',
   };
   for (const [name, text] of Object.entries(base)) await writeFile(path.join(directory, name), text);
-  await copyFile(fileURLToPath(new URL('../../Fixtures/source/m4/image.png', import.meta.url)), path.join(directory, 'image.png'));
+  await copyFile(fileURLToPath(new URL('../../Fixtures/source/review/image.png', import.meta.url)), path.join(directory, 'image.png'));
   await writeFile(path.join(directory, 'binary.bin'), Buffer.from([0, 1, 2, 3, 4]));
   await git(['add', '.']);
   await git(['-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '--quiet', '-m', 'Review base']);
@@ -55,9 +55,9 @@ export async function seedReviewRepository(server, mock) {
   const session = async (title, root = directory) => (await api.request('POST', '/api/session', {
     title, location: { directory: root }, model: { providerID: 'mock', id: 'mock-1' },
   })).data.id;
-  const edit = await session('M4 Review changes');
-  const large = await session('M4 Large diff');
-  const noGitSession = await session('M4 Create Git repository', noGit);
+  const edit = await session('Review sample edits');
+  const large = await session('Review sample large diff');
+  const noGitSession = await session('Review sample without Git', noGit);
   const turn = async (id, name, calls) => {
     await until(async () => (await fetch(mock.url + '/admin/state').then(r => r.json())).active === 0, 'mock idle');
     const response = await fetch(mock.url + '/admin/scenario', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name, script: { calls } }) });

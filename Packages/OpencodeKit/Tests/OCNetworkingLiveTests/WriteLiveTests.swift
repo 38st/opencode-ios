@@ -95,7 +95,7 @@ private struct LiveAuthentication: BiometricAuthenticating {
         #expect(store.sessions[id]?.pending.map(\.raw) == pending.map(\.raw))
         #expect(store.permissions[id]?.map(\.raw) == permissions.map(\.raw))
         #expect(store.forms[.session(id)]?.map(\.raw) == forms.map(\.raw))
-        print("PASS M3a store projection equals snapshot: \(label)")
+        print("PASS store projection equals snapshot: \(label)")
     }
 }
 
@@ -145,7 +145,7 @@ extension LiveContracts {
             try await c.until {
                 c.store.sessions[id]?.transcript?.snapshot.flatMap(\.content).contains { $0.fields.name == "edit" && ["completed", "error"].contains($0.fields.toolState.type) } == true
             }
-            if decision == .once { print("M3a direct Allow once to tool completion: \(start.duration(to: .now))") }
+            if decision == .once { print("Direct Allow once to tool completion: \(start.duration(to: .now))") }
             try await c.idle(id); try await c.parity(id, "permission \(decision.rawValue)")
         }
         for dismiss in [false, true] {
@@ -179,23 +179,23 @@ extension LiveContracts {
         try await c.until { c.store.readPath.outboxEntries[compactID] == nil }
         try await c.idle(compact); try await c.parity(compact, "compact")
         try await c.scenario("plain-text")
-        let mentionSession = try await c.session("M3b mention encoding")
+        let mentionSession = try await c.session("Mention encoding")
         var mentionText = AttributedString("😀 e\u{301}漢字 Read @sample.txt")
         if let range = mentionText.range(of: "@sample.txt") { mentionText[range][MentionAttribute.self] = .init(kind: "file", value: "sample.txt") }
         let encoded = ComposerInput.encode(mentionText, directory: c.directory, agent: "build", model: nil)
         let mentionID = try await c.store.readPath.sendPrompt(mentionSession, input: encoded)
         try await c.until { c.store.readPath.outboxEntries[mentionID] == nil }
-        try await c.idle(mentionSession); try await c.parity(mentionSession, "M3b mention-encoded prompt")
+        try await c.idle(mentionSession); try await c.parity(mentionSession, "mention-encoded prompt")
         let sent = try #require(c.store.sessions[mentionSession]?.transcript?.messages[mentionID]?.fields)
         #expect(ComposerInput.restoreText(sent.raw).runs.contains { $0[MentionAttribute.self]?.kind == "file" })
         try await c.scenario("plain-text")
-        let commandSession = try await c.session("M3b server command")
+        let commandSession = try await c.session("Server command")
         try await c.store.readPath.command(commandSession, name: "review", input: .init(text: "Review sample.txt"))
-        try await c.idle(commandSession); try await c.parity(commandSession, "M3b server command")
+        try await c.idle(commandSession); try await c.parity(commandSession, "server command")
         let shellID = try await c.store.readPath.shell(commandSession, command: "printf 'm3b-shell'")
         #expect(shellID.hasPrefix("msg_"))
         try await c.until { c.store.sessions[commandSession]?.transcript?.messages[shellID]?.fields.status == "exited" }
-        try await c.parity(commandSession, "M3b shell with minted ID")
+        try await c.parity(commandSession, "shell with minted ID")
         #expect(try await c.store.readPath.findFiles("sample", directory: c.directory).contains { $0.path == "sample.txt" })
         #expect(try await c.store.readPath.listDirectory(c.directory, directory: c.directory).contains { $0.path == "sample.txt" })
         #expect(try await c.store.readPath.resolveDirectory(c.directory).directory == c.directory)
@@ -209,7 +209,7 @@ extension LiveContracts {
             #expect(!(try await c.store.readPath.branches("", directory: worktreeDirectory)).isEmpty)
         }
         try await c.scenario("plain-text")
-        let duplicateSession = try await c.session("M3b duplicate admission")
+        let duplicateSession = try await c.session("Duplicate admission")
         c.store.readPath.setWritesConnected(false)
         let duplicateID = try await c.store.readPath.sendPrompt(duplicateSession, input: .init(text: "Exactly once", delivery: .queue, resume: false))
         let body = try #require(c.store.readPath.outboxEntries[duplicateID]?.body)
@@ -225,7 +225,7 @@ extension LiveContracts {
         #expect(changedReplay.raw == first.raw)
         print("PASS changed bytes preserve the first admission (V2 does not return 409 for this case)")
         // A cross-session ID collision is the server's actual 409 condition.
-        let collisionSession = try await c.session("M3b admission collision")
+        let collisionSession = try await c.session("Admission collision")
         do {
             _ = try await c.api.send(WriteEndpoints.prompt(collisionSession, body: changedBody))
             Issue.record("A cross-session admission ID must conflict")
@@ -234,12 +234,12 @@ extension LiveContracts {
         try await conflictBox.save(.init(id: duplicateID, serverID: "conflict", sessionID: collisionSession, body: changedBody))
         try await OutboxProcessor(store: conflictBox, serverID: "conflict").drain(using: c.api)
         #expect(try await conflictBox.entries(serverID: "conflict").first?.state == "failed")
-        try await c.parity(collisionSession, "M3b 409 leaves the other session unchanged")
+        try await c.parity(collisionSession, "409 leaves the other session unchanged")
         try await c.until { c.store.readPath.outboxEntries[duplicateID] == nil }
         try await c.store.readPath.changeDelivery(duplicateSession, itemID: duplicateID, delivery: .steer)
-        try await c.idle(duplicateSession); try await c.parity(duplicateSession, "M3b duplicate and 409")
+        try await c.idle(duplicateSession); try await c.parity(duplicateSession, "duplicate and 409")
         #expect(c.store.sessions[duplicateSession]?.transcript?.snapshot.filter { $0.type == "user" }.count == 1)
-        print("PASS M3b mention, command, shell, filesystem, worktree, duplicate admission and 409 contracts")
+        print("PASS mention, command, shell, filesystem, worktree, duplicate admission and 409 contracts")
         try await c.reviewContracts()
         await c.store.dispose()
     } catch { await c.store.dispose(); throw error }
@@ -293,7 +293,7 @@ private extension WriteContract {
         #expect(user.fields.text == "Please address this\nThe user made the following comment regarding lines 2 through 3 of Sources/Example.swift: Simplify these lines")
         #expect(user.fields.metadata?["comments"]?[0]?["selection"]?["startLine"] == .integer(2))
         #expect(LineComment.restore(user.raw).first?.comment == "Simplify these lines")
-        try await parity(session, "M4 review comment")
-        print("PASS M4 session.diff from/to/context, VCS working/branch/init, fs list/find/read 200/206/304/416, comment prompt and projection parity")
+        try await parity(session, "review comment")
+        print("PASS session.diff from/to/context, VCS working/branch/init, fs list/find/read 200/206/304/416, comment prompt and projection parity")
     }
 }

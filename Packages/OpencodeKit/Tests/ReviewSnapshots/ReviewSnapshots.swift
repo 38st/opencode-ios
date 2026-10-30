@@ -180,11 +180,11 @@ import FeatureComposer
     nonisolated static var patch: String { fixture("review-swift.patch") }
     nonisolated static var imageFixture: Data {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        return (try? Data(contentsOf: root.appendingPathComponent("Fixtures/source/m4/image.png"))) ?? Data()
+        return (try? Data(contentsOf: root.appendingPathComponent("Fixtures/source/review/image.png"))) ?? Data()
     }
     nonisolated static func fixture(_ name: String) -> String {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        return (try? String(contentsOf: root.appendingPathComponent("Fixtures/source/m4/" + name), encoding: .utf8)) ?? "Missing fixture: " + name
+        return (try? String(contentsOf: root.appendingPathComponent("Fixtures/source/review/" + name), encoding: .utf8)) ?? "Missing fixture: " + name
     }
 }
 

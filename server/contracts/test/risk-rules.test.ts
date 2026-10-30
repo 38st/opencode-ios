@@ -90,9 +90,9 @@ describe("risk-rules.json", () => {
   });
 });
 
-// M3a's OCModels/PermissionRisk.swift, transcribed. ECMAScript's \b, \s and . already have the
+// The app's original OCModels/PermissionRisk.swift rules, transcribed. ECMAScript's \b, \s and . already have the
 // ASCII-boundary, whitespace and line semantics the shared macros spell out.
-function m3a(action: string, resources: readonly string[]): Tier {
+function originalSwift(action: string, resources: readonly string[]): Tier {
   switch (action) {
     case "read": case "glob": case "grep": case "list":
       return "low";
@@ -108,21 +108,21 @@ function m3a(action: string, resources: readonly string[]): Tier {
   }
 }
 
-describe("compatibility with M3a", () => {
-  // Rated higher than M3a on purpose: force-push forms its `git\s+push` missed, the length cap, and
+describe("compatibility with the original Swift rules", () => {
+  // Rated higher than the original rules on purpose: force-push forms its `git\s+push` missed, the length cap, and
   // U+0085, which ICU's `\s` matched on iOS but ECMAScript's does not.
   const additions = new Set(["force-push", "too-long"]);
   for (const item of vectors) {
     test(item.name, () => {
-      const before = m3a(item.action, item.resources);
+      const before = originalSwift(item.action, item.resources);
       const after = classify(item.action, item.resources);
       if ((additions.has(after.rule) || item.resources.join("").includes("\u0085")) && before !== "high") expect(after.tier).toBe("high");
       else expect(after.tier).toBe(before);
     });
   }
 
-  test("the only additions are the force-push forms M3a missed, the length cap and ICU's U+0085", () => {
-    const changed = vectors.filter((item) => m3a(item.action, item.resources) !== item.tier).map((item) => item.name);
+  test("the only additions are the force-push forms the original rules missed, the length cap and ICU's U+0085", () => {
+    const changed = vectors.filter((item) => originalSwift(item.action, item.resources) !== item.tier).map((item) => item.name);
     expect(changed).toEqual([
       "shell, git push with a next line (U+0085, ICU whitespace)",
       "shell, force-push with -C",

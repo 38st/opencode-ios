@@ -24,7 +24,7 @@ await audit(auditDir, async () => {
     server = await startSandbox({ version, mockURL: mock.url, configure: configureReview });
     const worktreeDirectory = path.join(server.root, 'worktree-project');
     await mkdir(worktreeDirectory);
-    await writeFile(path.join(worktreeDirectory, 'README.md'), 'M3b worktree contract fixture\n');
+    await writeFile(path.join(worktreeDirectory, 'README.md'), 'Worktree contract fixture\n');
     await run('/usr/bin/git', ['init', '--quiet', worktreeDirectory], { env: server.env, cwd: server.root });
     await run('/usr/bin/git', ['add', 'README.md'], { env: server.env, cwd: worktreeDirectory });
     await run('/usr/bin/git', ['-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '--quiet', '-m', 'Fixture'], { env: server.env, cwd: worktreeDirectory });
@@ -71,9 +71,9 @@ await audit(auditDir, async () => {
         OPENCODE_LIVE_V1_PASSWORD: v1.password,
       } });
     console.log(swift);
-    assert.match(swift, /PASS M3a store projection equals snapshot: compact/, 'Swift write contracts must run through compact');
-    assert.match(swift, /PASS M7 PTY socket/, 'The Swift PTY socket contract must run');
-    console.log('PASS Swift networking, projection and M3a write contracts');
+    assert.match(swift, /PASS store projection equals snapshot: compact/, 'Swift write contracts must run through compact');
+    assert.match(swift, /PASS PTY socket/, 'The Swift PTY socket contract must run');
+    console.log('PASS Swift networking, projection and write contracts');
     // The push plugin in its own sandboxes: installed by configuration and by `opencode plugin add`.
     const push = await runPluginChecks({ version, mock });
     await writeFile(path.join(auditDir, 'push-plugin.json'), JSON.stringify(push, null, 2) + '\n');

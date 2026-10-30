@@ -13,7 +13,7 @@ import FeatureApprovals
 @MainActor @Suite(.serialized) struct ApprovalSnapshots {
     private static let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
     @Test func permissionStates() async throws {
-        let request = try JSONDecoder().decode(PermissionRequest.self, from: Data(contentsOf: Self.root.appending(path: "Fixtures/source/m3a/permission.json")))
+        let request = try JSONDecoder().decode(PermissionRequest.self, from: Data(contentsOf: Self.root.appending(path: "Fixtures/source/approvals/permission.json")))
         for state in PermissionSheetState.allCases {
             await capture(PermissionContent(request: request, directory: "/workspace/web-app", otherRequests: 2, state: .constant(state),
                                       note: .constant(state == .reject ? "Keep the existing timeout and add a regression test." : ""), reply: { _, _ in }), name: "permission-" + state.rawValue)
@@ -30,7 +30,7 @@ import FeatureApprovals
         await capture(PermissionContent(request: high, directory: "/workspace/web-app", state: .constant(.review), note: .constant(""), reply: { _, _ in }), name: "permission-high-risk")
     }
     @Test func questionStatesAndEveryFieldType() async throws {
-        let form = try JSONDecoder().decode(FormInfo.self, from: Data(contentsOf: Self.root.appending(path: "Fixtures/source/m3a/form.json")))
+        let form = try JSONDecoder().decode(FormInfo.self, from: Data(contentsOf: Self.root.appending(path: "Fixtures/source/approvals/form.json")))
         let answers: [String: JSONValue] = ["theme": .string("Sepia"), "checks": .array([.string("unit")]), "scale": .double(1.5), "count": .integer(2), "publish": .bool(true), "label": .string("Review build"), "external": .bool(true)]
         for state in FormSheetState.allCases {
             await capture(QuestionContent(form: form, state: .constant(state), answers: .constant(state == .invalid ? [:] : answers), reason: .constant("Use the existing preview."), submit: {}, dismiss: {}), name: "question-" + state.rawValue)

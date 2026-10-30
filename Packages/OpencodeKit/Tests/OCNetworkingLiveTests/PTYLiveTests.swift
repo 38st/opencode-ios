@@ -63,5 +63,5 @@ func ptySocketAgainstTheSandbox() async throws {
     guard case .closed(_, _, let status)? = unknown.events.last else { Issue.record("No close"); return }
     #expect(status == 404)
     _ = try? await api.send(TerminalEndpoints.delete(pty.id, directory: directory))
-    print("PASS M7 PTY socket: Basic upgrade, UTF-16 resume at \(end ?? -1), close 1000, close \(lateCode ?? -1) \(reason ?? ""), unknown PTY \(status ?? -1)")
+    print("PASS PTY socket: Basic upgrade, UTF-16 resume at \(end ?? -1), close 1000, close \(lateCode ?? -1) \(reason ?? ""), unknown PTY \(status ?? -1)")
 }

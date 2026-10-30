@@ -45,7 +45,7 @@ async function asked(api, mark, predicate = () => true) {
   return { event, seen: performance.now() };
 }
 
-/** The configuration install: the plugin directory in `plugins`. Returns the M0 answers it proves. */
+/** The configuration install: the plugin directory in `plugins`. Returns what each check observed. */
 async function configurationChecks({ version, mock, log }) {
   const results = {};
   const relay = await startRecordingRelay();

@@ -1,4 +1,4 @@
-// The local end-to-end for push (M5a): the sandboxed opencode with the plugin installed, the relay
+// The local end-to-end for push: the sandboxed opencode with the plugin installed, the relay
 // in the Workers local runtime (wrangler dev), and the mock APNs server. Nothing leaves this Mac.
 //   node Tools/push-e2e/index.mjs [--version 2.x.y]
 import assert from 'node:assert/strict';

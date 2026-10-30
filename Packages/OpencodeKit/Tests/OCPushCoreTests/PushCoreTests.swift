@@ -62,7 +62,7 @@ import Testing
 
 /// ICU-specific behaviour the shared spelling relies on (server/contracts/README.md, "Risk rules").
 @Test func portableDialectBehavesUnderICU() throws {
-    // ICU counts "ä" as a word character, so M3a's \brm\b missed "ärm"; the shared ASCII boundary does not.
+    // ICU counts "ä" as a word character, so the original Swift rule's \brm\b missed "ärm"; the shared ASCII boundary does not.
     #expect("ärm".range(of: #"\brm\b"#, options: .regularExpression) == nil)
     #expect(PermissionRisk.classify(action: "shell", resources: ["ärm"]).tier == .high)
     #expect(PermissionRisk.classify(action: "shell", resources: ["git\u{00A0}push"]).tier == .high)

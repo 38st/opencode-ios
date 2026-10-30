@@ -21,7 +21,7 @@ public struct PushKey: Codable, Sendable, Equatable {
 
 /// Push keys in the Keychain. `KeychainStore` writes with `AfterFirstUnlockThisDeviceOnly`, so the
 /// Notification Service Extension can read them on a locked phone, and they never leave the device.
-/// M5b passes the App Group's Keychain access group so the extension shares them.
+/// The app passes the App Group's Keychain access group so the extension shares them.
 public actor PushKeyStore {
     public static let service = "app.opencode.push-keys"
     private let secrets: any SecretStore
