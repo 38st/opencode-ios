@@ -5,10 +5,11 @@ import UIKit
 nonisolated class SmokeTestCase: XCTestCase {
     @MainActor lazy var app = XCUIApplication()
 
-    @MainActor func launchFreshApp(suffix: String) throws {
+    /// - Parameter animations: false launches the Debug build without UIKit animations.
+    @MainActor func launchFreshApp(suffix: String, animations: Bool = true) throws {
         let id = try XCTUnwrap(ProcessInfo.processInfo.environment["OPENCODE_UI_TEST_ID"])
         app.launchEnvironment["OPENCODE_UI_TEST_ID"] = id + suffix
-        app.launchArguments = ["--ui-testing-reset"]
+        app.launchArguments = ["--ui-testing-reset"] + (animations ? [] : ["--ui-testing-no-animations"])
         addTeardownBlock { @MainActor [self] in finishTest() }
         app.launch()
         // XCUIApplication.open can relaunch the process. Only the test's initial launch resets data.

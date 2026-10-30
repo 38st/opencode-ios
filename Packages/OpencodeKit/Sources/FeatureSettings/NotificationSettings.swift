@@ -7,6 +7,7 @@ import OCShared
 public struct NotificationSettings: View {
     @Bindable var controller: PushController
     private let refreshOnAppear: Bool
+    @State private var confirmApprovalsOff = false
     public init(controller: PushController, refreshOnAppear: Bool = true) {
         self.controller = controller; self.refreshOnAppear = refreshOnAppear
     }
@@ -34,6 +35,8 @@ public struct NotificationSettings: View {
             OCToggleRow("Live Activity", detail: "Show progress for prompts you send from this phone.",
                         isOn: Binding(get: { controller.preferences.liveActivities }, set: { controller.setLiveActivities($0) }))
                 .accessibilityIdentifier("liveActivityToggle")
+            categories
+            quietHours
             ForEach(controller.health) { server in
                 OCCard { VStack(alignment: .leading, spacing: OCSpacing.lg) {
                     Text(server.name).font(OCType.heading)
@@ -63,6 +66,52 @@ public struct NotificationSettings: View {
         .ocNavigationTitle("Notifications")
         .task { if refreshOnAppear { await controller.refresh() } }
         .refreshable { await controller.refresh() }
+    }
+    private static let kinds = [("permission", "Approvals", "Requests to run commands or edit files."),
+                                ("question", "Questions", "A session needs your answer."),
+                                ("finished", "Finished sessions", "A session finished its work."),
+                                ("failed", "Failed sessions", "A session stopped with an error.")]
+    @ViewBuilder private var categories: some View {
+        Text("Notify me about").font(OCType.heading)
+        ForEach(Self.kinds, id: \.0) { kind, title, detail in
+            OCToggleRow(title, detail: detail, isOn: Binding(get: { !controller.preferences.silencedKinds.contains(kind) }, set: { on in
+                if !on && kind == "permission" { confirmApprovalsOff = true } else { controller.setNotifications(kind, enabled: on) }
+            })).accessibilityIdentifier("notify-" + kind)
+        }
+        Text("Turned-off notifications still arrive in Notification Center, without sound or banner. Muted sessions do the same, except approvals.")
+            .font(OCType.small).foregroundStyle(OCColor.textMuted)
+            .sheet(isPresented: $confirmApprovalsOff) {
+                OCConfirmationSheet("Turn off approval notifications?", message: "Sessions waiting for your approval will no longer alert you, on every server, including at night. They stay in Notification Center.",
+                                    confirmTitle: "Turn off", cancel: { confirmApprovalsOff = false }) {
+                    controller.setNotifications("permission", enabled: false); confirmApprovalsOff = false
+                }.ocSheet()
+            }
+        if !controller.preferences.mutedSessions.isEmpty {
+            OCCard { VStack(alignment: .leading, spacing: OCSpacing.sm) {
+                Text("Muted sessions: \(controller.preferences.mutedSessions.count)").font(OCType.body)
+                Text("Unmute a session from its menu.").font(OCType.small).foregroundStyle(OCColor.textMuted)
+            } }.accessibilityIdentifier("mutedSessions")
+        }
+    }
+    @ViewBuilder private var quietHours: some View {
+        Text("Quiet hours").font(OCType.heading)
+        OCToggleRow("Quiet hours", detail: "Lower the alert level during these hours. Approvals keep theirs.",
+                    isOn: Binding(get: { controller.preferences.quietHours != nil }, set: { on in
+            controller.setQuietHours(on ? QuietHours(start: 22 * 60, end: 7 * 60) : nil)
+        })).accessibilityIdentifier("quietHoursToggle")
+        if let quiet = controller.preferences.quietHours {
+            DatePicker("From", selection: Binding(get: { Self.date(quiet.start) }, set: { controller.setQuietHours(QuietHours(start: Self.minutes($0), end: quiet.end)) }), displayedComponents: .hourAndMinute)
+                .font(OCType.body).accessibilityIdentifier("quietHoursStart")
+            DatePicker("Until", selection: Binding(get: { Self.date(quiet.end) }, set: { controller.setQuietHours(QuietHours(start: quiet.start, end: Self.minutes($0))) }), displayedComponents: .hourAndMinute)
+                .font(OCType.body).accessibilityIdentifier("quietHoursEnd")
+        }
+    }
+    private static func date(_ minutes: Int) -> Date {
+        Calendar.current.date(bySettingHour: minutes / 60, minute: minutes % 60, second: 0, of: Date(timeIntervalSince1970: 0)) ?? .now
+    }
+    private static func minutes(_ date: Date) -> Int {
+        let parts = Calendar.current.dateComponents([.hour, .minute], from: date)
+        return (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
     }
     private func status(_ title: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: OCSpacing.xs) {

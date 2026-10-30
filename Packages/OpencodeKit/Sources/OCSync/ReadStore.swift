@@ -40,6 +40,11 @@ import OCSecurity
     /// Reply failures keyed by permission or form id, shown on that request instead of server-wide.
     public internal(set) var approvalErrors: [String: String] = [:]
     public internal(set) var failedCreationDirectories: [String: String] = [:]
+    /// Moves requested from this device, until `session.moved` or a failure; the inbox item shows moves from anywhere.
+    public internal(set) var requestedMoves: [String: SessionMove] = [:]
+    /// The side question of each session (`/btw`). It is never part of the history.
+    public internal(set) var sideQuestions: [String: SideQuestion] = [:]
+    @ObservationIgnored var sideQuestionTasks: [String: Task<Void, Never>] = [:]
     public var formDrafts: [String: [String: JSONValue]] = [:]
     public internal(set) var lastApprovalRoundTrip: Double?
     public internal(set) var lastAnswerRoundTrip: Double?
@@ -112,6 +117,7 @@ import OCSecurity
         for task in refreshTasks.values { task.cancel() }
         for task in work.values { task.cancel() }
         for task in sessionLoads.values { task.cancel() }
+        for task in sideQuestionTasks.values { task.cancel() }
     }
     public func receive(_ batch: EventBatch) {
         guard !stopped else { return }

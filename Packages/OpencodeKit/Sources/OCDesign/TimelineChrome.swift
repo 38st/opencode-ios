@@ -101,9 +101,19 @@ public struct OCSessionIndicator: View {
             case .staleRunning: Circle().strokeBorder(lineWidth: 1.5).frame(width: 6, height: 6)
             }
         }.foregroundStyle(tone.foreground)
-            .opacity(state == .running && !reduceMotion && breathing ? 0.45 : 1)
-            .animation(state == .running && !reduceMotion ? .easeInOut(duration: 1.2).repeatForever(autoreverses: true) : nil, value: breathing)
-            .onAppear { breathing = true }.onChange(of: reduceMotion) { _, _ in breathing = !reduceMotion }
+            .opacity(state == .running && breathing ? 0.45 : 1)
+            // A few breaths when a run starts or the row appears, then a steady dot: an endless animation would keep the
+            // app from ever being idle, which UI automation and the system both wait for.
+            .task(id: state == .running && !reduceMotion) {
+                guard state == .running && !reduceMotion else { breathing = false; return }
+                for _ in 0..<3 {
+                    withAnimation(.easeInOut(duration: 0.6)) { breathing = true }
+                    try? await Task.sleep(for: .milliseconds(600))
+                    withAnimation(.easeInOut(duration: 0.6)) { breathing = false }
+                    try? await Task.sleep(for: .milliseconds(600))
+                    if Task.isCancelled { break }
+                }
+            }
             .accessibilityLabel(accessibilityTitle)
     }
 }

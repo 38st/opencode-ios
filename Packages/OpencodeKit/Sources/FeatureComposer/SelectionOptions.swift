@@ -37,9 +37,12 @@ struct SendOptions: View {
         Button("Interrupt and send", action: interrupt)
     }
 }
-enum SessionMenuAction { case rename, fork, compact, undo, redo, delete }
+enum SessionMenuAction { case rename, fork, compact, undo, redo, move, export, mute, delete }
 struct SessionMenuOptions: View {
     let canRedo: Bool
+    var canMove = true
+    /// nil when notifications are unavailable on this device.
+    var muted: Bool?
     let select: (SessionMenuAction) -> Void
     var body: some View {
         Button("Rename") { select(.rename) }
@@ -47,6 +50,10 @@ struct SessionMenuOptions: View {
         Button("Compact session") { select(.compact) }
         Button("Undo last message") { select(.undo) }
         Button("Redo last message") { select(.redo) }.disabled(!canRedo)
+        Divider()
+        Button("Move session…") { select(.move) }.disabled(!canMove)
+        Button("Export session…") { select(.export) }
+        if let muted { Button(muted ? "Unmute notifications" : "Mute notifications") { select(.mute) } }
         Divider()
         Button("Delete session", role: .destructive) { select(.delete) }
     }

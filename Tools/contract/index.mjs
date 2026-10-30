@@ -11,6 +11,7 @@ import { runScenario } from '../fixture-recorder/scenarios.mjs';
 import { runPluginChecks } from '../push-e2e/plugin-checks.mjs';
 import { ptyContract } from './pty.mjs';
 import { adminContract } from './admin.mjs';
+import { sessionsContract } from './sessions.mjs';
 
 const { values } = parseArgs({ options: { version: { type: 'string' }, 'write-flows-only': { type: 'boolean' } } });
 const version = await resolveVersion(values.version);
@@ -46,6 +47,9 @@ await audit(auditDir, async () => {
     const admin = await adminContract(server);
     await writeFile(path.join(auditDir, 'admin.json'), JSON.stringify(admin, null, 2) + '\n');
     console.log('PASS server settings: accounts by key, runtime MCP, saved permissions, catalogs, projects, worktrees, configuration and locations');
+    const sessions = await sessionsContract(server, mock);
+    await writeFile(path.join(auditDir, 'sessions.json'), JSON.stringify(sessions, null, 2) + '\n');
+    console.log('PASS session features: move into a worktree, export with and without sanitising, statistics and side questions');
     v1 = await startSandbox({ version: V1_VERSION, v1: true, mockURL: mock.url });
     await runScenario(v1, mock, 'v1-probe');
     console.log('PASS V1 detection');

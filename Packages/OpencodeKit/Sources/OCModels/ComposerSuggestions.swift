@@ -30,9 +30,10 @@ public struct ComposerTrigger: Hashable, Sendable {
 }
 
 public enum ComposerCommand: String, CaseIterable, Sendable {
-    case new, undo, redo, compact, fork, model, agent
+    case new, undo, redo, compact, fork, btw, model, agent
     public var title: String {
         switch self {
+        case .btw: "Ask a side question"
         case .new: "New session"
         case .undo: "Undo"
         case .redo: "Redo"
@@ -49,6 +50,7 @@ public enum ComposerCommand: String, CaseIterable, Sendable {
         case .redo: "Redo the last undone message"
         case .compact: "Summarize the session to reduce context size"
         case .fork: "Create a new session from a previous message"
+        case .btw: "Get a one-shot answer without adding to the conversation"
         case .model: "Select a different model"
         case .agent: "Switch to the next agent"
         }
@@ -56,7 +58,7 @@ public enum ComposerCommand: String, CaseIterable, Sendable {
     public static func available(session: Bool, showAgent: Bool, hasPrompts: Bool = true, reverted: Bool = true) -> [Self] {
         allCases.filter {
             (session || [.new, .model, .agent].contains($0)) && ($0 != .agent || showAgent) &&
-                (![.undo, .compact, .fork].contains($0) || hasPrompts) && ($0 != .redo || reverted)
+                (![.undo, .compact, .fork, .btw].contains($0) || hasPrompts) && ($0 != .redo || reverted)
         }
     }
 }
@@ -76,6 +78,12 @@ public struct ComposerSuggestion: Identifiable, Equatable, Sendable {
 }
 
 public enum ComposerSuggestions {
+    /// `/btw <question>`: the question, empty when none follows; nil for any other text.
+    public static func sideQuestion(_ text: String) -> String? {
+        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard text == "/btw" || text.hasPrefix("/btw ") || text.hasPrefix("/btw\n") else { return nil }
+        return String(text.dropFirst(4)).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
     public static func submittedCommand(_ text: String, server: JSONValue?, session: Bool, showAgent: Bool,
                                         hasPrompts: Bool, reverted: Bool) -> ComposerSuggestion? {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)

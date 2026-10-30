@@ -27,6 +27,10 @@ import FeatureSettings
             .object(["pluginVersion": .string("0.1.0")])
         }
         capture(NotificationSettings(controller: controller, refreshOnAppear: false), name: "notifications", height: 3000)
+        controller.setNotifications("finished", enabled: false)
+        controller.setQuietHours(QuietHours(start: 22 * 60, end: 7 * 60))
+        controller.setMuted(true, server: "server", sessionID: "ses_1")
+        capture(NotificationSettings(controller: controller, refreshOnAppear: false), name: "notifications-quiet", height: 3000)
     }
     @Test func liveActivityStates() {
         let attributes = SessionActivityAttributes(serverID: UUID().uuidString, sessionID: "ses_snapshot", title: "Review the connection changes", project: "opencode-ios")

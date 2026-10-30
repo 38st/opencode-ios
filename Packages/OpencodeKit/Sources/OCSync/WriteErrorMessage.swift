@@ -43,3 +43,9 @@ public enum WriteErrorMessage {
             : "The server could not be reached. Check your connection and try again."
     }
 }
+
+/// An error already worded for the user, for views below OCSync that show `localizedDescription`.
+public struct UserFacingError: LocalizedError, Sendable {
+    public let errorDescription: String?
+    nonisolated public init(_ error: any Error) { errorDescription = WriteErrorMessage.message(error) }
+}

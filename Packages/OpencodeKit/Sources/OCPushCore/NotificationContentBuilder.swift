@@ -16,6 +16,9 @@ public struct NotificationPresentation: Sendable, Equatable {
     public var shownID: String?
     public var receipt: String?
     public var url: URL?
+    /// Set when the device's settings lower the server's level; `silenced` also drops the sound.
+    public var interruption: NotificationFilter.Level?
+    public var silenced = false
     public init(title: String = "", body: String) { self.title = title; self.body = body }
 }
 
@@ -46,6 +49,12 @@ public enum NotificationContentBuilder {
                 freeText: payload.freeText == true, approvals: preferences.lockScreenApprovals)
             content.thread = payload.rootSessionID ?? payload.sessionID ?? ""
             content.relevance = ["permission", "question"].contains(payload.kind) ? 1 : 0.3
+            switch NotificationFilter.decide(kind: payload.kind, server: payload.server, sessionID: payload.sessionID,
+                                             rootSessionID: payload.rootSessionID, preferences: preferences, now: now) {
+            case .silence: content.silenced = true; content.interruption = .passive; content.relevance = 0
+            case .deliver(let level):
+                if level.rawValue != PushContract.shared.kinds[payload.kind]?.interruptionLevel { content.interruption = level }
+            }
             let shown = ShownNotification(id: id, keyID: opened.envelope.keyID, server: payload.server,
                 sessionID: payload.sessionID, rootSessionID: payload.rootSessionID, kind: payload.kind,
                 digest: payload.digest, summary: content.body, expiresAt: Date(timeIntervalSince1970: Double(payload.expiry)), displayedAt: now)

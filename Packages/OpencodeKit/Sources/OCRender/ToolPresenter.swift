@@ -21,6 +21,8 @@ public struct ToolPresentation: Equatable, Sendable {
     public var nested: [ToolPresentation] = []
     public var childID: String?
     public var shellID: String?
+    /// Images the tool returned (screenshots, a read image), shown inline.
+    public var images: [TranscriptImage] = []
     public init(title: String, status: String) { self.title = title; self.status = status }
     public static func shellFailed(_ metadata: JSONValue?) -> Bool {
         (metadata?["exit"]?.wireNumber ?? 0) != 0 || metadata?["timeout"]?.boolValue == true || metadata?["status"]?.stringValue == "timeout"
@@ -42,7 +44,12 @@ public struct ToolPresenterRegistry: Sendable {
         self.presenters = presenters
     }
     public func presentation(_ tool: ContentFields) -> ToolPresentation {
-        (presenters.first { $0.matches(tool.name) } ?? GenericToolPresenter()).detail(tool)
+        var value = (presenters.first { $0.matches(tool.name) } ?? GenericToolPresenter()).detail(tool)
+        value.images = tool.toolState.fields.content.compactMap { content in
+            guard case .file(let file) = content else { return nil }
+            return TranscriptImage(name: file.name, mime: file.mime, uri: file.uri)
+        }
+        return value
     }
 }
 
@@ -230,4 +237,21 @@ private func explore(_ tool: ContentFields, title: String, countKey: String) -> 
         detail += " · (\(Int(count)) \(count == 1 ? "match" : "matches"))"
     }
     return base(tool, title: title, style: .explore, icon: "magnifying-glass", subtitle: detail)
+}
+
+/// An inline image from a `data:` URI or base64 data. Other URIs (files on the server) are not fetched.
+public struct TranscriptImage: Equatable, Sendable, Identifiable {
+    public let name: String
+    public let mime: String
+    public let base64: String
+    public var id: String { name + ":" + String(base64.prefix(64)) + String(base64.count) }
+    public init?(name: String?, mime: String, uri: String? = nil, base64: String? = nil) {
+        let encoded = base64 ?? uri.flatMap { uri -> String? in
+            guard uri.hasPrefix("data:"), let comma = uri.firstIndex(of: ","), uri[..<comma].hasSuffix(";base64") else { return nil }
+            return String(uri[uri.index(after: comma)...])
+        }
+        let type = mime.isEmpty ? uri.map { String($0.dropFirst(5).prefix { $0 != ";" && $0 != "," }) } ?? "" : mime
+        guard let encoded, !encoded.isEmpty, type.hasPrefix("image/") else { return nil }
+        self.name = name ?? "Image"; self.mime = type; self.base64 = encoded
+    }
 }

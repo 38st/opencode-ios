@@ -5,6 +5,7 @@ import OCModels
 import OCFoundation
 import OCSync
 import OCDesign
+import OCRender
 
 public struct SessionActions: View {
     let store: ReadStore
@@ -16,20 +17,30 @@ public struct SessionActions: View {
     @State private var title = ""
     @State private var deleting = false
     @State private var forking = false
+    @State private var moving = false
+    @State private var exporting = false
     @State private var error: String?
+    @Environment(\.ocPushController) private var notifications
     @State private var task: Task<Void, Never>?
     public init(store: ReadStore, session: SessionModel, command: Binding<ComposerCommand?>, opened: @escaping (String) -> Void, deleted: @escaping () -> Void) {
         self.store = store; self.session = session; _command = command; self.opened = opened; self.deleted = deleted
     }
     public var body: some View {
         Menu {
-            SessionMenuOptions(canRedo: session.info.revert != nil) { action in
+            SessionMenuOptions(canRedo: session.info.revert != nil, canMove: session.info.parentID == nil,
+                               muted: notifications?.isMuted(server: store.serverID, sessionID: session.id)) { action in
                 switch action {
                 case .rename: title = session.info.title ?? ""; rename = true
                 case .fork: forking = true
                 case .compact: perform(.compact)
                 case .undo: perform(.undo)
                 case .redo: perform(.redo)
+                case .move: moving = true
+                case .export: exporting = true
+                case .mute:
+                    if let notifications {
+                        notifications.setMuted(!notifications.isMuted(server: store.serverID, sessionID: session.id), server: store.serverID, sessionID: session.id)
+                    }
                 case .delete: deleting = true
                 }
             }
@@ -52,6 +63,10 @@ public struct SessionActions: View {
                 }).ocSheet()
             }
             .sheet(isPresented: $forking) { forkSheet.ocSheet() }
+            .sheet(isPresented: $moving) { MoveSessionSheet(store: store, session: session) { moving = false }.ocSheet() }
+            .sheet(isPresented: $exporting) {
+                OCExportSheet(prepare: { try await store.exportFile(session.id, format: $0, sanitize: $1) }) { exporting = false }.ocSheet()
+            }
             .alert("Could not complete action", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
                 Button("OK") { error = nil }
             } message: { Text(error ?? "") }
@@ -136,8 +151,12 @@ public struct SentPrompt: View {
             if let files = input["files"]?.arrayValue {
                 ForEach(Array(files.enumerated()), id: \.offset) { _, file in
                     if file["mention"] == nil && !isCommentFile(file) {
-                        OCAttachmentChip(name: file["name"]?.stringValue ?? "Attachment", mime: file["mime"]?.stringValue ?? "text/plain",
-                                         base64: attachmentBase64(file))
+                        if let image = TranscriptImage(name: file["name"]?.stringValue, mime: file["mime"]?.stringValue ?? "", uri: file["uri"]?.stringValue, base64: attachmentBase64(file)) {
+                            OCTranscriptImage(image)
+                        } else {
+                            OCAttachmentChip(name: file["name"]?.stringValue ?? "Attachment", mime: file["mime"]?.stringValue ?? "text/plain",
+                                             base64: attachmentBase64(file))
+                        }
                     }
                 }
             }

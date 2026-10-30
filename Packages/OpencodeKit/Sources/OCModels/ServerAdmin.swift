@@ -190,7 +190,7 @@ public struct ConfigEntry: WireValue, Identifiable {
 
 /// Settings screens of one server, in the desktop's order.
 public enum ServerSettingsSection: String, CaseIterable, Identifiable, Sendable {
-    case providers, mcp, permissions, agents, configuration, worktrees, projects, administration
+    case providers, mcp, permissions, agents, configuration, worktrees, projects, usage, administration
     public var id: String { rawValue }
     public var title: String {
         switch self {
@@ -201,6 +201,7 @@ public enum ServerSettingsSection: String, CaseIterable, Identifiable, Sendable 
         case .configuration: "Configuration"
         case .worktrees: "Worktrees"
         case .projects: "Projects"
+        case .usage: "Usage statistics"
         case .administration: "Administration"
         }
     }
@@ -213,6 +214,7 @@ public enum ServerSettingsSection: String, CaseIterable, Identifiable, Sendable 
         case .configuration: "code"
         case .worktrees: "branch"
         case .projects: "folder"
+        case .usage: "window-analytics"
         case .administration: "server"
         }
     }
@@ -226,6 +228,7 @@ public enum ServerSettingsSection: String, CaseIterable, Identifiable, Sendable 
         case .configuration: "config opencode.json shell"
         case .worktrees: "workspaces branches"
         case .projects: "name icon colour color start script"
+        case .usage: "stats tokens cost sessions prompts tools models"
         case .administration: "server version locations reload update"
         }
     }

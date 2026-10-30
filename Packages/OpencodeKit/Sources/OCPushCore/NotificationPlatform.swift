@@ -13,6 +13,12 @@ public extension NotificationPresentation {
         content.categoryIdentifier = category
         if !thread.isEmpty { content.threadIdentifier = thread }
         content.relevanceScore = relevance
+        switch interruption {
+        case .passive?: content.interruptionLevel = .passive
+        case .active?: content.interruptionLevel = .active
+        case .timeSensitive?, nil: break
+        }
+        if silenced { content.sound = nil }
         // iOS withdraws every delivered notification of the app when one arrives with badge 0, so a zero
         // count never goes on the content; `clearsBadge` callers reset the icon with `setBadgeCount` instead.
         if let badge, badge > 0 { content.badge = NSNumber(value: badge) } else { content.badge = nil }

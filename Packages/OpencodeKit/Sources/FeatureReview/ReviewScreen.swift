@@ -20,6 +20,8 @@ public struct ReviewScreen: View {
     @State private var renderLarge = false
     @State private var regularWidth = false
     @State private var diffWidth: CGFloat = 0
+    @State private var gitAction: GitQuickAction?
+    @State private var gitError: String?
     public init(model: ReviewModel, composer: ComposerModel, openFile: @escaping (ReviewPath, Int?) -> Void) {
         self.model = model; self.composer = composer; self.openFile = openFile
     }
@@ -64,6 +66,16 @@ public struct ReviewScreen: View {
             }
         }
         .onAppear { model.appear() }.onDisappear { model.disappear() }
+        .sheet(item: $gitAction) { action in
+            OCConfirmationSheet(action.title, message: action.message, detail: action.prompt, confirmTitle: action.confirmTitle, destructive: false,
+                                cancel: { gitAction = nil }) {
+                gitAction = nil
+                Task { do { try await composer.sendAgentPrompt(action.prompt) } catch { gitError = WriteErrorMessage.message(error) } }
+            }.ocSheet()
+        }
+        .alert("Could not send the prompt", isPresented: Binding(get: { gitError != nil }, set: { if !$0 { gitError = nil } })) {
+            Button("OK") { gitError = nil }
+        } message: { Text(gitError ?? "") }
         .onChange(of: phase) { _, phase in if phase == .active { model.invalidate() } }
     }
     private func commentPath(_ path: String) -> String { model.path(path)?.absolute ?? path }
@@ -75,7 +87,18 @@ public struct ReviewScreen: View {
         }
     }
     private var totals: some View {
-        HStack(spacing: OCSpacing.xs) { Text("+\(model.additions)").foregroundStyle(OCColor.success); Text("−\(model.deletions)").foregroundStyle(OCColor.danger) }.font(OCType.micro)
+        HStack(spacing: OCSpacing.xs) {
+            Text("+\(model.additions)").foregroundStyle(OCColor.success); Text("−\(model.deletions)").foregroundStyle(OCColor.danger)
+            gitMenu
+        }.font(OCType.micro)
+    }
+    /// Commit and push, or open a pull request: prompts to the session's agent, shown before they are sent.
+    private var gitMenu: some View {
+        Menu {
+            ForEach(GitQuickAction.allCases) { action in Button(action.title) { gitAction = action } }
+        } label: { OCIcon("branch-out").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
+            .accessibilityLabel("Git actions").accessibilityIdentifier("reviewGitActions")
+            .disabled(model.vcs.provider == nil || composer.session == nil || composer.session?.info.parentID != nil)
     }
     private var sidebar: some View {
         VStack(spacing: 0) {

@@ -94,6 +94,11 @@ public struct SessionScreen: View {
                         }.frame(maxHeight: compactChrome ? geometry.size.height * OCLayout.sessionPendingFraction : nil)
                             .padding(.horizontal, OCSpacing.md)
                     }
+                    if server.readPath.moveState(sessionID) != nil { PendingMoveBanner(store: server.readPath, sessionID: sessionID).padding(.horizontal, OCSpacing.md) }
+                    if server.readPath.sideQuestions[sessionID] != nil {
+                        SideQuestionCard(store: server.readPath, sessionID: sessionID).padding(.horizontal, OCSpacing.md)
+                            .frame(maxHeight: compactChrome ? geometry.size.height * OCLayout.sessionPendingFraction : nil)
+                    }
                     ComposerDock(store: server.readPath, model: server.readPath.composer(sessionID: sessionID, directory: session.info.location.directory),
                                  newSession: newSession, clientCommand: { composerCommand = $0 }, ownsCommands: ownsCommands).padding(OCSpacing.md)
                     #if DEBUG

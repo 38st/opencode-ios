@@ -181,8 +181,12 @@ nonisolated final class TerminalSmokeTests: SmokeTestCase {
         waitScreen("less") { $0.contains("\n1\n") || $0.hasPrefix("1\n") }
         let rows = Int(size.split(separator: "x").last ?? "") ?? 0
         XCTAssertGreaterThan(rows, 0, "The terminal reports its rows")
+        let nextPage: (String) -> Bool = { screen in screen.components(separatedBy: "\n").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }.contains { $0 > rows } }
+        // The iPad simulator sometimes drops a key typed right after less draws its first page; the page did not move
+        // then, so the key is sent again (a second space past a page that did move is never sent).
         type(" ")
-        waitScreen("the next page") { screen in screen.components(separatedBy: "\n").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }.contains { $0 > rows } }
+        if !screenShows(within: 5, nextPage) { note("terminal-key-resent", terminalText); type(" ") }
+        waitScreen("the next page", nextPage)
         type("q")
         waitPrompt(after: "| less")
         // A new size reaches the server: on iPad, the window's width with Home shown. The iPhone simulator neither

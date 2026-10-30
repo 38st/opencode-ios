@@ -12,9 +12,11 @@ public enum FormOwner: Hashable, Sendable { case session(String), global(locatio
 @MainActor @Observable public final class SessionModel: Identifiable {
     public var id: String { info.id }
     public var info: SessionInfo
+    /// When the running turn began (`session.execution.started`), for the working timer; steps do not reset it.
+    public var turnStartedAt: Double?
     public var status: RunStatus = .idle {
         didSet {
-            if !status.isRunning { executionID = nil }
+            if !status.isRunning { executionID = nil; turnStartedAt = nil }
             else if executionID == nil { executionID = UUID().uuidString }
         }
     }

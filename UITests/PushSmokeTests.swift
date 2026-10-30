@@ -200,6 +200,30 @@ nonisolated final class PushSmokeTests: SmokeTestCase {
         try await command(["operation": "activityClear", "id": "activity-clear"])
         let cleared = try await waitReport("activity-clear") { _ in true }
         XCTAssertEqual(cleared["remaining"] as? Int, 0, "The test must not leave a Live Activity on the device")
+
+        // Notification settings: the push plugin still sends a muted session's result; the device silences it.
+        try await control("/scenario", body: ["name": "muted", "plain": true])
+        let mutedCreated = try await api("/api/session", method: "POST", body: ["title": "Push muted", "location": ["directory": try XCTUnwrap(env["OPENCODE_UI_DIRECTORY"])], "model": ["providerID": "mock", "id": "mock-1"]])
+        let mutedSession = try XCTUnwrap((mutedCreated["data"] as? [String: Any])?["id"] as? String)
+        app.open(try XCTUnwrap(URL(string: "opencodeios://server/" + serverRef + "/session/" + mutedSession)))
+        XCTAssertTrue(app.buttons["sessionActions"].waitForExistence(timeout: 15))
+        app.buttons["sessionActions"].tap()
+        XCTAssertTrue(app.buttons["Mute notifications"].waitForExistence(timeout: 5)); app.buttons["Mute notifications"].tap()
+        app.buttons["sessionActions"].tap()
+        XCTAssertTrue(app.buttons["Unmute notifications"].waitForExistence(timeout: 5), "The menu shows the session muted")
+        // Close the menu without choosing.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.12)).tap()
+        XCUIDevice.shared.press(.home)
+        try await Task.sleep(for: .seconds(2))
+        let mutedBefore = try await alertCount()
+        _ = try await api("/api/session/\(mutedSession)/prompt", method: "POST", body: ["text": "Run the mute check."])
+        let mutedAlert = try await waitAlert(kind: "finished", after: mutedBefore)
+        XCTAssertEqual(((mutedAlert["payload"] as? [String: Any])?["oc"] as? [String: Any]) != nil, true, "The plugin still sent the push")
+        let silenced = try await render(mutedAlert, id: "muted-render")
+        XCTAssertEqual(silenced["silenced"] as? Bool, true, "A muted session's push arrives silenced")
+        XCTAssertEqual(silenced["interruption"] as? String, "passive")
+        screenshot("push-muted")
+        try await waitIdle(mutedSession)
     }
     @MainActor private func dismissSettings() {
         if !app.buttons["closeSettings"].exists {

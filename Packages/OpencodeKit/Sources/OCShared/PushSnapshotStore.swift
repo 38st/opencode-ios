@@ -42,7 +42,39 @@ public struct NotificationAuditEntry: Codable, Sendable, Identifiable, Equatable
 public struct PushPreferences: Codable, Sendable, Equatable {
     public var lockScreenApprovals = true
     public var liveActivities = true
+    /// Notification kinds the user turned off (`permission`, `question`, `finished`, `failed`). Off kinds still arrive
+    /// but without sound or banner.
+    public var silencedKinds: Set<String> = []
+    /// Muted sessions as `server/sessionID`; a muted root session mutes its subagents.
+    public var mutedSessions: Set<String> = []
+    public var quietHours: QuietHours?
     public init() {}
+    public init(from decoder: any Decoder) throws {
+        // Every field is optional on disk: older files and newer ones with unknown fields both load.
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        lockScreenApprovals = try container.decodeIfPresent(Bool.self, forKey: .lockScreenApprovals) ?? true
+        liveActivities = try container.decodeIfPresent(Bool.self, forKey: .liveActivities) ?? true
+        silencedKinds = (try? container.decodeIfPresent(Set<String>.self, forKey: .silencedKinds)) ?? []
+        mutedSessions = (try? container.decodeIfPresent(Set<String>.self, forKey: .mutedSessions)) ?? []
+        quietHours = try? container.decodeIfPresent(QuietHours.self, forKey: .quietHours)
+    }
+    public static func muteKey(server: String, session: String) -> String { server + "/" + session }
+    public func muted(server: String, sessionID: String?, rootSessionID: String?) -> Bool {
+        [sessionID, rootSessionID].contains { $0.map { mutedSessions.contains(Self.muteKey(server: server, session: $0)) } ?? false }
+    }
+}
+
+/// A daily window, in minutes after local midnight; `start > end` spans midnight.
+public struct QuietHours: Codable, Sendable, Equatable {
+    public var start: Int
+    public var end: Int
+    public init(start: Int, end: Int) { self.start = start; self.end = end }
+    public func contains(_ date: Date, calendar: Calendar = .current) -> Bool {
+        let parts = calendar.dateComponents([.hour, .minute], from: date)
+        let minute = (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
+        if start == end { return false }
+        return start < end ? (start..<end).contains(minute) : minute >= start || minute < end
+    }
 }
 
 /// Each transaction holds a cross-process lock. Atomic rename protects readers from partial JSON,

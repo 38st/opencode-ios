@@ -98,9 +98,9 @@ nonisolated final class WorkspaceSmokeTests: SmokeTestCase {
         let attachment = XCTAttachment(string: text); attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)
     }
     /// A paired server, Settings closed, landscape, Home open, and sessions created newest last.
-    @MainActor private func setup(_ suffix: String, sessions titles: [String]) async throws -> [String] {
+    @MainActor private func setup(_ suffix: String, sessions titles: [String], animations: Bool = true) async throws -> [String] {
         continueAfterFailure = false
-        try launchFreshApp(suffix: suffix)
+        try launchFreshApp(suffix: suffix, animations: animations)
         app.buttons["addFirstServer"].tap()
         XCTAssertTrue(app.buttons["Use password"].waitForExistence(timeout: 5)); app.buttons["Use password"].tap()
         XCTAssertTrue(app.textFields["serverName"].waitForExistence(timeout: 5))
@@ -198,7 +198,9 @@ nonisolated final class WorkspaceSmokeTests: SmokeTestCase {
 
     @MainActor func testMenuNavigationAndSwitcher() async throws {
         executionTimeAllowance = 300
-        let ids = try await setup("-menus", sessions: ["Workspace A", "Workspace B", "Workspace C"])
+        // On the iPad simulator this flow sometimes never sees the app idle after a session key (60 s per event); the
+        // animating view was not found, so it runs without UIKit animations.
+        let ids = try await setup("-menus", sessions: ["Workspace A", "Workspace B", "Workspace C"], animations: false)
         // ⌘1–9 follow Home's order (newest first), up to the number of sessions; nothing is open, so no neighbour either.
         XCTAssertTrue(Set(ids).isSubset(of: Set(homeOrder())), "Home lists the new sessions: \(homeOrder())")
         let count = min(9, homeOrder().count)

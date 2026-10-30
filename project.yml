@@ -80,6 +80,9 @@ targets:
           - UTTypeIdentifier: dev.opencodeios.file-mention
             UTTypeDescription: File mention
             UTTypeConformsTo: [public.data]
+        NSMicrophoneUsageDescription: Voice input listens while you dictate a prompt. Recognition runs on this device and the audio never leaves it; only the text you send does.
+        NSSpeechRecognitionUsageDescription: Voice input turns your speech into prompt text on this device. The audio is not sent to Apple or to your server.
+        NSPhotoLibraryAddUsageDescription: Save images from a conversation to your photo library.
         NSCameraUsageDescription: Opencode uses the camera to scan server pairing QR codes and attach photos to prompts.
         NSFaceIDUsageDescription: Opencode verifies it is you before always allowing an action or approving a high-risk request.
         NSLocalNetworkUsageDescription: Opencode uses your local network to connect to opencode servers you choose on your computers.
@@ -377,6 +380,10 @@ targets:
         product: OCDesign
       - package: OpencodeKit
         product: FeatureSettings
+      - package: OpencodeKit
+        product: FeatureComposer
+      - package: OpencodeKit
+        product: OCRender
       - package: OpencodeKit
         product: OCSecurity
       - package: SnapshotTesting

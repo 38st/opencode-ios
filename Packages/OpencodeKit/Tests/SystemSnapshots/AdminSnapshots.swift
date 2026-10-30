@@ -218,7 +218,7 @@ private struct AdminSnapshotTransport: HTTPTransport {
     func stream(_ request: URLRequest) -> AsyncThrowingStream<TransportChunk, any Error> { .init { $0.finish() } }
 }
 
-private actor SnapshotConnection: ConnectionControlling {
+actor SnapshotConnection: ConnectionControlling {
     nonisolated let output: AsyncStream<ConnectionOutput>
     init() { output = AsyncStream { _ in } }
     func start(rerace: Bool) {}

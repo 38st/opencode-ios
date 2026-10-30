@@ -72,7 +72,7 @@ public struct ServerRootView: View {
         self.registry = registry; self.windows = windows; self.links = links; _windowValue = window; self.initialState = initialState
     }
     public var body: some View {
-        status(presentations(routing(lifecycle(workspace))))
+        status(presentations(routing(lifecycle(workspace)))).environment(\.ocPushController, registry.notifications)
     }
     @ViewBuilder private var workspace: some View {
         // Keep the sheet presenter stable when adding the first server replaces onboarding.
@@ -523,6 +523,8 @@ public struct ServerRootView: View {
         windows.update(windowID, phase: scenePhase == .active ? .active : scenePhase == .background ? .background : .inactive)
         defer { windows.update(windowID, path: sessionPath) }
         #if DEBUG
+        // A UI test whose app never reports idle on the iPad simulator runs without UIKit animations (cause unknown).
+        if ProcessInfo.processInfo.arguments.contains("--ui-testing-no-animations") { UIView.setAnimationsEnabled(false) }
         // A fresh UI-test launch starts with one window, whatever an earlier test left open.
         if first && ProcessInfo.processInfo.arguments.contains("--ui-testing-reset") {
             resetsOtherWindows = true

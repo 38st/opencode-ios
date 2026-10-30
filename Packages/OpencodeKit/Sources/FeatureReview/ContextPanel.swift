@@ -18,6 +18,7 @@ public struct ContextPanel: View {
     @Environment(\.locale) private var locale
     @Environment(\.timeZone) private var timeZone
     @State private var width: CGFloat = 0
+    @State private var exporting = false
     public init(store: ReadStore, sessionID: String, openSession: @escaping (String) -> Void = { _ in }, showChanges: @escaping () -> Void = {}) {
         self.store = store; self.sessionID = sessionID; self.openSession = openSession; self.showChanges = showChanges
     }
@@ -30,6 +31,9 @@ public struct ContextPanel: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
             }.background(OCColor.background).accessibilityIdentifier("contextPanel")
+                .sheet(isPresented: $exporting) {
+                    OCExportSheet(prepare: { try await store.exportFile(sessionID, format: $0, sanitize: $1) }) { exporting = false }.ocSheet()
+                }
         } else {
             OCEmptyState("Session unavailable", detail: "Open the session to see its context.", icon: "brain", presentation: .panel) { EmptyView() }
         }
@@ -40,7 +44,11 @@ public struct ContextPanel: View {
         let catalog = store.catalogs[session.info.location.key]
         let models = catalog?.models.value ?? []
         let usage = ContextUsage.compute(messages, boundary: session.info.revert?.messageID, models: models, session: session.info.model)
-        meter(usage)
+        HStack(alignment: .top) {
+            meter(usage)
+            Button { exporting = true } label: { OCIcon("download") }.buttonStyle(OCButtonStyle(.ghost))
+                .accessibilityLabel("Export session").accessibilityIdentifier("contextExport")
+        }
         let columns = typeSize.isAccessibilitySize || width < 512 ? 1 : 2
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: OCSpacing.lg, alignment: .topLeading), count: columns), alignment: .leading, spacing: OCSpacing.lg) {
             ForEach(stats(session, messages: messages, usage: usage, catalog: catalog), id: \.0) { label, value in

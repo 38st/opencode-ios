@@ -60,6 +60,7 @@ public struct ServerAdminView: View {
         case .configuration: ConfigurationSection(admin: admin)
         case .worktrees: WorktreesSection(admin: admin)
         case .projects: ProjectsSection(admin: admin)
+        case .usage: UsageStatisticsSection(server: server)
         case .administration: AdministrationSection(server: server, admin: admin)
         }
     }

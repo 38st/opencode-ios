@@ -114,6 +114,19 @@ import UserNotifications
         preferences.liveActivities = value; savePreferences()
         for server in registry?.servers ?? [] { changed(server) }
     }
+    public func setNotifications(_ kind: String, enabled: Bool) {
+        if enabled { preferences.silencedKinds.remove(kind) } else { preferences.silencedKinds.insert(kind) }
+        savePreferences()
+    }
+    public func isMuted(server: String, sessionID: String) -> Bool {
+        preferences.mutedSessions.contains(PushPreferences.muteKey(server: server, session: sessionID))
+    }
+    public func setMuted(_ muted: Bool, server: String, sessionID: String) {
+        let key = PushPreferences.muteKey(server: server, session: sessionID)
+        if muted { preferences.mutedSessions.insert(key) } else { preferences.mutedSessions.remove(key) }
+        savePreferences()
+    }
+    public func setQuietHours(_ value: QuietHours?) { preferences.quietHours = value; savePreferences() }
     /// UI tests that do not drive the push harness never start an activity: one left on the simulator outlives the
     /// test, and when the next install ends it iOS launches the app in the background without the test environment.
     private var startsLiveActivities: Bool {

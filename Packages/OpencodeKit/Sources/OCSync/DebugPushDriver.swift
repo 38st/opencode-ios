@@ -113,6 +113,7 @@ import UserNotifications
                 try await UNUserNotificationCenter.current().add(.init(identifier: identifier, content: content, trigger: UNTimeIntervalNotificationTrigger(timeInterval: delay, repeats: false)))
                 output["body"] = .string(presentation.body); output["shownID"] = presentation.shownID.map(JSONValue.string)
                 output["category"] = .string(presentation.category); output["receipt"] = presentation.receipt.map(JSONValue.string)
+                output["silenced"] = .bool(presentation.silenced); output["interruption"] = presentation.interruption.map { .string($0.rawValue) } ?? .null
             } catch { output["error"] = .string("Local notification failed") }
         case "action":
             let action = NotificationAction.ID(rawValue: command["action"]?.stringValue ?? "") ?? .open

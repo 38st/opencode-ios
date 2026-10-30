@@ -25,6 +25,7 @@ public struct ToolRowView: View {
         VStack(alignment: .leading, spacing: OCSpacing.xs) {
             OCToolChrome(presentation.title, subtitle: presentation.subtitle, icon: presentation.icon, status: presentation.status,
                          badge: badge, failed: presentation.failed, expanded: expanded, inline: presentation.style == .explore, onOpen: openFile) { details }
+            ForEach(presentation.images) { OCTranscriptImage($0) }
             if let error = presentation.errorMessage {
                 Text(error).font(OCType.small).foregroundStyle(OCColor.danger).ocSelectableText(error)
             }

@@ -12,7 +12,9 @@ public struct MarkdownBlock: Identifiable, Equatable, Sendable {
     public init(source: String, code: String? = nil, language: String? = nil, closed: Bool = true, identity: String? = nil, attributed: AttributedString? = nil) {
         self.source = source; self.code = code; self.language = language; self.closed = closed
         self.id = identity ?? Self.hash(source)
-        var parsed = attributed ?? ((try? AttributedString(markdown: source)) ?? AttributedString(source))
+        // Inline TeX becomes Unicode before parsing, so its `_` and `*` are never read as emphasis.
+        let markdown = code == nil ? MathMarkdown.inline(source) : source
+        var parsed = attributed ?? ((try? AttributedString(markdown: markdown)) ?? AttributedString(source))
         for run in parsed.runs {
             // Strip image attributes before Textual ever resolves attachments.
             if run.imageURL != nil { parsed[run.range].imageURL = nil }

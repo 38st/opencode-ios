@@ -22,7 +22,9 @@ public struct WorkspaceReviewPanel: View {
             let directory = session.info.location.directory
             PanelContent(server: server, sessionID: sessionID, model: server.readPath.review(sessionID: sessionID, directory: directory),
                          files: server.readPath.files(sessionID: sessionID, directory: directory),
-                         composer: server.readPath.composer(sessionID: sessionID, directory: directory), openSession: openSession, openTerminal: openTerminal).id(sessionID)
+                         composer: server.readPath.composer(sessionID: sessionID, directory: directory), openSession: openSession, openTerminal: openTerminal)
+                // A moved session gets new review and files models, which must appear again.
+                .id(sessionID + "\u{0}" + directory)
         } else { OCWorkspacePanel() }
     }
 }

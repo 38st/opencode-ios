@@ -19,6 +19,8 @@ struct PromptEditor: UIViewRepresentable {
     var enabled: Bool
     var placeholder = ""
     var suggestionsActive = false
+    /// ↑ and ↓ recall earlier prompts: with an empty editor, or while stepping through them.
+    var historyActive = false
     var focusRequest: UUID?
     var pasteAttachment: (NSItemProvider) -> Void = { _ in }
     /// A file dragged from the Files tab, with the UTF-16 offset it was dropped at.
@@ -45,7 +47,7 @@ struct PromptEditor: UIViewRepresentable {
         return view
     }
     func updateUIView(_ view: EditorView, context: Context) {
-        context.coordinator.parent = self; view.key = key; view.suggestionsActive = suggestionsActive; view.composing = composing
+        context.coordinator.parent = self; view.key = key; view.suggestionsActive = suggestionsActive; view.historyActive = historyActive; view.composing = composing
         guard view.markedTextRange == nil else { return }
         view.updateStyle(shell: shell)
         view.placeholder = placeholder
@@ -166,6 +168,7 @@ final class EditorView: UITextView {
     var key: (ComposerKey) -> Bool = { _ in false }
     /// Optional: the factory initializer leaves it zeroed, which for an optional is nil.
     var composing: ((Bool) -> Void)?
+    var historyActive = false
     var suggestionsActive = false
     var focusRequest: UUID?
     private var consumedFocusRequest: UUID?
@@ -304,7 +307,8 @@ final class EditorView: UITextView {
         // Do not register priority commands while the IME owns the keyboard.
         // Returning early from handleKey would still consume Return.
         guard markedTextRange == nil else { return super.keyCommands }
-        let chords = WorkspaceKeys.local(.promptEditor).filter { suggestionsActive || !WorkspaceKeys.PromptEditor.suggestions.contains($0) }
+        let history = [WorkspaceKeys.PromptEditor.up, WorkspaceKeys.PromptEditor.down]
+        let chords = WorkspaceKeys.local(.promptEditor).filter { suggestionsActive || historyActive && history.contains($0) || !WorkspaceKeys.PromptEditor.suggestions.contains($0) }
             + WorkspaceKeys.forwarded(.promptEditor).map(\.chord)
         return chords.map { $0.keyCommand(#selector(handleKey)) }
     }

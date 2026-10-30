@@ -34,11 +34,12 @@ public enum ComposerError: Error, LocalizedError, Equatable {
     public var confirmRevert = false
     public private(set) var focusRequest: UUID?
     public let sessionID: String?
-    public let directory: String
+    /// Changes only when the session moves to another directory; the draft stays keyed by the session.
+    public private(set) var directory: String
     public private(set) var draftID = UUID().uuidString
     @ObservationIgnored private weak var store: ReadStore?
     private let serverID: String
-    public let catalog: LocationCatalog
+    public private(set) var catalog: LocationCatalog
     @ObservationIgnored private var editRevision = 0
     @ObservationIgnored private var restoredRevision: Int?
     @ObservationIgnored private var saving: Task<Void, Never>?
@@ -92,6 +93,19 @@ public enum ComposerError: Error, LocalizedError, Equatable {
     public func selectAgent(_ agent: String) { var next = options; next.agent = agent; setOptions(next) }
     public func selectModel(_ model: ModelRef) { var next = options; next.model = model; setOptions(next) }
     public func requestFocus() { focusRequest = UUID() }
+    /// A prompt the app wrote (a git quick action), sent with the composer's agent and model; the draft is untouched.
+    @discardableResult public func sendAgentPrompt(_ text: String) async throws -> String {
+        let store = try availableStore()
+        guard let sessionID else { throw WriteStoreError.sessionUnavailable }
+        guard session?.info.parentID == nil else { throw ComposerError.childSession }
+        // While the agent works, the prompt waits for the turn to end rather than steering it mid-change.
+        let delivery: Delivery = session?.status.isRunning == true ? .queue : .steer
+        return try await store.sendPrompt(sessionID, input: PromptInput(text: text, delivery: delivery), prelude: WritePrelude(agent: options.agent, model: options.model))
+    }
+    func relocate(to directory: String) {
+        guard sessionID != nil, directory != self.directory, let store else { return }
+        self.directory = directory; catalog = store.catalog(for: .init(directory: directory))
+    }
     func reconcileSelection(persist: Bool = true) {
         guard let session else { return }
         var changed = false

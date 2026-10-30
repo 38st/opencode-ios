@@ -124,6 +124,7 @@ extension ReadStore {
             let previous = JSONValue.object(["location": session.info.location.raw, "projectID": .string(session.info.projectID), "subpath": session.info["subpath"] ?? .null]).omittingNullFields
             insert("location-switched", ["location": p["location"], "projectID": p["projectID"], "subpath": p["subpath"], "previous": previous])
             for key in ["location", "projectID", "subpath"] { session.info[key] = p[key] }
+            sessionMoved(id)
         case "session.inbox.enqueued":
             var raw = p["item"] ?? .object([:]); raw.set("id", p["inboxID"]); raw.set("sessionID", .string(id))
             raw.set("time", .object(["created": .number(created)]))
@@ -150,7 +151,9 @@ extension ReadStore {
                 var raw = session.pending[index].raw; raw.set("delivery", p["delivery"]); session.pending[index] = .init(raw: raw)
             }
         case "session.execution.started":
-            running.insert(id); session.status = .running(since: created)
+            running.insert(id); session.status = .running(since: created); session.turnStartedAt = created
+            // 2.2.2 reports the turn's start as `time.busy`.
+            session.info.raw.set(["time", "busy"], .number(created))
             session.executionID = header.id
         case "session.execution.succeeded", "session.execution.failed", "session.execution.interrupted":
             running.remove(id); session.status = .idle

@@ -3,6 +3,7 @@ import SwiftUI
 import UIKit
 import Observation
 import OCModels
+import OCFoundation
 import OCSync
 import OCDesign
 import OCRender
@@ -273,8 +274,10 @@ private struct TimelineHostedRow: View {
                     directory: parent.session.info.location.directory, detail: parent.detail, openChild: parent.openChild, openRoot: parent.openRoot)
             } else {
                 // While offline the session's last known state may be stale, so don't claim it is working.
-                OCLabel(parent.store.offline ? "Waiting for server…" : "Working…", icon: "status-active").font(OCType.small).foregroundStyle(OCColor.textMuted)
-                    .accessibilityIdentifier("sessionWorking")
+                if parent.store.offline {
+                    OCLabel("Waiting for server…", icon: "status-active").font(OCType.small).foregroundStyle(OCColor.textMuted)
+                        .accessibilityIdentifier("sessionWorking")
+                } else { WorkingStatus(session: parent.session) }
             }
         }.environment(\.timelineCellVisible, visibility.visible)
             .environment(\.ocDisclosureInteraction) {
@@ -291,6 +294,38 @@ extension EnvironmentValues {
     var timelineCellVisible: Bool? {
         get { self[TimelineVisibilityKey.self] }
         set { self[TimelineVisibilityKey.self] = newValue }
+    }
+}
+/// "Working · 1m 05s · Read README.md": the elapsed time of the running turn and what it is doing now.
+private struct WorkingStatus: View {
+    let session: SessionModel
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let text = ["Working", elapsed(context.date), activity].compactMap { $0 }.joined(separator: " · ")
+            OCLabel(text, icon: "status-active").font(OCType.small).foregroundStyle(OCColor.textMuted).lineLimit(1)
+                .accessibilityIdentifier("sessionWorking")
+        }
+    }
+    private func elapsed(_ now: Date) -> String? {
+        // The turn's start, not the current step's; after a reconnect the server's busy time stands in.
+        guard session.status.isRunning else { return nil }
+        let since = session.turnStartedAt ?? session.info.raw["time"]?["busy"]?.wireNumber ?? 0
+        guard since > 0 else { return nil }
+        return ElapsedTime.format(Int(now.timeIntervalSince1970 - since / 1_000))
+    }
+    /// The newest step's running tool, else Thinking or Writing.
+    private var activity: String? {
+        guard let transcript = session.transcript, let last = transcript.order.last(where: { transcript.messages[$0]?.fields.type == "assistant" }),
+              let message = transcript.messages[last], message.fields.time.completed == nil else { return nil }
+        if case .retrying = session.status { return "Retrying" }
+        guard let item = message.items.last else { return nil }
+        switch item.fields.type {
+        case "tool":
+            let presentation = ToolPresenterRegistry().presentation(item.fields)
+            return [presentation.title, presentation.subtitle].filter { !$0.isEmpty }.joined(separator: " ")
+        case "reasoning": return "Thinking"
+        default: return "Writing"
+        }
     }
 }
 #endif

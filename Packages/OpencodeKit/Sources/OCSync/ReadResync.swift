@@ -50,7 +50,9 @@ extension ReadStore {
                 case "session.retry.scheduled":
                     let payload = WireObject(raw: event.payload)
                     session.status = .retrying(attempt: payload.number("attempt"), at: payload.number("at"))
-                case "session.execution.started", "session.step.started": session.status = .running(since: event.header?.created ?? 0)
+                case "session.execution.started", "session.step.started":
+                    session.status = .running(since: event.header?.created ?? 0)
+                    if event.header?.type == "session.execution.started" { session.turnStartedAt = event.header?.created }
                 case "session.execution.succeeded", "session.execution.failed", "session.execution.interrupted": session.status = .idle
                 default: break
                 }

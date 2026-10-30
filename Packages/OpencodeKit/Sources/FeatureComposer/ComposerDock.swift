@@ -33,6 +33,10 @@ public struct ComposerDock: View {
     @State private var photos: [PhotosPickerItem] = []
     @State private var action: Task<Void, Never>?
     @State private var composing = false
+    @State private var historyCursor = PromptHistory.Cursor()
+    @State private var showHistory = false
+    @State private var gitAction: GitQuickAction?
+    @State private var voice: VoiceModel?
     /// Names this composer to the menu bar.
     @State private var commandOwner = UUID()
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -99,6 +103,13 @@ public struct ComposerDock: View {
             guard model.session?.info.parentID == nil else { return false }
             run { for provider in providers { try await drop(provider) } }; return true
         }
+        .sheet(isPresented: $showHistory) {
+            PromptHistorySheet(entries: promptEntries, current: model.sessionID) { text in showHistory = false; recallText(text) } cancel: { showHistory = false }.ocSheet()
+        }
+        .sheet(item: $gitAction) { action in
+            OCConfirmationSheet(action.title, message: action.message, detail: action.prompt, confirmTitle: action.confirmTitle, destructive: false,
+                                cancel: { gitAction = nil }) { gitAction = nil; sendGitAction(action) }.ocSheet()
+        }
         .sheet(isPresented: $model.confirmRevert) {
             OCConfirmationSheet("Discard reverted messages?", message: "The reverted messages and their file changes will be permanently discarded when you send this prompt.",
                                 confirmTitle: "Discard and send", cancel: { model.confirmRevert = false }, confirm: { model.confirmSend() }).ocSheet()
@@ -110,12 +121,13 @@ public struct ComposerDock: View {
                                 confirm: { store.resolveDraftReplacement(true) }).ocSheet()
         }
         .onDisappear {
-            action?.cancel()
+            action?.cancel(); voice?.stop()
             if model.sessionID != nil && store.replacingDraftSessionID == model.sessionID { store.resolveDraftReplacement(false) }
         }
     }
     private var editorContent: some View {
         VStack(spacing: 0) {
+            if let voice, voice.state != .idle { VoicePanel(voice: voice, insert: insertDictation) }
             if model.session?.info.revert != nil { revertNotice }
             if model.options.editingOutboxID != nil {
                 HStack {
@@ -160,10 +172,11 @@ public struct ComposerDock: View {
                     Text(warning).font(OCType.small).foregroundStyle(OCColor.warning).padding(.horizontal, OCSpacing.lg)
                 }
             }
-            PromptEditor(text: Binding(get: { model.text }, set: { model.setText($0) }), caret: $caret,
+            PromptEditor(text: Binding(get: { model.text }, set: { historyCursor.reset(); model.setText($0) }), caret: $caret,
                          shell: model.options.shell, enabled: model.loaded && !model.busy,
                          placeholder: placeholder,
                          suggestionsActive: trigger != nil && trigger != closedTrigger,
+                         historyActive: historyActive,
                          focusRequest: model.focusRequest,
                          pasteAttachment: { provider in run { try await importProvider(provider) } },
                          dropMention: { path, offset in caret = model.mentionFile(path, atUTF16: offset) },
@@ -186,10 +199,11 @@ public struct ComposerDock: View {
                     } label: { OCIcon("sliders").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
                         .accessibilityLabel("Agent and model").disabled(model.options.shell || model.busy)
                     Spacer(minLength: 0)
+                    voiceButton
                     deliveryControls
                 }
             } else {
-                HStack(spacing: OCSpacing.xxs) { attachmentMenu; selectionControls; Spacer(minLength: 0); deliveryControls }
+                HStack(spacing: OCSpacing.xxs) { attachmentMenu; selectionControls; Spacer(minLength: 0); voiceButton; deliveryControls }
             }
         }.padding(.horizontal, OCSpacing.sm).padding(.bottom, OCSpacing.xs).frame(minHeight: OCComposerMetrics.toolbar)
     }
@@ -203,6 +217,13 @@ public struct ComposerDock: View {
                 Button("Commands") { insert("/") }
                 Button("Context") { insert("@") }
                 Button("Shell command") { model.shellMode(true) }
+                Button("Prompt history") { showHistory = true }.disabled(promptEntries.isEmpty).accessibilityIdentifier("promptHistory")
+                if model.sessionID != nil && model.session?.info.parentID == nil {
+                    Divider()
+                    ForEach(GitQuickAction.allCases) { action in
+                        Button(action.title) { gitAction = action }.disabled(!gitAvailable)
+                    }
+                }
             } label: { OCIcon("plus").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
                 .accessibilityLabel("Add attachment or context").accessibilityIdentifier("composerAdd").disabled(model.busy)
     }
@@ -297,6 +318,14 @@ public struct ComposerDock: View {
     private var recent: [String] { (try? JSONDecoder().decode([String: [String]].self, from: Data(history.utf8)))?[store.serverID] ?? [] }
     private func send(alternate: Bool = false, interrupt: Bool = false) {
         guard model.loaded, !model.busy else { return }
+        historyCursor.reset()
+        if !model.options.shell, let question = ComposerSuggestions.sideQuestion(String(model.text.characters)) {
+            guard let sessionID = model.sessionID else { model.error = "Side questions need a session with a conversation. Send a prompt first."; return }
+            if question.isEmpty { model.error = "Add a question after /btw"; return }
+            store.askSideQuestion(sessionID, question: question)
+            model.setText(AttributedString()); caret = 0; closedTrigger = nil
+            return
+        }
         if !model.options.shell, let command = ComposerSuggestions.submittedCommand(String(model.text.characters),
             server: model.catalog.commands.value, session: model.sessionID != nil, showAgent: showAgent,
             hasPrompts: hasVisiblePrompts, reverted: model.session?.info.revert != nil) {
@@ -361,6 +390,7 @@ public struct ComposerDock: View {
                 let agents = ComposerPickers.agents(model.catalog.agents.value ?? [])
                 if !agents.isEmpty { model.selectAgent(ComposerPickers.agentID(agents[((agents.firstIndex { ComposerPickers.agentID($0) == model.effectiveAgent } ?? -1) + 1) % agents.count])) }
             case .new: newSession()
+            case .btw: insert("/btw ")
             default: clientCommand(command)
             }
         } else {
@@ -417,6 +447,7 @@ public struct ComposerDock: View {
             default: break
             }
         }
+        if (key == .up || key == .down) && historyActive { return recall(older: key == .up) }
         switch key {
         case .send: send()
         case .escape:
@@ -432,6 +463,69 @@ public struct ComposerDock: View {
         default: return false
         }
         return true
+    }
+    private var promptEntries: [PromptHistory.Entry] { store.promptHistory(model.sessionID, directory: model.directory) }
+    private var historyActive: Bool {
+        !model.options.shell && (trigger == nil || trigger == closedTrigger) &&
+            (historyCursor.index != nil || model.text.characters.isEmpty && caret == 0)
+    }
+    /// ↑ steps to older prompts, ↓ back towards the draft. The recalled text can be edited before sending.
+    private func recall(older: Bool) -> Bool {
+        let entries = promptEntries
+        let text = older ? historyCursor.older(entries, current: String(model.text.characters)) : historyCursor.newer(entries)
+        guard let text else { return older ? historyCursor.index != nil : false }
+        model.setText(AttributedString(text)); caret = text.utf16.count
+        return true
+    }
+    private func recallText(_ text: String) {
+        historyCursor.reset(); model.setText(AttributedString(text)); caret = text.utf16.count; model.requestFocus()
+    }
+    private var gitAvailable: Bool {
+        guard let session = model.session else { return false }
+        if let vcs = store.projects.first(where: { $0.id == session.info.projectID })?.vcs { return vcs == "git" }
+        let review = store.review(sessionID: session.id, directory: model.directory)
+        return !review.providerKnown || review.vcs.provider != nil
+    }
+    private func sendGitAction(_ action: GitQuickAction) {
+        run { try await model.sendAgentPrompt(action.prompt) }
+    }
+    @ViewBuilder private var voiceButton: some View {
+        if model.session?.info.parentID == nil && !model.options.shell {
+            Menu {
+                Button("Dictate") { startVoice(.dictation) }
+                Button("Hands-free conversation") { startVoice(.handsFree) }.disabled(model.sessionID == nil)
+            } label: { OCIcon("waveform").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) } primaryAction: { startVoice(.dictation) }
+                .accessibilityLabel("Voice input").accessibilityHint("Tap to dictate; hold for a hands-free conversation")
+                .accessibilityIdentifier("composerVoice").disabled(model.busy || voice?.active == true)
+        }
+    }
+    private func startVoice(_ mode: VoiceModel.Mode) {
+        let voice = voice ?? VoiceModel(recognizer: DeviceSpeechRecognizer(), speaker: DeviceSpeaker())
+        self.voice = voice
+        voice.send = { text in await sendSpoken(text) }
+        let files = model.session.map { session in store.review(sessionID: session.id, directory: model.directory).files.map(\.file) } ?? []
+        let texts = model.session?.transcript.map { transcript in
+            transcript.order.suffix(20).compactMap { transcript.messages[$0] }.map { $0.fields.type == "assistant" ? $0.items.map(\.text).joined(separator: "\n") : $0.fields.text }
+        } ?? []
+        let agents = (model.catalog.agents.value ?? []).map { ComposerPickers.agentID($0) }
+        voice.start(mode, contextualStrings: VoiceVocabulary.strings(files: files + model.comments.map(\.file), texts: texts, agents: agents))
+    }
+    /// Dictation ends: the transcript joins the draft at the caret, ready to edit.
+    private func insertDictation(_ text: String) {
+        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        let plain = String(model.text.characters)
+        let spaced = plain.isEmpty || plain.hasSuffix(" ") || plain.hasSuffix("\n") ? text : " " + text
+        caret = model.insertText(spaced, atUTF16: caret)
+    }
+    /// Hands-free: sends the transcript, waits for the turn to end and returns the reply as plain text.
+    private func sendSpoken(_ text: String) async -> String? {
+        guard let sessionID = model.sessionID else { return nil }
+        do {
+            let id = try await store.sendPrompt(sessionID, input: PromptInput(text: text, delivery: running ? preference : .steer),
+                                                prelude: WritePrelude(agent: model.options.agent, model: model.options.model))
+            return try await store.reply(to: id, sessionID: sessionID)
+        } catch { if !WriteErrorMessage.isCancellation(error) { model.error = WriteErrorMessage.message(error) }; return nil }
     }
     private func drop(_ provider: NSItemProvider) async throws {
         switch ComposerDrop.classify(provider.registeredTypeIdentifiers, named: provider.suggestedName) {

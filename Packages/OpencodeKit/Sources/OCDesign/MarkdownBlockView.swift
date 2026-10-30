@@ -45,7 +45,13 @@ public struct MarkdownBlockView: View, Equatable {
     }
     public static func == (lhs: Self, rhs: Self) -> Bool { lhs.block == rhs.block }
     public var body: some View {
-        if let code = block.code { CodeBlockView(code, language: block.language, closed: block.closed) }
+        if let code = block.code {
+            // A diagram is drawn once its fence closes; while it streams it stays a code block.
+            if block.closed && block.language?.lowercased() == "mermaid" { MermaidView(code) }
+            else if block.closed && block.language?.lowercased() == "math" { MathBlockView(code) }
+            else { CodeBlockView(code, language: block.language, closed: block.closed) }
+        }
+        else if block.closed, let tex = MathMarkdown.display(block.source) { MathBlockView(tex) }
         // Textual starts with empty content until its initial change handler runs.
         // Keep the lazy row measurable during that first layout pass.
         else { renderer.render(block).frame(minHeight: OCSpacing.xs) }
