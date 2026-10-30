@@ -41,6 +41,8 @@ import OCSecurity
     public internal(set) var approvalErrors: [String: String] = [:]
     public internal(set) var failedCreationDirectories: [String: String] = [:]
     /// Moves requested from this device, until `session.moved` or a failure; the inbox item shows moves from anywhere.
+    /// Whether this server's session info has `time.busy`, which the projection then keeps as the server does.
+    @ObservationIgnored public var projectsBusyTime = false
     public internal(set) var requestedMoves: [String: SessionMove] = [:]
     /// The side question of each session (`/btw`). It is never part of the history.
     public internal(set) var sideQuestions: [String: SideQuestion] = [:]

@@ -56,6 +56,7 @@ import OCPersistence
         self.record = record; self.connection = connection; self.credentials = credentials; self.clock = clock
         self.capabilities = .init(info: record.lastInfo)
         let readPath = ReadStore(serverID: record.id.rawValue.uuidString, cache: cache, clock: clock, residency: residency, drafts: drafts, background: background)
+        readPath.projectsBusyTime = record.lastInfo?.reportsBusyTime ?? false
         self.readPath = readPath; self.eventSink = eventSink ?? readPath
         self.recordChanged = recordChanged
         self.canConnect = canConnect
@@ -194,7 +195,7 @@ import OCPersistence
     private func apply(_ info: ServerInfo) {
         var safeInfo = info
         safeInfo.urls = info.urls.filter { (try? EndpointPolicy.validate($0)) != nil }
-        record.lastInfo = safeInfo; capabilities = .init(info: info)
+        record.lastInfo = safeInfo; capabilities = .init(info: info); readPath.projectsBusyTime = info.reportsBusyTime
         discover(info.urls)
     }
     private func discover(_ urls: [URL]) {

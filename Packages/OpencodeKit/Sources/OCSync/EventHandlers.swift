@@ -152,8 +152,7 @@ extension ReadStore {
             }
         case "session.execution.started":
             running.insert(id); session.status = .running(since: created); session.turnStartedAt = created
-            // 2.2.2 reports the turn's start as `time.busy`.
-            session.info.raw.set(["time", "busy"], .number(created))
+            if projectsBusyTime { session.info.raw.set(["time", "busy"], .number(created)) }
             session.executionID = header.id
         case "session.execution.succeeded", "session.execution.failed", "session.execution.interrupted":
             running.remove(id); session.status = .idle

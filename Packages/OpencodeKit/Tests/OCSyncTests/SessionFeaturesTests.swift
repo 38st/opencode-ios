@@ -250,3 +250,17 @@ private func enqueuedMove(_ directory: String, seq: Int = 4) -> ServerEvent {
     await settle { voice.state != .listening }
     #expect(voice.state == .failed("Voice input stopped: no model"))
 }
+
+@MainActor @Test func busyTimeIsProjectedOnlyForServersThatReportIt() {
+    let started = event(.object(["id": .string("evt_start1"), "type": .string("session.execution.started"), "created": .integer(500),
+        "data": .object(["sessionID": .string("ses_1")]), "durable": .object(["aggregateID": .string("ses_1"), "seq": .integer(3), "version": .integer(1)])]))
+    let old = featureStore(AdminTransport())
+    old.apply(started)
+    #expect(old.sessions["ses_1"]?.info.raw["time"]?["busy"] == nil, "2.0.32 session info has no busy time")
+    #expect(old.sessions["ses_1"]?.turnStartedAt == 500)
+    let current = featureStore(AdminTransport())
+    current.projectsBusyTime = true
+    current.apply(started)
+    #expect(current.sessions["ses_1"]?.info.raw["time"]?["busy"]?.wireNumber == 500, "2.2.2 sets busy to the turn's start")
+    #expect(ServerInfo(version: "2.2.2").reportsBusyTime && !ServerInfo(version: "2.0.32").reportsBusyTime)
+}
