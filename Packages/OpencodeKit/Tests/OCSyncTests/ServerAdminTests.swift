@@ -47,7 +47,7 @@ private let noContent = AdminTransport.Reply(status: 204)
     store.projects = [Project(raw: .object(["id": .string("prj"), "canonical": .string("/p"), "time": .object(["created": .integer(0), "updated": .integer(0), "active": .integer(2)])])),
                       Project(raw: .object(["id": .string("old"), "canonical": .string("/old"), "time": .object(["created": .integer(0), "updated": .integer(0), "active": .integer(1)])]))]
     let model = ServerAdminModel(store: store, clock: clock, now: now, log: log)
-    store.adminModel = model
+    store.adminModel = model; store.register(model)
     model.appear()
     return (store, model)
 }
@@ -324,4 +324,25 @@ private func integration(accounts: [String] = []) -> JSONValue {
         for _ in 0..<50 { await Task.yield() }
     }
     await settle { flow.phase == .complete }
+}
+
+@Test @MainActor func eachWindowHasItsOwnSettingsModel() async throws {
+    let (store, shared) = adminModel(AdminTransport())
+    let first = ServerAdminScope(), second = ServerAdminScope()
+    let a = first.model(for: store), b = second.model(for: store)
+    #expect(a !== b && first.model(for: store) === a, "A window keeps its model; another window gets its own")
+    a.appear(); b.appear()
+    a.directory = "/old"; a.error = "Only in the first window"; a.notice = "Mock connected"
+    #expect(b.directory == "/p" && b.error == nil && b.notice == nil)
+    // Server events reach every open model.
+    store.handle(try readEvent("installation.update-available", session: "", data: ["version": .string("2.3.0")]))
+    #expect(a.availableUpdate == "2.3.0" && b.availableUpdate == "2.3.0" && shared.availableUpdate == "2.3.0")
+}
+
+@Test @MainActor func aWindowDropsTheModelOfARemovedServer() {
+    let scope = ServerAdminScope()
+    let first = ReadStore(serverID: "same"), second = ReadStore(serverID: "same")
+    let old = scope.model(for: first)
+    #expect(scope.model(for: second) !== old, "A server added again with the same id gets a model of its new store")
+    withExtendedLifetime(first) {}
 }

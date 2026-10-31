@@ -24,7 +24,7 @@ public struct ContextUsage: Equatable, Sendable {
         return value.isFinite && value >= 0 ? Int(min(value, 999_999)) : nil
     }
     /// The header's badge.
-    public static func label(_ usage: ContextUsage?) -> String { usage?.percent.map { "Context \($0)%" } ?? "Context —" }
+    public static func label(_ usage: ContextUsage?) -> String { usage?.percent.map { localized("Context \($0.formatted(.percent))", comment: "Header badge; %@ is how full the context window is, like 43%") } ?? localized("Context —", comment: "Header badge when context usage is unknown") }
 
     /// The assistant step whose tokens fill the context window now: the latest one after the last completed
     /// compaction and before the revert boundary.

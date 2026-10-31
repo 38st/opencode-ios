@@ -20,14 +20,14 @@ struct TurnChangesCard: View {
         VStack(alignment: .leading, spacing: OCSpacing.xs) {
             let header = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: OCSpacing.xs)) : AnyLayout(HStackLayout())
             header {
-                Text("\(paths.count) Changed \(paths.count == 1 ? "file" : "files")").font(OCType.button)
+                Text(localized("\(paths.count) Changed files", comment: "Header of the files changed in a turn; %lld is the file count")).font(OCType.button)
                 HStack {
                     if model.loaded {
-                        Text("+\(FileDiff.totals(model.files).additions)").font(OCType.micro).foregroundStyle(OCColor.success)
-                        Text("−\(FileDiff.totals(model.files).deletions)").font(OCType.micro).foregroundStyle(OCColor.danger)
+                        Text(verbatim: "+\(FileDiff.totals(model.files).additions)").font(OCType.micro).foregroundStyle(OCColor.success)
+                        Text(verbatim: "−\(FileDiff.totals(model.files).deletions)").font(OCType.micro).foregroundStyle(OCColor.danger)
                     }
                     Spacer(minLength: 0)
-                    if paths.count > 5 { Button(expanded ? "Show less" : "Show all") { expanded.toggle() }.buttonStyle(OCButtonStyle(.ghost)) }
+                    if paths.count > 5 { Button(expanded ? localized("Show less") : localized("Show all")) { expanded.toggle() }.buttonStyle(OCButtonStyle(.ghost)) }
                 }
             }
             VStack(spacing: 0) {
@@ -43,12 +43,12 @@ struct TurnChangesCard: View {
                         }.font(OCType.small).lineLimit(1)
                         Spacer(minLength: 0)
                         if let file = model.files.first(where: { $0.file == path }) {
-                            if file.patch.isEmpty { Text("Binary file").font(OCType.micro).foregroundStyle(OCColor.textMuted) }
+                            if file.patch.isEmpty { Text(localized("Binary file")).font(OCType.micro).foregroundStyle(OCColor.textMuted) }
                             else if file.status == "added" || file.status == "deleted" {
-                                Text(file.status == "added" ? "Created" : "Deleted").font(OCType.micro).foregroundStyle(file.status == "added" ? OCColor.success : OCColor.danger)
+                                Text(file.status == "added" ? localized("Created", comment: "File status: the file was created") : localized("Deleted", comment: "File status: the file was deleted")).font(OCType.micro).foregroundStyle(file.status == "added" ? OCColor.success : OCColor.danger)
                             } else {
-                                Text("+\(file.additions)").font(OCType.micro).foregroundStyle(OCColor.success)
-                                Text("−\(file.deletions)").font(OCType.micro).foregroundStyle(OCColor.danger)
+                                Text(verbatim: "+\(file.additions)").font(OCType.micro).foregroundStyle(OCColor.success)
+                                Text(verbatim: "−\(file.deletions)").font(OCType.micro).foregroundStyle(OCColor.danger)
                             }
                         }
                     }.padding(.horizontal, OCSpacing.sm).frame(minHeight: 44).contentShape(Rectangle())
@@ -56,7 +56,7 @@ struct TurnChangesCard: View {
             }
             }.background(OCColor.background, in: RoundedRectangle(cornerRadius: OCRadius.md))
                 .overlay(RoundedRectangle(cornerRadius: OCRadius.md).strokeBorder(OCColor.border, lineWidth: OCBorder.hairline))
-            if model.error != nil { Button("Try again") { model.load() }.buttonStyle(OCButtonStyle(.ghost)) }
+            if model.error != nil { Button(localized("Try again")) { model.load() }.buttonStyle(OCButtonStyle(.ghost)) }
         }.padding(.top, OCSpacing.md)
             .onAppear { if visible != false { model.load() } }
             .onChange(of: visible) { _, value in if value == true { model.load() } }

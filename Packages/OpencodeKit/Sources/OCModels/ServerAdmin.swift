@@ -30,9 +30,9 @@ public struct IntegrationMethod: WireValue, Identifiable {
     public var label: String {
         if let label = self["label"]?.stringValue, !label.isEmpty { return label }
         switch type {
-        case "key": return "API key"
-        case "env": return "Environment variable"
-        case "command": return "Command"
+        case "key": return localized("API key", comment: "Provider sign-in method")
+        case "env": return localized("Environment variable", comment: "Provider sign-in method")
+        case "command": return localized("Command", comment: "Provider sign-in method: run a command")
         default: return type.capitalized
         }
     }
@@ -61,7 +61,7 @@ public struct IntegrationConnection: WireValue, Identifiable {
     public var method: String { string("method") }
     public var needsAuth: NeedsAuth? {
         guard let status = self["status"], status["status"]?.stringValue == "needs_auth" else { return nil }
-        return NeedsAuth(message: status["message"]?.stringValue ?? "Sign in again", url: status["url"]?.stringValue)
+        return NeedsAuth(message: status["message"]?.stringValue ?? localized("Sign in again"), url: status["url"]?.stringValue)
     }
     public struct NeedsAuth: Equatable, Sendable { public var message: String; public var url: String? }
 }
@@ -94,7 +94,7 @@ public enum AttemptStatus: Equatable, Sendable {
         switch raw["status"]?.stringValue ?? "" {
         case "pending": self = .pending(message: raw["message"]?.stringValue)
         case "complete": self = .complete
-        case "failed": self = .failed(raw["message"]?.stringValue ?? "Sign-in failed.")
+        case "failed": self = .failed(raw["message"]?.stringValue ?? localized("Sign-in failed."))
         case "expired": self = .expired
         case let other: self = .unknown(other)
         }
@@ -133,7 +133,7 @@ public struct PluginInfo: WireValue, Identifiable {
     public var outdated: Bool { self["source"]?["outdated"]?.boolValue ?? false }
     public var updating: Bool { self["source"]?["updating"]?.boolValue ?? false }
     public var failure: String? {
-        self["state"]?["status"]?.stringValue == "failed" ? self["state"]?["error"]?.stringValue ?? "Failed to load" : nil
+        self["state"]?["status"]?.stringValue == "failed" ? self["state"]?["error"]?.stringValue ?? localized("Failed to load") : nil
     }
     public var features: [String] {
         let object = self["features"]?.objectValue ?? [:]
@@ -194,15 +194,15 @@ public enum ServerSettingsSection: String, CaseIterable, Identifiable, Sendable 
     public var id: String { rawValue }
     public var title: String {
         switch self {
-        case .providers: "Providers"
+        case .providers: localized("Providers")
         case .mcp: "MCP"
-        case .permissions: "Permissions"
-        case .agents: "Agents and tools"
-        case .configuration: "Configuration"
-        case .worktrees: "Worktrees"
-        case .projects: "Projects"
-        case .usage: "Usage statistics"
-        case .administration: "Administration"
+        case .permissions: localized("Permissions", comment: "Server settings section")
+        case .agents: localized("Agents and tools")
+        case .configuration: localized("Configuration")
+        case .worktrees: localized("Worktrees")
+        case .projects: localized("Projects")
+        case .usage: localized("Usage statistics")
+        case .administration: localized("Administration")
         }
     }
     public var icon: String {

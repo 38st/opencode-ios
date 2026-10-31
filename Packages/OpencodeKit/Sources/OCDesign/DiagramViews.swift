@@ -24,7 +24,7 @@ public struct MathBlockView: View {
             }.scrollBounceBehavior(.basedOnSize).frame(maxWidth: .infinity, alignment: .center)
                 .accessibilityElement().accessibilityLabel(node.unicode).accessibilityIdentifier("mathBlock")
         case .failure(let error):
-            DiagramFallback(source: source, language: "latex", reason: (error as? MathError)?.message ?? "This formula could not be rendered")
+            DiagramFallback(source: source, language: "latex", reason: (error as? MathError)?.message ?? localized("This formula could not be rendered"))
         }
     }
 }
@@ -136,7 +136,7 @@ public struct MermaidView: View {
                 .overlay(RoundedRectangle(cornerRadius: OCRadius.md).strokeBorder(OCColor.border, lineWidth: OCBorder.hairline))
                 .accessibilityElement().accessibilityLabel(Self.summary(diagram)).accessibilityIdentifier("mermaidDiagram")
         case .failure(let error):
-            DiagramFallback(source: source, language: "mermaid", reason: (error as? MermaidError)?.message ?? "This diagram could not be rendered")
+            DiagramFallback(source: source, language: "mermaid", reason: (error as? MermaidError)?.message ?? localized("This diagram could not be rendered"))
         }
     }
     static func measure(_ text: String) -> CGSize {
@@ -153,12 +153,15 @@ public struct MermaidView: View {
     static func summary(_ diagram: MermaidDiagram) -> String {
         switch diagram {
         case .flowchart(let chart):
-            "Flowchart: " + chart.edges.map { edge in
+            let edges = chart.edges.map { edge in
                 let name = { (id: String) in chart.nodes.first { $0.id == id }?.label ?? id }
-                return name(edge.from) + " to " + name(edge.to) + (edge.label.map { " (" + $0 + ")" } ?? "")
+                let from = name(edge.from), to = name(edge.to)
+                return edge.label.map { localized("\(from) to \(to) (\($0))", comment: "Flowchart edge; %1$@ and %2$@ are node names, %3$@ the edge label") } ?? localized("\(from) to \(to)", comment: "Flowchart edge; %1$@ and %2$@ are node names")
             }.joined(separator: ", ")
+            return localized("Flowchart: \(edges)", comment: "%@ is a list of flowchart edges")
         case .sequence(let sequence):
-            "Sequence diagram: " + sequence.participants.map(\.label).joined(separator: ", ")
+            let names = sequence.participants.map(\.label).joined(separator: ", ")
+            return localized("Sequence diagram: \(names)", comment: "%@ is a list of participant names")
         }
     }
 }

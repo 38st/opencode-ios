@@ -1,0 +1,128 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%lld running" : {
+      "comment" : "Number of running sessions"
+    },
+    "%lld sessions" : {
+      "comment" : "Number of recent sessions",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld session"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld sessions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld waiting" : {
+      "comment" : "Number of requests waiting for the user"
+    },
+    "+%lld more" : {
+      "comment" : "More sessions than the widget shows"
+    },
+    "Edit the widget to choose another server." : {
+      "comment" : "Shown in Session Widget Views"
+    },
+    "Needs you" : {
+      "comment" : "Widget name"
+    },
+    "New prompt" : {
+      "comment" : "Shown in Widget Controls"
+    },
+    "No servers" : {
+      "comment" : "Shown in Session Widget Views"
+    },
+    "No sessions yet" : {
+      "comment" : "Shown in Session Widget Views"
+    },
+    "Not updated recently" : {
+      "comment" : "Shown in Session Widget Views"
+    },
+    "Nothing needs you" : {
+      "comment" : "Shown in Session Widget Views"
+    },
+    "Nothing running" : {
+      "comment" : "Shown in Session Widget Views"
+    },
+    "Open" : {
+      "comment" : "Link title in Session Activity View"
+    },
+    "Open a new session's composer in the project you used last." : {
+      "comment" : "Shown in Widget Controls"
+    },
+    "Open for status" : {
+      "comment" : "Shown in Session Activity View"
+    },
+    "Open the app" : {
+      "comment" : "Shown in Session Widget Views"
+    },
+    "Open the app to refresh" : {
+      "comment" : "Text in Session Widget Views"
+    },
+    "Open the next request that waits for your approval or answer." : {
+      "comment" : "Shown in Widget Controls"
+    },
+    "Pair a server in the app to see its sessions here." : {
+      "comment" : "Shown in Session Widget Views"
+    },
+    "Recent" : {
+      "comment" : "Widget name"
+    },
+    "Requests and failed runs appear here." : {
+      "comment" : "Shown in Session Widget Views"
+    },
+    "Requests waiting for your approval or answer, and failed runs." : {
+      "comment" : "Shown in Session Widgets"
+    },
+    "Review approval" : {
+      "comment" : "Shown in Widget Controls"
+    },
+    "Running" : {
+      "comment" : "Widget name"
+    },
+    "Running sessions appear here." : {
+      "comment" : "Shown in Session Widget Views"
+    },
+    "Server removed" : {
+      "comment" : "Shown in Session Widget Views"
+    },
+    "Sessions that are running now." : {
+      "comment" : "Shown in Session Widgets"
+    },
+    "Step %lld" : {
+      "comment" : "Text in Session Activity View"
+    },
+    "Stop" : {
+      "comment" : "Button title in Session Activity View"
+    },
+    "The app was updated; open it once to refresh this widget." : {
+      "comment" : "Shown in Session Widget Views"
+    },
+    "Updated %@" : {
+      "comment" : "%@ is how long ago, such as 5 min ago"
+    },
+    "Your latest sessions appear here." : {
+      "comment" : "Shown in Session Widget Views"
+    },
+    "Your latest sessions." : {
+      "comment" : "Shown in Session Widgets"
+    },
+    "Your sessions appear here once the app has loaded them." : {
+      "comment" : "Shown in Session Widget Views"
+    }
+  },
+  "version" : "1.0"
+}

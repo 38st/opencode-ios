@@ -19,13 +19,13 @@ public struct RunCommandSheet: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: OCSpacing.md) {
                 HStack(spacing: OCSpacing.sm) {
-                    TextField("Command", text: $command).font(OCType.code).textFieldStyle(OCTextFieldStyle(font: OCType.code))
+                    TextField(localized("Command", comment: "Placeholder for the shell command field"), text: $command).font(OCType.code).textFieldStyle(OCTextFieldStyle(font: OCType.code))
                         .textInputAutocapitalization(.never).autocorrectionDisabled().submitLabel(.go).onSubmit(run)
                         .accessibilityIdentifier("runCommandField")
-                    Button("Run", action: run).buttonStyle(OCButtonStyle(.contrast))
+                    Button(localized("Run", comment: "Runs the shell command"), action: run).buttonStyle(OCButtonStyle(.contrast))
                         .disabled(command.trimmingCharacters(in: .whitespaces).isEmpty).accessibilityIdentifier("runCommandRun")
                 }
-                Text("Runs in \(model.directory) on the server, outside any session.").font(OCType.micro).foregroundStyle(OCColor.textMuted)
+                Text(localized("Runs in \(model.directory) on the server, outside any session.", comment: "%@ is a directory path")).font(OCType.micro).foregroundStyle(OCColor.textMuted)
                 if let shell = model.shell { status(shell) }
                 if let error = model.error { OCBanner(error, tone: .danger) }
                 Group {
@@ -36,8 +36,8 @@ public struct RunCommandSheet: View {
                 if !model.running.isEmpty { runningList }
             }.padding(OCSpacing.md)
                 .background(OCColor.background)
-                .navigationTitle("Run a command").navigationBarTitleDisplayMode(.inline)
-                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() }.accessibilityIdentifier("runCommandDone") } }
+                .navigationTitle(localized("Run a command")).navigationBarTitleDisplayMode(.inline)
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button(localized("Done")) { dismiss() }.accessibilityIdentifier("runCommandDone") } }
         }
         .onAppear {
             model.appear()
@@ -60,8 +60,8 @@ public struct RunCommandSheet: View {
             if !stacked { Spacer(minLength: 0) }
             HStack(spacing: OCSpacing.sm) {
                 if model.isRunning {
-                    OCSpinner("Running").accessibilityIdentifier("runCommandRunning")
-                    Button("Stop") { model.stop() }.buttonStyle(OCButtonStyle(.danger)).disabled(model.stopping).accessibilityIdentifier("runCommandStop")
+                    OCSpinner(localized("Running", comment: "Status: the command is running")).accessibilityIdentifier("runCommandRunning")
+                    Button(localized("Stop", comment: "Stops the running command")) { model.stop() }.buttonStyle(OCButtonStyle(.danger)).disabled(model.stopping).accessibilityIdentifier("runCommandStop")
                 } else {
                     OCPill(Self.ended(shell), tone: shell.exit.map { $0 == 0 } ?? false ? .neutral : .warning)
                         .accessibilityElement(children: .combine).accessibilityIdentifier("runCommandEnded")
@@ -71,13 +71,13 @@ public struct RunCommandSheet: View {
     }
     private var runningList: some View {
         VStack(alignment: .leading, spacing: OCSpacing.xs) {
-            OCSidebarHeader("Running commands")
+            OCSidebarHeader(localized("Running commands"))
             ForEach(model.running) { shell in
                 Button { model.show(shell) } label: {
                     HStack {
                         Text(shell.command).font(OCType.code).lineLimit(1).truncationMode(.middle)
                         Spacer(minLength: 0)
-                        if shell.metadata?["sessionID"]?.stringValue != nil { OCBadge("Agent") }
+                        if shell.metadata?["sessionID"]?.stringValue != nil { OCBadge(localized("Agent", comment: "Badge: the command was started by the agent")) }
                     }.frame(minHeight: OCLayout.touchTarget).contentShape(Rectangle())
                 }.buttonStyle(.plain).hoverEffect(.highlight).accessibilityIdentifier("runningShell-" + shell.id)
             }
@@ -85,9 +85,9 @@ public struct RunCommandSheet: View {
     }
     static func ended(_ shell: ShellInfo) -> String {
         switch shell.status {
-        case "killed": "Stopped"
-        case "timeout": "Timed out"
-        default: shell.exit.map { "Exited with code \(Int($0))" } ?? "Finished"
+        case "killed": localized("Stopped", comment: "Command status: stopped by the user")
+        case "timeout": localized("Timed out")
+        default: shell.exit.map { localized("Exited with code \(Int($0))", comment: "%lld is the exit code") } ?? localized("Finished", comment: "Command status: ended")
         }
     }
 }

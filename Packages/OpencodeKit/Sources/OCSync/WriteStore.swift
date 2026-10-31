@@ -132,8 +132,8 @@ extension ReadStore {
                 await self?.acknowledgeResponse(id, result: result)
             }
             writeError = nil
-        } catch is CancellationError {} catch APIError.cancelled {} catch { writeError = "Waiting to send. Your prompt is saved on this device." }
-        do { try await reloadOutbox() } catch { writeError = "Could not read the saved outbox." }
+        } catch is CancellationError {} catch APIError.cancelled {} catch { writeError = localized("Waiting to send. Your prompt is saved on this device.") }
+        do { try await reloadOutbox() } catch { writeError = localized("Could not read the saved outbox.") }
     }
     func acknowledgeResponse(_ id: String, result: OutboxAcknowledgement) {
         switch result {

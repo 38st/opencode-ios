@@ -12,16 +12,16 @@ public struct SystemIntegrationSection: View {
         self.system = system; self.openSystemSettings = openSystemSettings
     }
     public var body: some View {
-        OCSection("Widgets and Shortcuts") {
-            OCToggleRow("Show sessions in Spotlight",
-                        detail: "Session titles, project names and server names appear in search, never what a session says. Turning this off removes them.",
+        OCSection(localized("Widgets and Shortcuts")) {
+            OCToggleRow(localized("Show sessions in Spotlight"),
+                        detail: localized("Session titles, project names and server names appear in search, never what a session says. Turning this off removes them."),
                         isOn: Binding(get: { system.spotlightEnabled }, set: { value in Task { await system.setSpotlight(value) } }))
                 .accessibilityIdentifier("spotlightToggle")
-            explanation("Widgets", "Needs you, Running and Recent show session titles on the Home Screen. On the Lock Screen titles stay hidden until you unlock; counts stay visible.")
-            explanation("Controls", "New prompt and Review approval work in Control Center, on the Lock Screen and with the Action button.")
-            explanation("Shortcuts and Siri", "Send a prompt, Get session status, Open a session, Review the next approval and New prompt. Requests are always answered in the app.")
-            Button("Open Siri & Search settings", action: openSystemSettings).buttonStyle(OCButtonStyle())
-                .accessibilityHint("Opens this app's page in the Settings app")
+            explanation(localized("Widgets"), localized("Needs you, Running and Recent show session titles on the Home Screen. On the Lock Screen titles stay hidden until you unlock; counts stay visible."))
+            explanation(localized("Controls", comment: "Control Center controls"), localized("New prompt and Review approval work in Control Center, on the Lock Screen and with the Action button."))
+            explanation(localized("Shortcuts and Siri"), localized("Send a prompt, Get session status, Open a session, Review the next approval and New prompt. Requests are always answered in the app."))
+            Button(localized("Open Siri & Search settings"), action: openSystemSettings).buttonStyle(OCButtonStyle())
+                .accessibilityHint(localized("Opens this app's page in the Settings app"))
                 .accessibilityIdentifier("openSystemSettings")
         }
     }

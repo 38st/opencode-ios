@@ -35,7 +35,7 @@ public struct ContextPanel: View {
                     OCExportSheet(prepare: { try await store.exportFile(sessionID, format: $0, sanitize: $1) }) { exporting = false }.ocSheet()
                 }
         } else {
-            OCEmptyState("Session unavailable", detail: "Open the session to see its context.", icon: "brain", presentation: .panel) { EmptyView() }
+            OCEmptyState(localized("Session unavailable"), detail: localized("Open the session to see its context."), icon: "brain", presentation: .panel) { EmptyView() }
         }
     }
     @ViewBuilder private func content(_ session: SessionModel) -> some View {
@@ -47,7 +47,7 @@ public struct ContextPanel: View {
         HStack(alignment: .top) {
             meter(usage)
             Button { exporting = true } label: { OCIcon("download") }.buttonStyle(OCButtonStyle(.ghost))
-                .accessibilityLabel("Export session").accessibilityIdentifier("contextExport")
+                .accessibilityLabel(localized("Export session")).accessibilityIdentifier("contextExport")
         }
         let columns = typeSize.isAccessibilitySize || width < 512 ? 1 : 2
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: OCSpacing.lg, alignment: .topLeading), count: columns), alignment: .leading, spacing: OCSpacing.lg) {
@@ -61,7 +61,7 @@ public struct ContextPanel: View {
         details(session, catalog: catalog)
         let todos = SessionTodo.current(messages, boundary: session.info.revert?.messageID)
         if !todos.isEmpty {
-            section("Todo") {
+            section(localized("Todo", comment: "Section title for the session to-do list")) {
                 ForEach(Array(todos.enumerated()), id: \.offset) { _, todo in
                     HStack(alignment: .firstTextBaseline, spacing: OCSpacing.sm) {
                         Text(Self.marker(todo.status)).font(OCType.code).foregroundStyle(todo.status == .inProgress ? OCColor.accent : OCColor.textMuted)
@@ -72,7 +72,7 @@ public struct ContextPanel: View {
             }
         }
         if let servers = catalog?.mcp.value, !servers.isEmpty {
-            section("MCP") {
+            section(localized("MCP", comment: "Abbreviation: Model Context Protocol servers section")) {
                 ForEach(servers) { mcp in
                     HStack(spacing: OCSpacing.sm) {
                         OCStatusDot(Self.tone(mcp.status))
@@ -84,7 +84,7 @@ public struct ContextPanel: View {
             }
         }
         if let prompt = messages.last(where: { $0.type == "system" })?.text.trimmingCharacters(in: .whitespacesAndNewlines), !prompt.isEmpty {
-            section("System Prompt") {
+            section(localized("System Prompt")) {
                 Text(prompt).font(OCType.small).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, OCSpacing.md).padding(.vertical, OCSpacing.sm).frame(maxWidth: .infinity, alignment: .leading)
                     .background(OCColor.surface, in: RoundedRectangle(cornerRadius: OCRadius.md))
@@ -92,7 +92,7 @@ public struct ContextPanel: View {
             }
         }
         if !messages.isEmpty {
-            section("Raw messages") {
+            section(localized("Raw messages")) {
                 LazyVStack(alignment: .leading, spacing: 0) {
                     ForEach(messages, id: \.id) { message in RawMessageRow(message: message, created: time(message.time.created)) }
                 }
@@ -102,9 +102,9 @@ public struct ContextPanel: View {
     private func meter(_ usage: ContextUsage?) -> some View {
         VStack(alignment: .leading, spacing: OCSpacing.sm) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Context").font(OCType.button)
+                Text(localized("Context", comment: "Title of the context window usage meter")).font(OCType.button)
                 Spacer(minLength: 0)
-                Text(usage?.percent.map { "\($0)%" } ?? "—").font(OCType.button)
+                Text(usage?.percent.map { $0.formatted(.percent) } ?? "—").font(OCType.button)
             }
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
@@ -112,10 +112,13 @@ public struct ContextPanel: View {
                     Capsule().fill(OCColor.accent).frame(width: geometry.size.width * min(1, Double(usage?.percent ?? 0) / 100))
                 }
             }.frame(height: 6).accessibilityHidden(true)
-            Text(usage.map { usage in usage.limit.map { Self.number(usage.total) + " of " + Self.number($0) + " tokens" } ?? Self.number(usage.total) + " tokens, limit unknown" } ?? "No usage yet")
+            Text(usage.map { usage -> String in
+                let total = Self.number(usage.total)
+                return usage.limit.map { value -> String in let limit = Self.number(value); return localized("\(total) of \(limit) tokens", comment: "Context usage; %1$@ is tokens used, %2$@ the limit") } ?? localized("\(total) tokens, limit unknown", comment: "%@ is a token count")
+            } ?? localized("No usage yet"))
                 .font(OCType.micro).foregroundStyle(OCColor.textMuted)
-        }.accessibilityElement(children: .combine).accessibilityLabel("Context window")
-            .accessibilityValue(usage?.percent.map { "\($0) percent used" } ?? "Unknown")
+        }.accessibilityElement(children: .combine).accessibilityLabel(localized("Context window"))
+            .accessibilityValue(usage?.percent.map { localized("\($0) percent used", comment: "%lld is the percentage of the context window used") } ?? localized("Unknown"))
             .accessibilityIdentifier("contextMeter")
     }
     private func stats(_ session: SessionModel, messages: [MessageFields], usage: ContextUsage?, catalog: LocationCatalog?) -> [(String, Text)] {
@@ -126,50 +129,50 @@ public struct ContextPanel: View {
         let variant = model?.variant.flatMap { $0 == "default" ? nil : $0 }
         let cost = store.family(session.id).reduce(0) { $0 + $1.info.cost }
         return [
-            ("Session", Text(session.info.title ?? session.id)),
-            ("Messages", Text(Self.number(Double(messages.count)))),
-            ("Provider", Text(usage == nil ? "—" : provider ?? "—")),
-            ("Model", Text(usage == nil ? "—" : info.map(ComposerPickers.displayName) ?? model?.id ?? "—")),
-            ("Variant", Text(variant ?? "Default")),
-            ("Agent", Text(agent?.capitalized ?? "—")),
-            ("Context Limit", Text(usage?.limit.map(Self.number) ?? "—")),
-            ("Total Tokens", Text(usage.map { Self.number($0.total) } ?? "—")),
-            ("Usage", Text(usage?.percent.map { "\($0)%" } ?? "—")),
-            ("Input Tokens", Text(usage.map { Self.number($0.input) } ?? "—")),
-            ("Output Tokens", Text(usage.map { Self.number($0.output) } ?? "—")),
-            ("Reasoning Tokens", Text(usage.map { Self.number($0.reasoning) } ?? "—")),
-            ("Cache Tokens (read/write)", Text(usage.map { Self.number($0.cacheRead) + " / " + Self.number($0.cacheWrite) } ?? "— / —")),
-            ("User Messages", Text(Self.number(Double(messages.filter { $0.type == "user" }.count)))),
-            ("Assistant Messages", Text(Self.number(Double(messages.filter { $0.type == "assistant" }.count)))),
-            ("Total Cost", Text(cost.formatted(.currency(code: "USD")))),
-            ("Session Created", time(session.info.time.created)),
-            ("Last Activity", time(usage?.created)),
+            (localized("Session"), Text(session.info.title ?? session.id)),
+            (localized("Messages"), Text(Self.number(Double(messages.count)))),
+            (localized("Provider"), Text(usage == nil ? "—" : provider ?? "—")),
+            (localized("Model"), Text(usage == nil ? "—" : info.map(ComposerPickers.displayName) ?? model?.id ?? "—")),
+            (localized("Variant"), Text(variant ?? localized("Default", comment: "The default model variant"))),
+            (localized("Agent"), Text(agent?.capitalized ?? "—")),
+            (localized("Context Limit"), Text(usage?.limit.map(Self.number) ?? "—")),
+            (localized("Total Tokens"), Text(usage.map { Self.number($0.total) } ?? "—")),
+            (localized("Usage", comment: "Share of the context window used"), Text(usage?.percent.map { $0.formatted(.percent) } ?? "—")),
+            (localized("Input Tokens"), Text(usage.map { Self.number($0.input) } ?? "—")),
+            (localized("Output Tokens"), Text(usage.map { Self.number($0.output) } ?? "—")),
+            (localized("Reasoning Tokens"), Text(usage.map { Self.number($0.reasoning) } ?? "—")),
+            (localized("Cache Tokens (read/write)"), Text(usage.map { Self.number($0.cacheRead) + " / " + Self.number($0.cacheWrite) } ?? "— / —")),
+            (localized("User Messages"), Text(Self.number(Double(messages.filter { $0.type == "user" }.count)))),
+            (localized("Assistant Messages"), Text(Self.number(Double(messages.filter { $0.type == "assistant" }.count)))),
+            (localized("Total Cost"), Text(cost.formatted(.currency(code: "USD")))),
+            (localized("Session Created"), time(session.info.time.created)),
+            (localized("Last Activity"), time(usage?.created)),
         ]
     }
     private func details(_ session: SessionModel, catalog: LocationCatalog?) -> some View {
-        section("Session") {
-            row("ID") {
+        section(localized("Session")) {
+            row(localized("ID", comment: "Label for the session identifier")) {
                 HStack(spacing: OCSpacing.xs) {
                     Text(session.id).font(OCType.code).textSelection(.enabled).lineLimit(1).truncationMode(.middle)
-                    OCIconButton("Copy session ID", icon: "copy") { OCCopy.text(session.id) }
+                    OCIconButton(localized("Copy session ID"), icon: "copy") { OCCopy.text(session.id) }
                 }
             }
             // A session in a worktree runs in its own directory, beside the project's.
             let project = session.info.location.project?.directory ?? ""
             let worktree = !project.isEmpty && project != session.info.location.directory
-            row(worktree ? "Worktree" : "Directory") { Text(session.info.location.directory).font(OCType.small).textSelection(.enabled).fixedSize(horizontal: false, vertical: true) }
-            if worktree { row("Project") { Text(project).font(OCType.small).textSelection(.enabled).fixedSize(horizontal: false, vertical: true) } }
-            if let branch = catalog?.vcs.value?["branch"]?["current"]?.stringValue { row("Branch") { OCLabel(branch, icon: "branch").font(OCType.small) } }
-            row("Updated") { time(max(session.info.time.updated, session.info.time.created)).font(OCType.small) }
+            row(worktree ? localized("Worktree") : localized("Directory")) { Text(session.info.location.directory).font(OCType.small).textSelection(.enabled).fixedSize(horizontal: false, vertical: true) }
+            if worktree { row(localized("Project")) { Text(project).font(OCType.small).textSelection(.enabled).fixedSize(horizontal: false, vertical: true) } }
+            if let branch = catalog?.vcs.value?["branch"]?["current"]?.stringValue { row(localized("Branch", comment: "Git branch")) { OCLabel(branch, icon: "branch").font(OCType.small) } }
+            row(localized("Updated", comment: "Label for when the session was last updated")) { time(max(session.info.time.updated, session.info.time.created)).font(OCType.small) }
             if let parent = session.info.parentID {
-                row("Parent") {
+                row(localized("Parent", comment: "Label for the parent session")) {
                     Button(store.sessions[parent]?.info.title ?? parent) { openSession(parent) }.buttonStyle(OCButtonStyle(.ghost))
                         .accessibilityIdentifier("contextParent")
                 }
             }
             let children = store.sessions.values.filter { $0.info.parentID == session.id }.sorted { $0.info.time.created < $1.info.time.created }
             if !children.isEmpty {
-                row("Subagents") {
+                row(localized("Subagents")) {
                     VStack(alignment: .leading, spacing: 0) {
                         ForEach(children, id: \.id) { child in
                             Button(child.info.title ?? child.id) { openSession(child.id) }.buttonStyle(OCButtonStyle(.ghost))
@@ -179,12 +182,12 @@ public struct ContextPanel: View {
             }
             let review = store.review(sessionID: session.id, directory: session.info.location.directory)
             if !review.files.isEmpty {
-                row("Changes") {
+                row(localized("Changes", comment: "Label for the session changed files")) {
                     Button { showChanges() } label: {
                         HStack(spacing: OCSpacing.sm) {
-                            Text("\(review.files.count) \(review.files.count == 1 ? "file" : "files")")
-                            Text("+\(review.additions)").foregroundStyle(OCColor.success)
-                            Text("−\(review.deletions)").foregroundStyle(OCColor.danger)
+                            Text(localized("\(review.files.count) files", comment: "%lld is the number of changed files"))
+                            Text(verbatim: "+\(review.additions)").foregroundStyle(OCColor.success)
+                            Text(verbatim: "−\(review.deletions)").foregroundStyle(OCColor.danger)
                         }
                     }.buttonStyle(OCButtonStyle(.ghost)).accessibilityIdentifier("contextChanges")
                 }
@@ -207,7 +210,7 @@ public struct ContextPanel: View {
     static func number(_ value: Double) -> String { value.formatted(.number.precision(.fractionLength(0))) }
     /// The desktop's medium date and time, in the environment's locale and time zone.
     private func time(_ value: Double?) -> Text {
-        guard let value, value > 0 else { return Text("—") }
+        guard let value, value > 0 else { return Text(verbatim: "—") }
         var style = Date.FormatStyle.dateTime.year().month(.abbreviated).day().hour().minute()
         style.locale = locale; style.timeZone = timeZone
         return Text(Date(timeIntervalSince1970: value / 1_000).formatted(style))
@@ -216,12 +219,12 @@ public struct ContextPanel: View {
         switch status { case .completed: "[✓]"; case .inProgress: "[•]"; case .cancelled: "[-]"; case .pending: "[ ]" }
     }
     static func statusName(_ status: SessionTodo.Status) -> String {
-        switch status { case .completed: "Completed"; case .inProgress: "In progress"; case .cancelled: "Cancelled"; case .pending: "Pending" }
+        switch status { case .completed: localized("Completed"); case .inProgress: localized("In progress"); case .cancelled: localized("Cancelled"); case .pending: localized("Pending", comment: "To-do status: not started") }
     }
     static func statusTitle(_ status: MCPStatus) -> String {
         switch status {
-        case .connected: "Connected"; case .pending: "Connecting"; case .disabled: "Disabled"; case .needsAuth: "Needs sign-in"
-        case .failed: status.error ?? "Failed"; case .unknown(let type, _): type; case .undecodable: "Unknown"
+        case .connected: localized("Connected"); case .pending: localized("Connecting"); case .disabled: localized("Disabled"); case .needsAuth: localized("Needs sign-in")
+        case .failed: status.error ?? localized("Failed"); case .unknown(let type, _): type; case .undecodable: localized("Unknown")
         }
     }
     static func tone(_ status: MCPStatus) -> OCTone {
@@ -242,8 +245,8 @@ public struct ContextSheet: View {
     public var body: some View {
         NavigationStack {
             ContextPanel(store: store, sessionID: sessionID, openSession: openSession, showChanges: showChanges)
-                .ocNavigationTitle("Usage").toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button("Done", action: close).accessibilityIdentifier("closeContext") }
+                .ocNavigationTitle(localized("Usage", comment: "Title of the context and token usage sheet")).toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button(localized("Done"), action: close).accessibilityIdentifier("closeContext") }
                 }
         }
     }
@@ -262,7 +265,10 @@ private struct RawMessageRow: View {
             }
         } label: {
             HStack(spacing: OCSpacing.sm) {
-                Text("\(message.type) \(Text("• " + message.id).foregroundStyle(OCColor.textMuted))").font(OCType.small)
+                HStack(spacing: OCSpacing.xs) {
+                    Text(verbatim: message.type)
+                    Text(verbatim: "• " + message.id).foregroundStyle(OCColor.textMuted)
+                }.font(OCType.small)
                 Spacer(minLength: 0)
                 created.font(OCType.micro).foregroundStyle(OCColor.textMuted)
             }.lineLimit(1).frame(minHeight: OCLayout.touchTarget)

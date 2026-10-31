@@ -1,0 +1,26 @@
+{
+  "simulator": {
+    "collection": {
+      "rendered_5000_footprint_mb": 53.1,
+      "rendered_5000_incremental_mb": 1.1
+    },
+    "hour-of-events": {
+      "footprint_growth_mb": 0.2,
+      "process_footprint_mb": 47.1
+    },
+    "rows": {
+      "process_footprint_mb": 54.5,
+      "session_5000_incremental_mb": 10.1
+    }
+  },
+  "host": {
+    "hour-of-events": {
+      "footprint_growth_mb": 3.3,
+      "process_footprint_mb": 76.3
+    },
+    "rows": {
+      "process_footprint_mb": 75.5,
+      "session_5000_incremental_mb": 7.3
+    }
+  }
+}

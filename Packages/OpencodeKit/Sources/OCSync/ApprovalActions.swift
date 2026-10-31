@@ -40,7 +40,7 @@ extension ReadStore {
             catch let failure where failure is DeviceAuthenticationError || failure is CancellationError {
                 // A cancelled prompt is silent; other gate failures explain themselves on the request.
                 self.approvalErrors[request.id] = DeviceAuthenticationError(failure).message
-            } catch { self.approvalErrors[request.id] = "Reply could not be sent. Try again." }
+            } catch { self.approvalErrors[request.id] = localized("Reply could not be sent. Try again.") }
         }
     }
     public func replyPermission(_ request: PermissionRequest, decision: PermissionDecision, message: String? = nil, authenticated: Bool = false) async throws {
@@ -80,7 +80,7 @@ extension ReadStore {
         owned { [weak self] in
             guard let self else { return }
             do { try await self.replyForm(form, answer: answer, reason: reason, directory: directory) }
-            catch { self.approvalErrors[form.id] = "Answers could not be sent. Review and try again." }
+            catch { self.approvalErrors[form.id] = localized("Answers could not be sent. Review and try again.") }
         }
     }
     public func replyForm(_ form: FormInfo, answer: [String: JSONValue]?, reason: String? = nil, directory: String? = nil) async throws {
@@ -120,9 +120,13 @@ extension ReadStore {
     }
     /// Names the action and its first resource so the system prompt says what is being allowed.
     func authenticationReason(_ request: PermissionRequest, decision: PermissionDecision) -> String {
-        let prefix = decision == .always ? "Always allow \(request.action) in this project" : "Allow high-risk \(request.action)"
-        guard let resource = request.resources.first?.trimmingCharacters(in: .whitespacesAndNewlines), !resource.isEmpty else { return prefix }
-        return prefix + ": " + (resource.count > 60 ? resource.prefix(59) + "…" : resource)
+        guard let resource = request.resources.first?.trimmingCharacters(in: .whitespacesAndNewlines), !resource.isEmpty else {
+            return decision == .always ? localized("Always allow \(request.action) in this project", comment: "Authentication reason; %@ is a tool action")
+                : localized("Allow high-risk \(request.action)", comment: "Authentication reason; %@ is a tool action")
+        }
+        let shown: String = resource.count > 60 ? resource.prefix(59) + "…" : resource
+        return decision == .always ? localized("Always allow \(request.action) in this project: \(shown)", comment: "Authentication reason; first %@ is a tool action, second its resource")
+            : localized("Allow high-risk \(request.action): \(shown)", comment: "Authentication reason; first %@ is a tool action, second its resource")
     }
     private func nonempty(_ value: String?) -> String? {
         value?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false ? value : nil

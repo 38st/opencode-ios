@@ -1,0 +1,114 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ of %@" : {
+      "comment" : "Download progress; bytes loaded of total size"
+    },
+    "%lld of %lld" : {
+      "comment" : "Find position; current match of total matches"
+    },
+    "A" : {
+      "comment" : "Abbreviation for an added file"
+    },
+    "All files" : {
+      "comment" : "Button title in Files Screen"
+    },
+    "Binary file · %@" : {
+      "comment" : "%@ is the file size"
+    },
+    "Cancel" : {
+      "comment" : "Button title in Files Screen"
+    },
+    "Choose a file from the tree" : {
+      "comment" : "Shown in Files Screen"
+    },
+    "Close search" : {
+      "comment" : "Icon button label in Files Screen"
+    },
+    "Close tab" : {
+      "comment" : "Icon button label in Files Screen"
+    },
+    "Copy path" : {
+      "comment" : "Button title in Files Screen"
+    },
+    "D" : {
+      "comment" : "Abbreviation for a deleted file"
+    },
+    "Download" : {
+      "comment" : "Button that downloads the file"
+    },
+    "Download file?" : {
+      "comment" : "Confirmation title in Files Screen"
+    },
+    "Failed to list files" : {
+      "comment" : "Text in Files Screen"
+    },
+    "Filter files" : {
+      "comment" : "Text field placeholder in Files Screen"
+    },
+    "Find" : {
+      "comment" : "Button that searches in the open file"
+    },
+    "Fit" : {
+      "comment" : "Fits the image to the screen"
+    },
+    "Load more" : {
+      "comment" : "Button title in Files Screen"
+    },
+    "Loading…" : {
+      "comment" : "Shown in Files Screen"
+    },
+    "M" : {
+      "comment" : "Abbreviation for a modified file"
+    },
+    "Mention in composer" : {
+      "comment" : "Button title in Files Screen"
+    },
+    "Next match" : {
+      "comment" : "Icon button label in Files Screen"
+    },
+    "No results found" : {
+      "comment" : "Text in Files Screen"
+    },
+    "Open" : {
+      "comment" : "Opens the file"
+    },
+    "Open a file" : {
+      "comment" : "Shown in Files Screen"
+    },
+    "Open files" : {
+      "comment" : "Label for the row of open file tabs"
+    },
+    "Preview" : {
+      "comment" : "Shows the rendered Markdown"
+    },
+    "Preview %@" : {
+      "comment" : "%@ is a file name"
+    },
+    "Previous match" : {
+      "comment" : "Icon button label in Files Screen"
+    },
+    "Resize file tree" : {
+      "comment" : "Shown in Files Screen"
+    },
+    "Retry" : {
+      "comment" : "VoiceOver hint in Files Screen"
+    },
+    "Search matches" : {
+      "comment" : "VoiceOver label in Files Screen"
+    },
+    "Showing the first %@ of %@" : {
+      "comment" : "Partial file; size shown of total size"
+    },
+    "Source" : {
+      "comment" : "Shows the Markdown source"
+    },
+    "This file is larger than 100 MiB." : {
+      "comment" : "Text in Files Screen"
+    },
+    "Unable to load image." : {
+      "comment" : "Shown in Files Screen"
+    }
+  },
+  "version" : "1.0"
+}

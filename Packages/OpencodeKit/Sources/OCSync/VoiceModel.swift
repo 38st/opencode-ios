@@ -97,7 +97,7 @@ public enum VoiceAuthorization: Equatable, Sendable { case granted, denied(Strin
             timer?.cancel()
             // The microphone stays off after a failure.
             await recognizer.stop()
-            state = .failed("Voice input stopped: " + error.localizedDescription)
+            state = .failed(localized("Voice input stopped: \(error.localizedDescription)", comment: "%@ is the system's error description"))
         }
     }
     /// Silence after speech starts the countdown; more speech restarts the wait.

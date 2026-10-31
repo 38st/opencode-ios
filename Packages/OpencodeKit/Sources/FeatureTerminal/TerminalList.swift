@@ -22,22 +22,22 @@ public struct TerminalListView: View {
     public var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: OCSpacing.sm) {
-                Text("Terminals").font(OCType.button).accessibilityAddTraits(.isHeader)
+                Text(localized("Terminals")).font(OCType.button).accessibilityAddTraits(.isHeader)
                 Spacer(minLength: 0)
                 newMenu
                 Menu {
-                    Button("Run a command", action: runCommand).accessibilityIdentifier("runCommand")
-                    Button("Clear exited terminals") { list.clearExited() }.disabled(!list.hasExited)
+                    Button(localized("Run a command"), action: runCommand).accessibilityIdentifier("runCommand")
+                    Button(localized("Clear exited terminals")) { list.clearExited() }.disabled(!list.hasExited)
                 } label: { OCIcon("dot-grid").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
-                    .buttonStyle(.plain).accessibilityLabel("More terminal actions").accessibilityIdentifier("terminalListActions")
+                    .buttonStyle(.plain).accessibilityLabel(localized("More terminal actions")).accessibilityIdentifier("terminalListActions")
             }.padding(.horizontal, OCSpacing.md).frame(minHeight: OCLayout.touchTarget)
             if let error = list.error { OCBanner(error, tone: .danger).padding(.horizontal, OCSpacing.md) }
             if list.terminals.isEmpty {
                 if list.loaded {
-                    OCEmptyState("No terminals", detail: "Start a shell on your server in this folder.", icon: "terminal") {
-                        Button("New terminal") { list.create() }.buttonStyle(OCButtonStyle(.contrast)).accessibilityIdentifier("newTerminalEmpty")
+                    OCEmptyState(localized("No terminals"), detail: localized("Start a shell on your server in this folder."), icon: "terminal") {
+                        Button(localized("New terminal")) { list.create() }.buttonStyle(OCButtonStyle(.contrast)).accessibilityIdentifier("newTerminalEmpty")
                     }
-                } else { Spacer(); OCSpinner("Loading terminals…"); Spacer() }
+                } else { Spacer(); OCSpinner(localized("Loading terminals…")); Spacer() }
             } else {
                 ScrollView {
                     LazyVStack(spacing: 0) {
@@ -48,26 +48,26 @@ public struct TerminalListView: View {
         }
         .background(OCColor.background)
         .onAppear { list.appear() }.onDisappear { list.disappear() }
-        .alert("Rename terminal", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
-            TextField("Title", text: $title).accessibilityIdentifier("terminalTitleField")
-            Button("Rename") { if let renaming { list.rename(renaming.id, title: title) } }
-            Button("Cancel", role: .cancel) {}
+        .alert(localized("Rename terminal"), isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
+            TextField(localized("Title", comment: "Placeholder for the terminal title field"), text: $title).accessibilityIdentifier("terminalTitleField")
+            Button(localized("Rename")) { if let renaming { list.rename(renaming.id, title: title) } }
+            Button(localized("Cancel"), role: .cancel) {}
         }
         .sheet(item: $closing) { terminal in
-            OCConfirmationSheet("Close \(terminal.title)?", message: "Its process is still running and will be stopped.", confirmTitle: "Close terminal",
+            OCConfirmationSheet(localized("Close \(terminal.title)?", comment: "%@ is the terminal title"), message: localized("Its process is still running and will be stopped."), confirmTitle: localized("Close terminal"),
                                 cancel: { closing = nil }) { closing = nil; list.close(terminal.id) }.ocSheet()
         }
     }
     private var newMenu: some View {
         Menu {
-            Button("Default shell") { list.create() }.accessibilityIdentifier("newTerminalDefault")
+            Button(localized("Default shell")) { list.create() }.accessibilityIdentifier("newTerminalDefault")
             if !list.shells.isEmpty {
-                Section("Shells") { ForEach(list.shells) { shell in Button(shell.name) { list.create(shell: shell) } } }
+                Section(localized("Shells")) { ForEach(list.shells) { shell in Button(shell.name) { list.create(shell: shell) } } }
             }
         } label: {
             if list.creating { ProgressView().frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
             else { OCIcon("plus").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
-        }.buttonStyle(.plain).disabled(list.creating).accessibilityLabel("New terminal").accessibilityIdentifier("newTerminal")
+        }.buttonStyle(.plain).disabled(list.creating).accessibilityLabel(localized("New terminal")).accessibilityIdentifier("newTerminal")
     }
     /// At the accessibility sizes the status moves under the text, which may wrap.
     private func row(_ terminal: PtyInfo) -> some View {
@@ -87,20 +87,20 @@ public struct TerminalListView: View {
                 }.frame(minHeight: OCLayout.touchTarget).contentShape(Rectangle())
             }.buttonStyle(.plain).hoverEffect(.highlight)
                 .accessibilityElement(children: .combine).accessibilityIdentifier("terminalRow-" + terminal.title)
-            OCIconButton("Close \(terminal.title)", icon: "close") { terminal.status == .running ? (closing = terminal) : list.close(terminal.id) }
+            OCIconButton(localized("Close \(terminal.title)", comment: "%@ is the terminal title"), icon: "close") { terminal.status == .running ? (closing = terminal) : list.close(terminal.id) }
         }.padding(.vertical, OCSpacing.xs)
             .contextMenu {
-                Button("Open") { open(terminal) }
-                Button("Rename") { title = terminal.title; renaming = terminal }
-                Button("Close terminal", role: .destructive) { terminal.status == .running ? (closing = terminal) : list.close(terminal.id) }
+                Button(localized("Open", comment: "Opens the terminal")) { open(terminal) }
+                Button(localized("Rename")) { title = terminal.title; renaming = terminal }
+                Button(localized("Close terminal"), role: .destructive) { terminal.status == .running ? (closing = terminal) : list.close(terminal.id) }
             }
     }
     @ViewBuilder private func status(_ terminal: PtyInfo) -> some View {
         switch terminal.status {
-        case .running: OCPill("Running", tone: .success)
+        case .running: OCPill(localized("Running", comment: "Terminal status"), tone: .success)
         case .exited:
-            if let code = terminal.exitCode, code != 0 { OCPill("Exited \(code)", tone: .danger) } else { OCPill("Exited") }
-        case .unknown(let value): OCPill(value.isEmpty ? "Unknown" : value)
+            if let code = terminal.exitCode, code != 0 { OCPill(localized("Exited \(code)", comment: "Terminal status; %lld is the exit code"), tone: .danger) } else { OCPill(localized("Exited", comment: "Terminal status")) }
+        case .unknown(let value): OCPill(value.isEmpty ? localized("Unknown") : value)
         }
     }
 }
@@ -138,7 +138,7 @@ public struct TerminalsScreen: View {
     public init(list: TerminalListModel, shells: ShellRunModel, open: Binding<String?>) { self.list = list; self.shells = shells; _open = open }
     public var body: some View {
         TerminalListView(list: list, open: { open = $0.id }) { running = true }
-            .navigationTitle("Terminals").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(localized("Terminals")).navigationBarTitleDisplayMode(.inline)
             // A terminal started here opens at once, as the panel shows it.
             .onChange(of: list.selected) { _, id in if let id { open = id; list.selected = nil } }
             .navigationDestination(item: $open) { id in

@@ -31,7 +31,7 @@ struct CommandPalette: View {
             HStack(spacing: OCSpacing.sm) {
                 OCIcon("magnifying-glass").foregroundStyle(OCColor.iconMuted)
                 // The field keeps the closures of its last update; both read the list as it is when the key arrives.
-                PaletteField(text: $query, placeholder: "Search commands and sessions", move: { active += $0 }, submit: { alternate in
+                PaletteField(text: $query, placeholder: localized("Search commands and sessions"), move: { active += $0 }, submit: { alternate in
                     let entries = search(query).flatMap(\.entries)
                     if let index = Self.wrap(active, entries.count) { select(entries[index], alternate && supportsWindows) }
                 }, cancel: close).frame(minHeight: OCLayout.touchTarget)
@@ -40,7 +40,7 @@ struct CommandPalette: View {
                 .padding(OCSpacing.sm)
             Rectangle().fill(OCColor.border).frame(height: OCBorder.hairline)
             if entries.isEmpty {
-                Text("No results found").font(OCType.small).foregroundStyle(OCColor.textMuted)
+                Text(localized("No results found")).font(OCType.small).foregroundStyle(OCColor.textMuted)
                     .frame(maxWidth: .infinity, minHeight: 220).accessibilityIdentifier("paletteEmpty")
             } else {
                 ScrollViewReader { proxy in
@@ -88,8 +88,8 @@ struct CommandPalette: View {
             .accessibilityAddTraits(active ? .isSelected : [])
             .contextMenu {
                 if case .session = entry.kind {
-                    Button("Open") { select(entry, false) }
-                    if supportsWindows { Button("Open in New Window") { select(entry, true) } }
+                    Button(localized("Open", comment: "Verb: open the session")) { select(entry, false) }
+                    if supportsWindows { Button(localized("Open in New Window")) { select(entry, true) } }
                 }
             }
     }
@@ -97,7 +97,7 @@ struct CommandPalette: View {
         Text(shortcut).font(OCType.micro).foregroundStyle(OCColor.textMuted)
             .padding(.horizontal, OCSpacing.xs).padding(.vertical, OCSpacing.xxs)
             .background(OCColor.layer2, in: RoundedRectangle(cornerRadius: OCRadius.sm))
-            .accessibilityLabel("Shortcut " + shortcut)
+            .accessibilityLabel(localized("Shortcut \(shortcut)", comment: "%@ is a keyboard shortcut"))
     }
     private func icon(_ entry: SwitcherEntry) -> String {
         switch entry.kind {

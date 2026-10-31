@@ -20,18 +20,19 @@ public struct OCToolChrome<Content: View>: View {
     let failed: Bool
     let inline: Bool
     let onOpen: (() -> Void)?
+    let actions: [OCAccessibilityAction]
     let content: Content
     let defaultExpanded: Bool
     @State private var expanded: Bool
     public init(_ title: String, subtitle: String = "", icon: String = "code", status: String = "completed",
                 badge: String? = nil, failed: Bool = false, expanded: Bool = false, inline: Bool = false, onOpen: (() -> Void)? = nil,
-                @ViewBuilder content: () -> Content) {
-        self.title = title; self.subtitle = subtitle; self.icon = icon; self.status = status; self.onOpen = onOpen
+                actions: [OCAccessibilityAction] = [], @ViewBuilder content: () -> Content) {
+        self.title = title; self.subtitle = subtitle; self.icon = icon; self.status = status; self.onOpen = onOpen; self.actions = actions
         self.badge = badge; self.failed = failed; self.inline = inline; self.content = content(); defaultExpanded = expanded; _expanded = State(initialValue: expanded)
     }
     public var body: some View {
         VStack(alignment: .leading, spacing: OCSpacing.sm) {
-            HStack(alignment: .top, spacing: 0) { disclosure; if let onOpen { OCIconButton("Open file", icon: "open-file", action: onOpen) } }
+            HStack(alignment: .top, spacing: 0) { disclosure; if let onOpen { OCIconButton(localized("Open file"), icon: "open-file", action: onOpen) } }
             if expanded { content.padding(.leading, OCSpacing.xl) }
         }.frame(maxWidth: .infinity, alignment: .leading)
             .onChange(of: defaultExpanded) { _, value in expanded = value }
@@ -49,8 +50,8 @@ public struct OCToolChrome<Content: View>: View {
                     }
                     if status != "completed" || badge != nil {
                         ViewThatFits(in: .horizontal) {
-                            HStack { OCBadge(badge ?? status.capitalized, tone: failed ? .danger : .neutral) }
-                            OCBadge(badge ?? status.capitalized, tone: failed ? .danger : .neutral)
+                            HStack { OCBadge(badge ?? statusTitle, tone: failed ? .danger : .neutral) }
+                            OCBadge(badge ?? statusTitle, tone: failed ? .danger : .neutral)
                         }
                     }
                 }
@@ -58,9 +59,21 @@ public struct OCToolChrome<Content: View>: View {
                 OCIcon(expanded ? "chevron-down" : "chevron-right", size: 12).foregroundStyle(OCColor.iconMuted)
             }.frame(minHeight: OCLayout.touchTarget, alignment: .center).contentShape(Rectangle())
         }.buttonStyle(.plain)
-            .accessibilityLabel([title, subtitle, badge ?? (status == "completed" ? "" : status.capitalized)].filter { !$0.isEmpty }.joined(separator: ", "))
-            .accessibilityValue(expanded ? "Expanded" : "Collapsed")
-            .accessibilityActions { if let onOpen { Button("Open file", action: onOpen) } }
+            .accessibilityLabel([title, subtitle, badge ?? (status == "completed" ? "" : statusTitle)].filter { !$0.isEmpty }.joined(separator: ", "))
+            .accessibilityValue(expanded ? localized("Expanded") : localized("Collapsed"))
+            .accessibilityActions {
+                if let onOpen { Button(localized("Open file"), action: onOpen) }
+                ForEach(actions) { action in Button(action.name, action: action.perform) }
+            }
+    }
+    private var statusTitle: String {
+        switch status {
+        case "pending": localized("Pending", comment: "Tool call status")
+        case "running": localized("Running", comment: "Tool call status")
+        case "streaming": localized("Streaming", comment: "Tool call status")
+        case "error": localized("Error", comment: "Tool call status")
+        default: status.capitalized
+        }
     }
 }
 private struct OCDisclosureInteractionKey: EnvironmentKey {
@@ -84,9 +97,14 @@ public struct OCSessionIndicator: View {
     }
     private var accessibilityTitle: String {
         switch state {
-        case .needsYou: "Needs you"
-        case .staleRunning: "Last seen running"
-        default: state.rawValue.capitalized
+        case .needsYou: localized("Needs you", comment: "Session status")
+        case .failed: localized("Failed", comment: "Session status")
+        case .running: localized("Running", comment: "Session status")
+        case .staleRunning: localized("Last seen running", comment: "Session status")
+        case .unread: localized("Unread", comment: "Session status")
+        case .syncing: localized("Syncing", comment: "Session status")
+        case .offline: localized("Offline", comment: "Session status")
+        case .idle: localized("Idle", comment: "Session status")
         }
     }
     public var body: some View {
@@ -124,7 +142,7 @@ public struct OCJumpToLatest: View {
     public init(count: Int, action: @escaping () -> Void) { self.count = count; self.action = action }
     public var body: some View {
         Button(action: action) {
-            OCLabel(count > 0 ? "Jump to latest (\(count))" : "Jump to latest", icon: "arrow-down-to-line")
+            OCLabel(count > 0 ? localized("Jump to latest (\(count))", comment: "%lld is the number of new messages") : localized("Jump to latest"), icon: "arrow-down-to-line")
                 .font(OCType.button).foregroundStyle(OCColor.text)
                 .padding(.horizontal, OCSpacing.lg).padding(.vertical, OCSpacing.sm)
                 .frame(minHeight: OCLayout.touchTarget)

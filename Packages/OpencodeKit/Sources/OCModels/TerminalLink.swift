@@ -51,6 +51,8 @@ public struct TerminalLink: Equatable, Sendable {
     private var restoredWithoutCursor = false
     /// The last socket ended normally while live, so the process ended with every byte received.
     private var endedLive = false
+    /// The process exited while attached and every byte arrived: saved with the screen, so a relaunch shows no gap.
+    public var exitedLive: Bool { if case .exited = phase { endedLive } else { false } }
 
     public init() {}
 
@@ -131,10 +133,11 @@ public struct TerminalLink: Equatable, Sendable {
     }
     /// The list already shows the PTY as exited: there is nothing to connect to, and an exited PTY cannot replay
     /// what it printed after the saved cursor.
-    public mutating func exited(code: Int?, cursor saved: Int?) -> [Effect] {
+    /// `seenLive`: an earlier attach saw the exit with all output, which the saved screen already shows.
+    public mutating func exited(code: Int?, cursor saved: Int?, seenLive: Bool = false) -> [Effect] {
         guard phase == .idle else { return [] }
-        cursor = saved.flatMap { $0 >= 0 ? $0 : nil }; phase = .exited(code: code)
-        return [.gap(.exitedWhileAway)]
+        cursor = saved.flatMap { $0 >= 0 ? $0 : nil }; phase = .exited(code: code); endedLive = seenLive
+        return seenLive ? [] : [.gap(.exitedWhileAway)]
     }
     /// The PTY was closed or deleted: stop and drop what is saved for it.
     public mutating func removed() -> [Effect] {

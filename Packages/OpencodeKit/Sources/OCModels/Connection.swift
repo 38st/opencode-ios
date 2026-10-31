@@ -7,22 +7,22 @@ public enum ConnectionFailure: String, Error, Codable, Sendable, Equatable {
 
     public var message: String {
         switch self {
-        case .insecureRemote: "Plain HTTP is only supported for local networking. Use an HTTPS URL for this host."
-        case .localNetworkDenied: "Allow Local Network access in Settings."
-        case .dnsFailure: "The hostname could not be resolved. Check DNS and tunnel domain blocking."
-        case .tlsError: "The server's TLS connection could not be verified."
-        case .unauthorized: "Authentication failed. Pair with the server again."
-        case .timeout: "The server did not respond in time."
-        case .invalidURL: "Check the server URL."
-        case .transport: "The server could not be reached. Check the address and network."
-        case .firstFrameTimeout: "The server did not open its event stream in time."
-        case .invalidFirstFrame: "The server sent an unexpected first event."
-        case .watchdog: "The event stream stopped responding."
-        case .streamClosed: "The server closed the event stream."
-        case .backlogOverflow: "Catching up after too many events."
-        case .notOpencode: "This address is not an opencode server."
-        case .cancelled: "The connection was cancelled."
-        case .unknown: "An unknown connection error occurred."
+        case .insecureRemote: localized("Plain HTTP is only supported for local networking. Use an HTTPS URL for this host.")
+        case .localNetworkDenied: localized("Allow Local Network access in Settings.")
+        case .dnsFailure: localized("The hostname could not be resolved. Check DNS and tunnel domain blocking.")
+        case .tlsError: localized("The server's TLS connection could not be verified.")
+        case .unauthorized: localized("Authentication failed. Pair with the server again.")
+        case .timeout: localized("The server did not respond in time.")
+        case .invalidURL: localized("Check the server URL.")
+        case .transport: localized("The server could not be reached. Check the address and network.")
+        case .firstFrameTimeout: localized("The server did not open its event stream in time.")
+        case .invalidFirstFrame: localized("The server sent an unexpected first event.")
+        case .watchdog: localized("The event stream stopped responding.")
+        case .streamClosed: localized("The server closed the event stream.")
+        case .backlogOverflow: localized("Catching up after too many events.")
+        case .notOpencode: localized("This address is not an opencode server.")
+        case .cancelled: localized("The connection was cancelled.")
+        case .unknown: localized("An unknown connection error occurred.")
         }
     }
 }

@@ -43,7 +43,7 @@ public struct OCConfirmationSheet: View {
             .presentationDetents([.height(contentHeight)])
     }
     @ViewBuilder private var actions: some View {
-        Button("Cancel", action: cancel).buttonStyle(OCButtonStyle(.ghost))
+        Button(localized("Cancel"), action: cancel).buttonStyle(OCButtonStyle(.ghost))
         if destructive { Button(confirmTitle, role: .destructive, action: confirm).buttonStyle(OCButtonStyle(.danger)) }
         else { Button(confirmTitle, action: confirm).buttonStyle(OCButtonStyle()) }
     }

@@ -1,0 +1,27 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Authentication is locked. Unlock your device with its passcode, then try again." : {
+      "comment" : "Shown in Biometric Gate"
+    },
+    "Confirm with Face ID or passcode…" : {
+      "comment" : "Shown in Biometric Gate"
+    },
+    "Confirm with Optic ID or passcode…" : {
+      "comment" : "Shown in Biometric Gate"
+    },
+    "Confirm with Touch ID or passcode…" : {
+      "comment" : "Shown in Biometric Gate"
+    },
+    "Confirm with your passcode…" : {
+      "comment" : "Shown in Biometric Gate"
+    },
+    "Could not confirm it is you. Try again." : {
+      "comment" : "Shown in Biometric Gate"
+    },
+    "Set a device passcode in Settings to approve this request." : {
+      "comment" : "Shown in Biometric Gate"
+    }
+  },
+  "version" : "1.0"
+}

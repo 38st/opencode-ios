@@ -33,44 +33,43 @@ public struct PermissionContent: View {
         VStack(alignment: .leading, spacing: OCSpacing.lg) {
             let headingLayout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: OCSpacing.sm)) : AnyLayout(HStackLayout(alignment: .top, spacing: OCSpacing.sm))
             headingLayout {
-                OCLabel("Permission required", icon: "warning").font(OCType.heading)
+                OCLabel(localized("Permission required"), icon: "warning").font(OCType.heading)
                     .fixedSize(horizontal: false, vertical: true)
                 if !typeSize.isAccessibilitySize { Spacer(minLength: 0) }
-                OCBadge(PermissionRisk.assess(request).rawValue.capitalized + " risk", tone: PermissionRisk.assess(request) == .high ? .danger : .warning)
-            }
-            copyable("Action", values: [request.action])
+                OCBadge(Self.riskLabel(PermissionRisk.assess(request)), tone: PermissionRisk.assess(request) == .high ? .danger : .warning)
+            }.accessibilityElement(children: .combine).accessibilityAddTraits(.isHeader)
+            copyable(localized("Action", comment: "Label for the requested permission action"), copyLabel: localized("Copy action"), values: [request.action])
             if let message = request.message { Text(message).font(OCType.body) }
-            copyable("Resources", values: request.resources)
-            copyable("Working directory", values: [directory])
+            copyable(localized("Resources"), copyLabel: localized("Copy resources"), values: request.resources)
+            copyable(localized("Working directory"), copyLabel: localized("Copy working directory"), values: [directory])
             ForEach(Array((request.metadata?["files"]?.lossy(FileDiff.self).values ?? []).enumerated()), id: \.offset) { _, file in
                 DiffCardView(file: file.file, patch: file.patch, additions: file.additions, deletions: file.deletions, expanded: true)
             }
             if !request.save.isEmpty {
-                copyable("Allow always saves these patterns in this project", values: request.save)
+                copyable(localized("Allow always saves these patterns in this project"), copyLabel: localized("Copy allow always saves these patterns in this project"), values: request.save)
             }
             if state == .reject {
                 Group {
-                    if otherRequests == 1 { Text("Rejecting also rejects 1 other pending request in this session.") }
-                    else if otherRequests > 1 { Text("Rejecting also rejects \(otherRequests) other pending requests in this session.") }
-                    Text("Without a note, rejecting ends the turn.")
+                    if otherRequests > 0 { Text(localized("Rejecting also rejects \(otherRequests) other pending requests in this session.", comment: "%lld is the number of other pending permission requests")) }
+                    Text(localized("Without a note, rejecting ends the turn."))
                 }.font(OCType.small).foregroundStyle(OCColor.textMuted).fixedSize(horizontal: false, vertical: true)
-                TextField("Tell the agent what to do instead (optional)", text: $note, axis: .vertical)
+                TextField(localized("Tell the agent what to do instead (optional)"), text: $note, axis: .vertical)
                     .textFieldStyle(OCTextFieldStyle()).accessibilityIdentifier("permissionNote")
-                Button("Reject") { reply(.reject, note) }.buttonStyle(OCButtonStyle(.danger)).accessibilityIdentifier("confirmReject")
-                Button("Back") { state = .review }.buttonStyle(OCButtonStyle(.ghost))
+                Button(localized("Reject")) { reply(.reject, note) }.buttonStyle(OCButtonStyle(.danger)).accessibilityIdentifier("confirmReject")
+                Button(localized("Back")) { state = .review }.buttonStyle(OCButtonStyle(.ghost))
             } else if state == .settled {
-                OCBadge("Already handled", tone: .success)
+                OCBadge(localized("Already handled"), tone: .success)
             } else if state == .authenticating {
                 OCLabel(authentication.prompt, icon: "status").font(OCType.small)
             } else {
                 if state == .failed {
-                    Text(failure ?? "Reply could not be sent. Try again.").font(OCType.small).foregroundStyle(OCColor.danger)
+                    Text(failure ?? localized("Reply could not be sent. Try again.")).font(OCType.small).foregroundStyle(OCColor.danger)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 if authentication == .unavailable {
                     Text(PermissionRisk.assess(request) == .high
-                         ? "Allow always and Allow once on high-risk requests need a device passcode. Set one in Settings."
-                         : "Allow always needs a device passcode. Set one in Settings.")
+                         ? localized("Allow always and Allow once on high-risk requests need a device passcode. Set one in Settings.")
+                         : localized("Allow always needs a device passcode. Set one in Settings."))
                         .font(OCType.small).foregroundStyle(OCColor.textMuted).fixedSize(horizontal: false, vertical: true)
                 }
                 ViewThatFits(in: .horizontal) {
@@ -81,21 +80,38 @@ public struct PermissionContent: View {
         }.frame(maxWidth: .infinity, alignment: .leading).textFieldStyle(OCTextFieldStyle())
     }
     @ViewBuilder private var actions: some View {
-        Button("Reject") { state = .reject }.buttonStyle(OCButtonStyle(.ghost)).accessibilityIdentifier("rejectPermission")
-        Button("Allow always") { reply(.always, nil) }.buttonStyle(OCButtonStyle(.neutral)).accessibilityIdentifier("allowAlways")
+        Button(localized("Reject")) { state = .reject }.buttonStyle(OCButtonStyle(.ghost)).accessibilityIdentifier("rejectPermission")
+        Button(localized("Allow always")) { reply(.always, nil) }.buttonStyle(OCButtonStyle(.neutral)).accessibilityIdentifier("allowAlways")
             .disabled(authentication == .unavailable)
-        Button("Allow once") { reply(.once, nil) }.buttonStyle(OCButtonStyle(.submit)).accessibilityIdentifier("allowOnce")
+        Button(localized("Allow once")) { reply(.once, nil) }.buttonStyle(OCButtonStyle(.submit)).accessibilityIdentifier("allowOnce")
             .disabled(authentication == .unavailable && PermissionRisk.assess(request) == .high)
     }
-    private func copyable(_ title: String, values: [String]) -> some View {
+    /// What VoiceOver says when the sheet opens: the risk tier, the action and every option the person has.
+    public static func announcement(_ request: PermissionRequest, authentication: DeviceAuthenticationMethod) -> String {
+        let risk = PermissionRisk.assess(request)
+        var options = [localized("Reject")]
+        if authentication != .unavailable { options.append(localized("Allow always")) }
+        if authentication != .unavailable || risk != .high { options.append(localized("Allow once")) }
+        return localized("Permission required. \(riskLabel(risk)). \(request.action). Options: \(options.formatted(.list(type: .or))).",
+                         comment: "VoiceOver announcement; the first %@ is the risk tier, the second the action, the third the list of choices")
+    }
+    static func riskLabel(_ risk: PermissionRisk) -> String {
+        switch risk {
+        case .low: localized("Low risk")
+        case .elevated: localized("Elevated risk")
+        case .high: localized("High risk")
+        }
+    }
+    private func copyable(_ title: String, copyLabel: String, values: [String]) -> some View {
         VStack(alignment: .leading, spacing: OCSpacing.sm) {
             HStack {
                 Text(title).font(OCType.small).foregroundStyle(OCColor.textMuted).fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
-                OCIconButton("Copy " + title.lowercased(), icon: "copy") { OCCopy.text(values.joined(separator: "\n")) }
+                OCIconButton(copyLabel, icon: "copy") { OCCopy.text(values.joined(separator: "\n")) }
             }
             ForEach(Array(values.enumerated()), id: \.offset) { _, value in
                 Text(value).font(OCType.code).fixedSize(horizontal: false, vertical: true).ocSelectableText(value)
+                    .frame(maxWidth: .infinity, alignment: .leading).environment(\.layoutDirection, .leftToRight)
             }
         }
     }
@@ -123,13 +139,14 @@ public struct PermissionSheet: View {
             OCForm {
                 PermissionContent(request: request, directory: directory, otherRequests: max(0, (store.permissions[request.sessionID]?.count ?? 1) - 1),
                                   authentication: authentication, failure: failure, state: $state, note: $note, reply: send)
-            }.ocNavigationTitle("Permission required")
-                .toolbar { ToolbarItem(placement: .cancellationAction) { OCIconButton("Close", icon: "close") { dismiss() } } }
+            }.ocNavigationTitle(localized("Permission required"))
+                .toolbar { ToolbarItem(placement: .cancellationAction) { OCIconButton(localized("Close", comment: "Closes the sheet"), icon: "close") { dismiss() } } }
         }
             .interactiveDismissDisabled(state == .authenticating)
             .task { await composer.load() }
             .task {
                 authentication = await store.biometricGate.method()
+                OCAnnouncer.post(PermissionContent.announcement(request, authentication: authentication))
                 // A reply that failed after an earlier dismissal reopens in its failed state.
                 if let error = store.approvalErrors[request.id], state == .review { failure = error; state = .failed }
             }
@@ -143,7 +160,7 @@ public struct PermissionSheet: View {
             .onChange(of: store.permissions[request.sessionID]?.map(\.id)) { _, ids in
                 guard !(ids ?? []).contains(request.id) else { return }
                 // Our own reply removes the request too; only another client's answer is news.
-                if !replied && state != .settled { OCAnnouncer.post("Already handled") }
+                if !replied && state != .settled { OCAnnouncer.post(localized("Already handled")) }
                 state = .settled
             }
     }

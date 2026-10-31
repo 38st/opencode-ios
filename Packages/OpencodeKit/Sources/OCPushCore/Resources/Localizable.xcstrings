@@ -1,0 +1,60 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "A session failed" : {
+      "comment" : "Shown in Notification Content Builder"
+    },
+    "A session finished" : {
+      "comment" : "Shown in Notification Content Builder"
+    },
+    "A session needs your answer" : {
+      "comment" : "Shown in Notification Content Builder"
+    },
+    "Allow %@?" : {
+      "comment" : "Notification title; %@ is the action a session asks to run"
+    },
+    "Allow once" : {
+      "comment" : "Shown in Notification Categories"
+    },
+    "Allow this action?" : {
+      "comment" : "Shown in Notification Content Builder"
+    },
+    "Answered on another device" : {
+      "comment" : "Shown in Notification Content Builder"
+    },
+    "Answer…" : {
+      "comment" : "Notification action: answer a question"
+    },
+    "Message" : {
+      "comment" : "Notification text input placeholder"
+    },
+    "Open" : {
+      "comment" : "Notification action: open the session"
+    },
+    "Reject" : {
+      "comment" : "Notification action: reject a permission request"
+    },
+    "Reject with note…" : {
+      "comment" : "Shown in Notification Categories"
+    },
+    "Reply…" : {
+      "comment" : "Notification action: reply to a session"
+    },
+    "Request resolved" : {
+      "comment" : "Shown in Notification Content Builder"
+    },
+    "Send" : {
+      "comment" : "Notification text input button"
+    },
+    "Test notification from opencode" : {
+      "comment" : "Shown in Notification Content Builder"
+    },
+    "opencode has a question" : {
+      "comment" : "Shown in Notification Content Builder"
+    },
+    "opencode needs your approval" : {
+      "comment" : "Shown in Notification Content Builder"
+    }
+  },
+  "version" : "1.0"
+}

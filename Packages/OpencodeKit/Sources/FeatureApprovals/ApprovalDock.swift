@@ -21,6 +21,8 @@ public struct ApprovalDock: View {
                     ForEach(forms) { form in QuestionCard(store: store, form: form, child: form.sessionID != sessionID) }
                 }
             }.frame(maxHeight: OCLayout.approvalDockHeight)
+                // The soft edge effect would fade the request's text against the transcript.
+                .scrollEdgeEffectHidden(true)
                 .accessibilityIdentifier("approvalDock")
         }
     }
@@ -39,8 +41,8 @@ public struct PermissionCard: View {
         OCPromptDock {
             VStack(alignment: .leading, spacing: OCSpacing.sm) {
                 HStack {
-                    OCLabel("Permission required", icon: "warning").font(OCType.button)
-                    if child { OCBadge("Subagent") }
+                    OCLabel(localized("Permission required"), icon: "warning").font(OCType.button)
+                    if child { OCBadge(localized("Subagent", comment: "Badge on a request raised by a child agent session")) }
                 }
                 Text(request.action.capitalized).font(OCType.small).foregroundStyle(OCColor.textMuted)
                 ForEach(Array(request.resources.enumerated()), id: \.offset) { _, resource in
@@ -61,8 +63,8 @@ public struct PermissionCard: View {
             .accessibilityIdentifier("permission-" + request.id)
     }
     @ViewBuilder private var actions: some View {
-        Button("Review") { show = true }.buttonStyle(OCButtonStyle(.neutral)).accessibilityIdentifier("reviewPermission")
-        Button("Allow once") { store.respondToPermission(request, decision: .once) }
+        Button(localized("Review", comment: "Button that opens the full permission request")) { show = true }.buttonStyle(OCButtonStyle(.neutral)).accessibilityIdentifier("reviewPermission")
+        Button(localized("Allow once")) { store.respondToPermission(request, decision: .once) }
             .buttonStyle(OCButtonStyle(.submit)).accessibilityIdentifier("dockAllowOnce")
     }
 }
@@ -75,13 +77,13 @@ public struct QuestionCard: View {
     public var body: some View {
         OCPromptDock {
             VStack(alignment: .leading, spacing: OCSpacing.sm) {
-                OCLabel("Question", icon: "bubble-5").font(OCType.button)
-                if child { OCBadge("Subagent") }
+                OCLabel(localized("Question", comment: "Heading of an agent question card"), icon: "bubble-5").font(OCType.button)
+                if child { OCBadge(localized("Subagent", comment: "Badge on a request raised by a child agent session")) }
                 Text(form.title).font(OCType.body)
                 if let error = store.approvalErrors[form.id] {
                     Text(error).font(OCType.small).foregroundStyle(OCColor.danger).fixedSize(horizontal: false, vertical: true)
                 }
-                Button("Answer question") { show = true }.buttonStyle(OCButtonStyle(.submit)).accessibilityIdentifier("answerQuestion")
+                Button(localized("Answer question")) { show = true }.buttonStyle(OCButtonStyle(.submit)).accessibilityIdentifier("answerQuestion")
             }
         }.sheet(isPresented: $show) { QuestionSheet(store: store, form: form).ocSheet() }
             .onChange(of: store.reviewRequest, initial: true) { _, id in if id == form.id { store.reviewRequest = nil; show = true } }

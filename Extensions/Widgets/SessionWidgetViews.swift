@@ -64,7 +64,7 @@ struct WidgetHeader: View {
                 if !compact, let server = content.serverName { serverName(server) }
                 Spacer(minLength: 4)
                 if content.kind != .recent, content.state == .rows || content.state == .placeholder {
-                    Text("\(content.count)").font(WidgetStyle.heading.monospacedDigit())
+                    Text(content.count, format: .number).font(WidgetStyle.heading.monospacedDigit())
                         .foregroundStyle(content.stale ? WidgetStyle.muted : content.kind == .needsYou ? WidgetStyle.warning : WidgetStyle.success)
                         .widgetAccentable().accessibilityLabel(content.kind.countLabel(content.count))
                 }
@@ -114,9 +114,9 @@ struct WidgetFooter: View {
     var body: some View {
         if content.overflow > 0 || content.stale {
             VStack(alignment: .leading, spacing: 2) {
-                if content.overflow > 0 { Text("+\(content.overflow) more").font(WidgetStyle.micro).secondary() }
+                if content.overflow > 0 { Text("+\(content.overflow) more", comment: "More sessions than the widget shows").font(WidgetStyle.micro).secondary() }
                 if content.stale {
-                    Text(content.updated.map { "Updated " + WidgetTime.text($0, now: now, locale: locale, timeZone: timeZone) } ?? "Not updated recently")
+                    Text(content.updated.map { String(localized: "Updated \(WidgetTime.text($0, now: now, locale: locale, timeZone: timeZone))", comment: "%@ is how long ago, such as 5 min ago") } ?? String(localized: "Not updated recently"))
                         .font(WidgetStyle.micro).foregroundStyle(WidgetStyle.muted)
                     Text("Open the app to refresh").font(WidgetStyle.micro).secondary()
                 }
@@ -145,7 +145,7 @@ struct CircularWidget: View {
             AccessoryWidgetBackground()
             VStack(spacing: 1) {
                 AccessoryGlyph(content: content, side: 14)
-                Text(content.showsCount ? "\(content.count)" : "–").font(WidgetStyle.inter(20, relativeTo: .title2, weight: .semibold).monospacedDigit())
+                Text(verbatim: content.showsCount ? content.count.formatted() : "–").font(WidgetStyle.inter(20, relativeTo: .title2, weight: .semibold).monospacedDigit())
                     .minimumScaleFactor(0.6).lineLimit(1)
             }
             .widgetAccentable()
@@ -161,7 +161,7 @@ struct RectangularWidget: View {
         VStack(alignment: .leading, spacing: 1) {
             HStack(spacing: 4) {
                 AccessoryGlyph(content: content, side: 12)
-                Text(content.showsCount && content.count > 0 ? WidgetKind.needsYou.countLabel(content.count) : "Needs you").font(WidgetStyle.heading).lineLimit(1)
+                Text(content.showsCount && content.count > 0 ? WidgetKind.needsYou.countLabel(content.count) : WidgetKind.needsYou.title).font(WidgetStyle.heading).lineLimit(1)
             }
             .widgetAccentable()
             if let row = content.rows.first {
@@ -257,16 +257,16 @@ enum WidgetTime {
 extension WidgetKind {
     var title: String {
         switch self {
-        case .needsYou: "Needs you"
-        case .running: "Running"
-        case .recent: "Recent"
+        case .needsYou: String(localized: "Needs you", comment: "Widget name")
+        case .running: String(localized: "Running", comment: "Widget name")
+        case .recent: String(localized: "Recent", comment: "Widget name")
         }
     }
     func countLabel(_ count: Int) -> String {
         switch self {
-        case .needsYou: count == 1 ? "1 waiting" : "\(count) waiting"
-        case .running: count == 1 ? "1 running" : "\(count) running"
-        case .recent: "\(count) sessions"
+        case .needsYou: String(localized: "\(count) waiting", comment: "Number of requests waiting for the user")
+        case .running: String(localized: "\(count) running", comment: "Number of running sessions")
+        case .recent: String(localized: "\(count) sessions", comment: "Number of recent sessions")
         }
     }
 }
@@ -276,15 +276,15 @@ extension WidgetContent {
     var showsCount: Bool { state == .rows || state == .empty || state == .placeholder }
     var message: (title: String, detail: String) {
         switch state {
-        case .noData: ("Open the app", "Your sessions appear here once the app has loaded them.")
-        case .needsApp: ("Open the app", "The app was updated; open it once to refresh this widget.")
-        case .noServer: ("No servers", "Pair a server in the app to see its sessions here.")
-        case .serverRemoved: ("Server removed", "Edit the widget to choose another server.")
+        case .noData: (String(localized: "Open the app"), String(localized: "Your sessions appear here once the app has loaded them."))
+        case .needsApp: (String(localized: "Open the app"), String(localized: "The app was updated; open it once to refresh this widget."))
+        case .noServer: (String(localized: "No servers"), String(localized: "Pair a server in the app to see its sessions here."))
+        case .serverRemoved: (String(localized: "Server removed"), String(localized: "Edit the widget to choose another server."))
         case .empty, .rows, .placeholder:
             switch kind {
-            case .needsYou: ("Nothing needs you", "Requests and failed runs appear here.")
-            case .running: ("Nothing running", "Running sessions appear here.")
-            case .recent: ("No sessions yet", "Your latest sessions appear here.")
+            case .needsYou: (String(localized: "Nothing needs you"), String(localized: "Requests and failed runs appear here."))
+            case .running: (String(localized: "Nothing running"), String(localized: "Running sessions appear here."))
+            case .recent: (String(localized: "No sessions yet"), String(localized: "Your latest sessions appear here."))
             }
         }
     }

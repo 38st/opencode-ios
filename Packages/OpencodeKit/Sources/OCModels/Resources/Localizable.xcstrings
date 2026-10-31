@@ -1,0 +1,381 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "(not answered)" : {
+      "comment" : "Shown in Form Validation"
+    },
+    "30 days" : {
+      "comment" : "Statistics range"
+    },
+    "7 days" : {
+      "comment" : "Statistics range"
+    },
+    "90 days" : {
+      "comment" : "Statistics range"
+    },
+    "API key" : {
+      "comment" : "Provider sign-in method"
+    },
+    "Add files" : {
+      "comment" : "Shown in Workspace Command"
+    },
+    "Administration" : {
+      "comment" : "Shown in Server Admin"
+    },
+    "Agents and tools" : {
+      "comment" : "Shown in Server Admin"
+    },
+    "Allow Local Network access in Settings." : {
+      "comment" : "Shown in Connection"
+    },
+    "An unknown connection error occurred." : {
+      "comment" : "Shown in Connection"
+    },
+    "Ask a side question" : {
+      "comment" : "Shown in Composer Suggestions"
+    },
+    "Attach an image, PDF or text file. The server drops audio, video and other binary files." : {
+      "comment" : "Shown in Attachment Processing"
+    },
+    "Authentication failed. Pair with the server again." : {
+      "comment" : "Shown in Connection"
+    },
+    "Branch changes" : {
+      "comment" : "Shown in Review"
+    },
+    "Catching up after too many events." : {
+      "comment" : "Shown in Connection"
+    },
+    "Check the server URL." : {
+      "comment" : "Shown in Connection"
+    },
+    "Choose Yes or No." : {
+      "comment" : "Shown in Form Validation"
+    },
+    "Choose answers." : {
+      "comment" : "Shown in Form Validation"
+    },
+    "Choose at least %@ answers." : {
+      "comment" : "%@ is a number of answers"
+    },
+    "Choose at most %@ answers." : {
+      "comment" : "%@ is a number of answers"
+    },
+    "Choose each answer once." : {
+      "comment" : "Shown in Form Validation"
+    },
+    "Choose from the listed options." : {
+      "comment" : "Shown in Form Validation"
+    },
+    "Choose model" : {
+      "comment" : "Shown in Composer Suggestions"
+    },
+    "Choose one of the options." : {
+      "comment" : "Shown in Form Validation"
+    },
+    "Close terminal" : {
+      "comment" : "Shown in Workspace Command"
+    },
+    "Command" : {
+      "comment" : "Provider sign-in method: run a command"
+    },
+    "Command palette" : {
+      "comment" : "Shown in Workspace Command"
+    },
+    "Commands" : {
+      "comment" : "Command palette group"
+    },
+    "Commit and push" : {
+      "comment" : "Shown in Git Quick Action"
+    },
+    "Compact session" : {
+      "comment" : "Shown in Composer Suggestions"
+    },
+    "Complete the external step and confirm below." : {
+      "comment" : "Shown in Form Validation"
+    },
+    "Configuration" : {
+      "comment" : "Shown in Server Admin"
+    },
+    "Context %@" : {
+      "comment" : "Header badge; %@ is how full the context window is, like 43%"
+    },
+    "Context —" : {
+      "comment" : "Header badge when context usage is unknown"
+    },
+    "Create a new session from a previous message" : {
+      "comment" : "Shown in Composer Suggestions"
+    },
+    "Cycle agent" : {
+      "comment" : "Shown in Composer Suggestions"
+    },
+    "Cycle thinking effort" : {
+      "comment" : "Shown in Workspace Command"
+    },
+    "Default" : {
+      "comment" : "Model badge: the default model"
+    },
+    "Directory" : {
+      "comment" : "Suggestion kind: a folder"
+    },
+    "Each attachment must be 20 MiB or smaller." : {
+      "comment" : "Shown in Attachment Processing"
+    },
+    "Edit" : {
+      "comment" : "Menu bar menu"
+    },
+    "Enter a date and time with a time zone." : {
+      "comment" : "Shown in Form Validation"
+    },
+    "Enter a date as YYYY-MM-DD." : {
+      "comment" : "Shown in Form Validation"
+    },
+    "Enter a full URL." : {
+      "comment" : "Shown in Form Validation"
+    },
+    "Enter a number." : {
+      "comment" : "Shown in Form Validation"
+    },
+    "Enter a whole number." : {
+      "comment" : "Shown in Form Validation"
+    },
+    "Enter an email address." : {
+      "comment" : "Shown in Form Validation"
+    },
+    "Enter at least %@ characters." : {
+      "comment" : "%@ is a number of characters"
+    },
+    "Enter at most %@ characters." : {
+      "comment" : "%@ is a number of characters"
+    },
+    "Enter text." : {
+      "comment" : "Shown in Form Validation"
+    },
+    "Environment variable" : {
+      "comment" : "Provider sign-in method"
+    },
+    "Failed to create worktree" : {
+      "comment" : "Shown in Workspace Input"
+    },
+    "Failed to load" : {
+      "comment" : "Shown in Server Admin"
+    },
+    "File" : {
+      "comment" : "Suggestion kind: a file"
+    },
+    "Find" : {
+      "comment" : "Menu command: find text"
+    },
+    "Fork from message" : {
+      "comment" : "Shown in Composer Suggestions"
+    },
+    "Free" : {
+      "comment" : "Model badge: costs nothing"
+    },
+    "Get a one-shot answer without adding to the conversation" : {
+      "comment" : "Shown in Composer Suggestions"
+    },
+    "Git changes" : {
+      "comment" : "Shown in Review"
+    },
+    "Image" : {
+      "comment" : "Model badge: accepts images"
+    },
+    "Last turn changes" : {
+      "comment" : "Shown in Review"
+    },
+    "Latest" : {
+      "comment" : "Model badge"
+    },
+    "Match the requested format." : {
+      "comment" : "Shown in Form Validation"
+    },
+    "Maximum: %@" : {
+      "comment" : "%@ is the largest allowed number"
+    },
+    "Minimum: %@" : {
+      "comment" : "%@ is the smallest allowed number"
+    },
+    "Model" : {
+      "comment" : "Menu bar menu"
+    },
+    "New Window" : {
+      "comment" : "Shown in Workspace Command"
+    },
+    "New session" : {
+      "comment" : "Shown in Composer Suggestions"
+    },
+    "New terminal" : {
+      "comment" : "Shown in Workspace Command"
+    },
+    "Next session" : {
+      "comment" : "Shown in Workspace Command"
+    },
+    "Next unread session" : {
+      "comment" : "Shown in Workspace Command"
+    },
+    "No" : {
+      "comment" : "Form answer for a yes/no question"
+    },
+    "Open a pull request" : {
+      "comment" : "Shown in Git Quick Action"
+    },
+    "PDF" : {
+      "comment" : "Model badge: accepts PDF files"
+    },
+    "Permissions" : {
+      "comment" : "Server settings section"
+    },
+    "Plain HTTP is only supported for local networking. Use an HTTPS URL for this host." : {
+      "comment" : "Shown in Connection"
+    },
+    "Previous session" : {
+      "comment" : "Shown in Workspace Command"
+    },
+    "Previous unread session" : {
+      "comment" : "Shown in Workspace Command"
+    },
+    "Projects" : {
+      "comment" : "Command palette group"
+    },
+    "Providers" : {
+      "comment" : "Shown in Server Admin"
+    },
+    "Recent" : {
+      "comment" : "Group of recently used models"
+    },
+    "Recent sessions" : {
+      "comment" : "Shown in Switcher Index"
+    },
+    "Redo" : {
+      "comment" : "Composer command"
+    },
+    "Redo the last undone message" : {
+      "comment" : "Shown in Composer Suggestions"
+    },
+    "Required" : {
+      "comment" : "Form field error: the field must be filled in"
+    },
+    "Review next approval" : {
+      "comment" : "Shown in Workspace Command"
+    },
+    "Select a different model" : {
+      "comment" : "Shown in Composer Suggestions"
+    },
+    "Send" : {
+      "comment" : "Menu command: send the prompt"
+    },
+    "Send commit prompt" : {
+      "comment" : "Shown in Git Quick Action"
+    },
+    "Send pull request prompt" : {
+      "comment" : "Shown in Git Quick Action"
+    },
+    "Session" : {
+      "comment" : "Menu bar menu"
+    },
+    "Session %lld" : {
+      "comment" : "Menu command; %lld is the session's position, 1 to 9"
+    },
+    "Sessions" : {
+      "comment" : "Command palette group"
+    },
+    "Settings" : {
+      "comment" : "Command palette group"
+    },
+    "Sign in again" : {
+      "comment" : "Shown in Server Admin"
+    },
+    "Sign-in failed." : {
+      "comment" : "Shown in Server Admin"
+    },
+    "Stop" : {
+      "comment" : "Menu command: stop the running session"
+    },
+    "Summarize the session to reduce context size" : {
+      "comment" : "Shown in Composer Suggestions"
+    },
+    "Switch to the next agent" : {
+      "comment" : "Shown in Composer Suggestions"
+    },
+    "Terminal" : {
+      "comment" : "Menu bar menu"
+    },
+    "The agent will commit the current changes and push the branch, after its current turn if it is working. It sends this prompt:" : {
+      "comment" : "Shown in Git Quick Action"
+    },
+    "The agent will push the branch and open a pull request, after its current turn if it is working. It sends this prompt:" : {
+      "comment" : "Shown in Git Quick Action"
+    },
+    "The connection was cancelled." : {
+      "comment" : "Shown in Connection"
+    },
+    "The event stream stopped responding." : {
+      "comment" : "Shown in Connection"
+    },
+    "The hostname could not be resolved. Check DNS and tunnel domain blocking." : {
+      "comment" : "Shown in Connection"
+    },
+    "The server closed the event stream." : {
+      "comment" : "Shown in Connection"
+    },
+    "The server could not be reached. Check the address and network." : {
+      "comment" : "Shown in Connection"
+    },
+    "The server did not open its event stream in time." : {
+      "comment" : "Shown in Connection"
+    },
+    "The server did not respond in time." : {
+      "comment" : "Shown in Connection"
+    },
+    "The server sent an unexpected first event." : {
+      "comment" : "Shown in Connection"
+    },
+    "The server's TLS connection could not be verified." : {
+      "comment" : "Shown in Connection"
+    },
+    "This address is not an opencode server." : {
+      "comment" : "Shown in Connection"
+    },
+    "This field needs a newer client." : {
+      "comment" : "Shown in Form Validation"
+    },
+    "This image could not be read." : {
+      "comment" : "Shown in Attachment Processing"
+    },
+    "Today" : {
+      "comment" : "Statistics range"
+    },
+    "Toggle review" : {
+      "comment" : "Shown in Workspace Command"
+    },
+    "Toggle sidebar" : {
+      "comment" : "Shown in Workspace Command"
+    },
+    "Turn changes" : {
+      "comment" : "Shown in Review"
+    },
+    "Undo" : {
+      "comment" : "Composer command"
+    },
+    "Undo the last message" : {
+      "comment" : "Shown in Composer Suggestions"
+    },
+    "Usage statistics" : {
+      "comment" : "Shown in Server Admin"
+    },
+    "Variants" : {
+      "comment" : "Model badge: has thinking-effort variants"
+    },
+    "View" : {
+      "comment" : "Menu bar menu"
+    },
+    "Worktrees" : {
+      "comment" : "Shown in Server Admin"
+    },
+    "Yes" : {
+      "comment" : "Form answer for a yes/no question"
+    }
+  },
+  "version" : "1.0"
+}

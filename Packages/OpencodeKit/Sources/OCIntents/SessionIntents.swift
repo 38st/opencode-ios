@@ -13,7 +13,7 @@ public struct ReviewNextApprovalIntent: AppIntent {
     @MainActor public func perform() async throws -> some IntentResult & ProvidesDialog {
         IntentTrace.record("review")
         let opened = try await Self.review(app: IntentEnvironment.app)
-        return .result(dialog: opened ? "Opening the request." : "Nothing is waiting for your approval.")
+        return .result(dialog: IntentDialog(opened ? LocalizedStringResource("Opening the request.", bundle: .module) : LocalizedStringResource("Nothing is waiting for your approval.", bundle: .module)))
     }
     /// Opens the request, if one waits; true when it did.
     @MainActor static func review(app: (any IntentApp)?) async throws -> Bool {

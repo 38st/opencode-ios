@@ -82,7 +82,7 @@ private nonisolated struct ActivityHandle: @unchecked Sendable {
         for (key, pending) in unregistered where activities[key] != nil {
             let expires = (lifecycles[key]?.createdAt ?? .now).addingTimeInterval(7.5 * 3600)
             do { try await register(pending.attributes, pending.id, pending.token, expires); unregistered.removeValue(forKey: key); error = nil }
-            catch { self.error = "Live Activity remote updates unavailable" }
+            catch { self.error = localized("Live Activity remote updates unavailable") }
         }
     }
     public func removeServer(_ serverID: String) async {
@@ -114,7 +114,7 @@ private nonisolated struct ActivityHandle: @unchecked Sendable {
                         // No relay identity yet: nothing to retry until a token registration creates one.
                         self?.unregistered[key] = (activity.attributes, activity.id, token); break
                     } catch {
-                        self?.error = "Live Activity remote updates unavailable"
+                        self?.error = localized("Live Activity remote updates unavailable")
                         do { try await Task.sleep(for: .seconds(delay)) } catch { return }
                         delay = min(60, delay * 2)
                     }

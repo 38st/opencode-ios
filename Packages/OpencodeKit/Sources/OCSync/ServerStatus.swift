@@ -14,24 +14,24 @@ public struct ServerStatus: Equatable, Sendable {
         switch state {
         case .connected(let id, _):
             let kind = endpoints.first { $0.id == id }?.kind
-            title = "Connected · \(kind?.label ?? "Server")"; symbol = "checkmark.circle.fill"; tone = .good
+            title = localized("Connected · \(kind?.label ?? localized("Server", comment: "Connection kind when unknown"))", comment: "Server status; %@ is the connection kind, like Tailscale"); symbol = "checkmark.circle.fill"; tone = .good
         case .idle, .resolving, .connecting:
-            title = "Connecting"; symbol = "arrow.triangle.2.circlepath"; tone = .progress
+            title = localized("Connecting", comment: "Server status"); symbol = "arrow.triangle.2.circlepath"; tone = .progress
         case .waiting(let count, let retryAt, let failure):
             let remaining = now.duration(to: retryAt)
             let seconds = max(0, Int(ceil(Double(remaining.components.seconds) + Double(remaining.components.attoseconds) / 1e18)))
-            title = "Retrying in \(seconds)s"; detail = "Attempt \(count) · \(failure.message)"
+            title = localized("Retrying in \(seconds)s", comment: "Server status; %lld is a number of seconds, s abbreviates seconds"); detail = localized("Attempt \(count) · \(failure.message)", comment: "%lld is the attempt number, %@ the connection error")
             symbol = "arrow.clockwise"; tone = .warning
         case .unauthorized:
-            title = "Needs re-pairing"; symbol = "key.fill"; tone = .warning
+            title = localized("Needs re-pairing"); symbol = "key.fill"; tone = .warning
         case .incompatible(.notOpencode):
-            title = "Not an opencode server"; symbol = "exclamationmark.triangle.fill"; tone = .warning
+            title = localized("Not an opencode server"); symbol = "exclamationmark.triangle.fill"; tone = .warning
         case .incompatible:
-            title = "Update opencode"; symbol = "arrow.up.circle.fill"; tone = .warning
+            title = localized("Update opencode"); symbol = "arrow.up.circle.fill"; tone = .warning
         case .serviceStarting:
-            title = "Starting"; symbol = "hourglass"; tone = .progress
+            title = localized("Starting", comment: "Server status"); symbol = "hourglass"; tone = .progress
         case .suspended:
-            title = "Paused"; symbol = "pause.circle.fill"; tone = .neutral
+            title = localized("Paused", comment: "Server status"); symbol = "pause.circle.fill"; tone = .neutral
         }
     }
 }
@@ -58,10 +58,10 @@ public extension EndpointKind {
         switch self {
         case .lan: "LAN"
         case .tailnet: "Tailscale"
-        case .tunnel: "Tunnel"
+        case .tunnel: localized("Tunnel", comment: "Connection kind")
         case .https: "HTTPS"
         case .ssh: "SSH"
-        case .unknown: "Server"
+        case .unknown: localized("Server", comment: "Connection kind when unknown")
         }
     }
 }

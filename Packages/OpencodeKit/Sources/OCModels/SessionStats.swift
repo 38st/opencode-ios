@@ -60,7 +60,7 @@ public struct StatsRange: Hashable, Sendable {
     public enum Preset: String, CaseIterable, Sendable {
         case today, week, month, quarter
         public var title: String {
-            switch self { case .today: "Today"; case .week: "7 days"; case .month: "30 days"; case .quarter: "90 days" }
+            switch self { case .today: localized("Today", comment: "Statistics range"); case .week: localized("7 days", comment: "Statistics range"); case .month: localized("30 days", comment: "Statistics range"); case .quarter: localized("90 days", comment: "Statistics range") }
         }
         var days: Int { switch self { case .today: 1; case .week: 7; case .month: 30; case .quarter: 90 } }
     }

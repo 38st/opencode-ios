@@ -46,7 +46,7 @@ final class CodeImageCell: UICollectionViewCell {
         image.contentMode = .scaleAspectFit
         contentView.addSubview(image)
         isAccessibilityElement = true
-        accessibilityLabel = "Image preview"
+        accessibilityLabel = localized("Image preview")
     }
     required init?(coder: NSCoder) { nil }
     func configure(_ data: Data?) { image.image = data.flatMap { UIImage(data: $0) } }

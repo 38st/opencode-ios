@@ -21,15 +21,15 @@ public enum AdminEndpoints {
               body: try attemptBody(methodID, answers, label))
     }
     public static func oauthStatus(_ integrationID: String, attempt: String, directory: String) -> Endpoint<AttemptStatus> {
-        status(integration(integrationID, "connect/oauth/" + attempt), directory: directory)
+        status(integration(integrationID, "connect/oauth/" + pathSegment(attempt)), directory: directory)
     }
     public static func completeOAuth(_ integrationID: String, attempt: String, directory: String, code: String?) throws -> Endpoint<Void> {
         var body: JSONValue = .object([:]); body.set("code", code.map(JSONValue.string))
-        return void(.post, integration(integrationID, "connect/oauth/\(attempt)/complete"), directory: directory, body: try JSONEncoder().encode(body))
+        return void(.post, integration(integrationID, "connect/oauth/\(pathSegment(attempt))/complete"), directory: directory, body: try JSONEncoder().encode(body))
     }
     /// Idempotent.
     public static func cancelOAuth(_ integrationID: String, attempt: String, directory: String) -> Endpoint<Void> {
-        void(.delete, integration(integrationID, "connect/oauth/" + attempt), directory: directory)
+        void(.delete, integration(integrationID, "connect/oauth/" + pathSegment(attempt)), directory: directory)
     }
     /// Runs the method's login command on the server machine.
     public static func startCommand(_ integrationID: String, directory: String, methodID: String, label: String? = nil) throws -> Endpoint<Located<CommandAttempt>> {
@@ -37,30 +37,30 @@ public enum AdminEndpoints {
               body: try attemptBody(methodID, nil, label))
     }
     public static func commandStatus(_ integrationID: String, attempt: String, directory: String) -> Endpoint<AttemptStatus> {
-        status(integration(integrationID, "connect/command/" + attempt), directory: directory)
+        status(integration(integrationID, "connect/command/" + pathSegment(attempt)), directory: directory)
     }
     public static func cancelCommand(_ integrationID: String, attempt: String, directory: String) -> Endpoint<Void> {
-        void(.delete, integration(integrationID, "connect/command/" + attempt), directory: directory)
+        void(.delete, integration(integrationID, "connect/command/" + pathSegment(attempt)), directory: directory)
     }
     public static func renameCredential(_ id: String, label: String) throws -> Endpoint<Void> {
-        void(.patch, "/api/credential/" + id, body: try JSONEncoder().encode(["label": label]))
+        void(.patch, "/api/credential/" + pathSegment(id), body: try JSONEncoder().encode(["label": label]))
     }
-    public static func activateCredential(_ id: String) -> Endpoint<Void> { void(.post, "/api/credential/\(id)/activate") }
-    public static func removeCredential(_ id: String) -> Endpoint<Void> { void(.delete, "/api/credential/" + id) }
+    public static func activateCredential(_ id: String) -> Endpoint<Void> { void(.post, "/api/credential/\(pathSegment(id))/activate") }
+    public static func removeCredential(_ id: String) -> Endpoint<Void> { void(.delete, "/api/credential/" + pathSegment(id)) }
 
     // MARK: MCP
     public static func mcpConnect(_ server: String, directory: String) -> Endpoint<Void> {
-        void(.post, "/api/experimental/mcp/\(server)/connect", directory: directory)
+        void(.post, "/api/experimental/mcp/\(pathSegment(server))/connect", directory: directory)
     }
     public static func mcpDisconnect(_ server: String, directory: String) -> Endpoint<Void> {
-        void(.post, "/api/experimental/mcp/\(server)/disconnect", directory: directory)
+        void(.post, "/api/experimental/mcp/\(pathSegment(server))/disconnect", directory: directory)
     }
 
     // MARK: Saved permissions
     public static func savedPermissions(projectID: String) -> Endpoint<DataResponse<LossyArray<SavedPermission>>> {
         .json(path: "/api/permission/saved", query: [URLQueryItem(name: "projectID", value: projectID)])
     }
-    public static func deleteSavedPermission(_ id: String) -> Endpoint<Void> { void(.delete, "/api/permission/saved/" + id) }
+    public static func deleteSavedPermission(_ id: String) -> Endpoint<Void> { void(.delete, "/api/permission/saved/" + pathSegment(id)) }
 
     // MARK: Catalogs
     public static func plugins(_ directory: String) -> Endpoint<Located<LossyArray<PluginInfo>>> {
@@ -82,7 +82,7 @@ public enum AdminEndpoints {
         var body: JSONValue = .object([:])
         body.set("name", name.map(JSONValue.string)); body.set("icon", icon)
         body.set("commands", startCommand.map { .object(["start": .string($0)]) })
-        return .json(method: .patch, path: "/api/project/" + id, body: try JSONEncoder().encode(body))
+        return .json(method: .patch, path: "/api/project/" + pathSegment(id), body: try JSONEncoder().encode(body))
     }
     public static func createWorktree(projectID: String, name: String? = nil) throws -> Endpoint<WorktreeInfo> {
         var body: JSONValue = .object(["projectID": .string(projectID)])
@@ -121,7 +121,7 @@ public enum AdminEndpoints {
     public static let reloadLocations = void(.post, "/api/location/reload")
 
     // MARK: Helpers
-    static func integration(_ id: String, _ suffix: String) -> String { "/api/integration/\(id)/" + suffix }
+    static func integration(_ id: String, _ suffix: String) -> String { "/api/integration/\(pathSegment(id))/" + suffix }
     static func attemptBody(_ methodID: String, _ answers: JSONValue?, _ label: String?) throws -> Data {
         var body: JSONValue = .object(["methodID": .string(methodID)])
         body.set("answer", answers); body.set("label", label.map(JSONValue.string))

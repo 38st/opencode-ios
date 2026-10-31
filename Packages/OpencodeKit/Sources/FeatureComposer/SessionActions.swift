@@ -45,15 +45,15 @@ public struct SessionActions: View {
                 }
             }
         } label: { OCIcon("dot-grid").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
-            .accessibilityLabel("Session actions").accessibilityIdentifier("sessionActions")
-            .alert("Rename session", isPresented: $rename) {
-                TextField("Session title", text: $title)
-                Button("Cancel", role: .cancel) {}
-                Button("Save") { run { try await store.renameSession(session.id, title: title) } }
-            } message: { Text("Leave the title empty to generate a new one.") }
+            .accessibilityLabel(localized("Session actions")).accessibilityIdentifier("sessionActions")
+            .alert(localized("Rename session"), isPresented: $rename) {
+                TextField(localized("Session title"), text: $title)
+                Button(localized("Cancel"), role: .cancel) {}
+                Button(localized("Save")) { run { try await store.renameSession(session.id, title: title) } }
+            } message: { Text(localized("Leave the title empty to generate a new one.")) }
             .sheet(isPresented: $deleting) {
-                OCConfirmationSheet("Delete session", message: "Delete session \"\(session.info.title ?? "Untitled session")\"?" + (store.family(session.id).count > 1 ? " Its subagent sessions will be deleted too." : ""),
-                                    confirmTitle: "Delete session", cancel: { deleting = false }, confirm: {
+                OCConfirmationSheet(localized("Delete session"), message: deleteMessage,
+                                    confirmTitle: localized("Delete session"), cancel: { deleting = false }, confirm: {
                     store.deleteSession(session.id) { result in
                         switch result {
                         case .success: deleting = false; deleted()
@@ -67,11 +67,17 @@ public struct SessionActions: View {
             .sheet(isPresented: $exporting) {
                 OCExportSheet(prepare: { try await store.exportFile(session.id, format: $0, sanitize: $1) }) { exporting = false }.ocSheet()
             }
-            .alert("Could not complete action", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
-                Button("OK") { error = nil }
+            .alert(localized("Could not complete action"), isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
+                Button(localized("OK")) { error = nil }
             } message: { Text(error ?? "") }
             .onChange(of: command) { _, next in if let next { command = nil; perform(next) } }
             .onDisappear { task?.cancel() }
+    }
+    private var deleteMessage: String {
+        let title = session.info.title ?? localized("Untitled session")
+        return store.family(session.id).count > 1
+            ? localized("Delete session \"\(title)\"? Its subagent sessions will be deleted too.", comment: "%@ is the session title")
+            : localized("Delete session \"\(title)\"?", comment: "%@ is the session title")
     }
     private var forkMessages: [SessionMessage] {
         guard let transcript = session.transcript else { return [] }
@@ -92,8 +98,8 @@ public struct SessionActions: View {
                         }.frame(minHeight: OCLayout.touchTarget)
                     }.buttonStyle(.plain).listRowBackground(OCColor.background)
                 }
-            }.scrollContentBackground(.hidden).background(OCColor.background).navigationTitle("Fork from message")
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { forking = false } } }
+            }.scrollContentBackground(.hidden).background(OCColor.background).navigationTitle(localized("Fork from message"))
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(localized("Cancel")) { forking = false } } }
         }.ocTheme()
     }
     private func perform(_ command: ComposerCommand) {
@@ -147,14 +153,14 @@ public struct SentPrompt: View {
             ForEach(Array((showAllComments || styledText.characters.isEmpty ? comments : Array(comments.prefix(5))).enumerated()), id: \.offset) { _, comment in
                 HStack { Spacer(minLength: 0); OCCommentCard(comment) }
             }
-            if !showAllComments && !styledText.characters.isEmpty && comments.count > 5 { Button("Show more") { showAllComments = true }.buttonStyle(OCButtonStyle(.ghost)) }
+            if !showAllComments && !styledText.characters.isEmpty && comments.count > 5 { Button(localized("Show more")) { showAllComments = true }.buttonStyle(OCButtonStyle(.ghost)) }
             if let files = input["files"]?.arrayValue {
                 ForEach(Array(files.enumerated()), id: \.offset) { _, file in
                     if file["mention"] == nil && !isCommentFile(file) {
                         if let image = TranscriptImage(name: file["name"]?.stringValue, mime: file["mime"]?.stringValue ?? "", uri: file["uri"]?.stringValue, base64: attachmentBase64(file)) {
                             OCTranscriptImage(image)
                         } else {
-                            OCAttachmentChip(name: file["name"]?.stringValue ?? "Attachment", mime: file["mime"]?.stringValue ?? "text/plain",
+                            OCAttachmentChip(name: file["name"]?.stringValue ?? localized("Attachment"), mime: file["mime"]?.stringValue ?? "text/plain",
                                              base64: attachmentBase64(file))
                         }
                     }

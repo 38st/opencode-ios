@@ -31,8 +31,8 @@ public struct DiffCardView: View {
             else { Button { expanded.toggle() } label: { header }.buttonStyle(.plain) }
             if expanded {
                 #if os(iOS)
-                preview
-                Button("Show full diff") { selecting = true }.buttonStyle(OCButtonStyle()).padding(OCSpacing.sm)
+                preview.environment(\.layoutDirection, .leftToRight)
+                Button(localized("Show full diff")) { selecting = true }.buttonStyle(OCButtonStyle()).padding(OCSpacing.sm)
                 #else
                 CodeBlockView(patch)
                 #endif
@@ -58,7 +58,7 @@ public struct DiffCardView: View {
     @ViewBuilder private var fileTitle: some View {
         if fileLinks != nil {
             Button(action: openFile) { Text(file).font(OCType.small).lineLimit(1).truncationMode(.middle).frame(minHeight: OCLayout.touchTarget).contentShape(Rectangle()) }
-                .buttonStyle(.plain).accessibilityHint("Open file")
+                .buttonStyle(.plain).accessibilityHint(localized("Open file"))
         } else { Text(file).font(OCType.small).lineLimit(1).truncationMode(.middle) }
     }
     private var header: some View {
@@ -68,7 +68,7 @@ public struct DiffCardView: View {
             else { fileTitle; counts }
             Spacer(minLength: 0)
             if fileLinks != nil {
-                OCIconButton(expanded ? "Collapse diff" : "Expand diff", icon: expanded ? "chevron-down" : "chevron-right") { expanded.toggle() }
+                OCIconButton(expanded ? localized("Collapse diff") : localized("Expand diff"), icon: expanded ? "chevron-down" : "chevron-right") { expanded.toggle() }
             } else { OCIcon(expanded ? "chevron-down" : "chevron-right", size: 12) }
         }.font(OCType.micro).padding(OCSpacing.md).frame(minHeight: OCLayout.touchTarget).contentShape(Rectangle())
             .fixedSize(horizontal: false, vertical: true)
@@ -97,20 +97,20 @@ public struct DiffCardView: View {
             GeometryReader { geometry in
                 VStack(spacing: 0) {
                     HStack {
-                        OCIconButton(showAll ? "Hide non-diff lines" : "Show all lines", icon: "code-lines") { showAll.toggle() }
+                        OCIconButton(showAll ? localized("Hide non-diff lines") : localized("Show all lines"), icon: "code-lines") { showAll.toggle() }
                         Menu {
-                            Button("Unified") { split = false }
-                            if geometry.size.width >= 560 && !typeSize.isAccessibilitySize { Button("Split") { split = true } }
-                            Toggle("Wrap lines", isOn: $wrap)
+                            Button(localized("Unified", comment: "Diff layout with one column")) { split = false }
+                            if geometry.size.width >= 560 && !typeSize.isAccessibilitySize { Button(localized("Split", comment: "Diff layout with side-by-side columns")) { split = true } }
+                            Toggle(localized("Wrap lines"), isOn: $wrap)
                         } label: { OCIcon(split && geometry.size.width >= 560 && !typeSize.isAccessibilitySize ? "split" : "unified").frame(width: 44, height: 44) }
-                            .accessibilityLabel("Diff view")
+                            .accessibilityLabel(localized("Diff view"))
                         Spacer(minLength: 0)
-                        if fileLinks != nil { Button("Open file") { selecting = false; openFile() }.buttonStyle(OCButtonStyle(.ghost)) }
+                        if fileLinks != nil { Button(localized("Open file")) { selecting = false; openFile() }.buttonStyle(OCButtonStyle(.ghost)) }
                     }.padding(.horizontal, OCSpacing.sm)
                     diff(full: true)
                 }
             }.ocNavigationTitle(file)
-                .toolbar { ToolbarItem(placement: .cancellationAction) { OCIconButton("Close diff", icon: "close") { selecting = false } } }
+                .toolbar { ToolbarItem(placement: .cancellationAction) { OCIconButton(localized("Close diff"), icon: "close") { selecting = false } } }
         }
     }
     private func editComment(_ value: LineComment) -> some View {
@@ -126,8 +126,8 @@ public struct DiffCardView: View {
     #endif
     private var counts: some View {
         HStack(spacing: OCSpacing.sm) {
-            Text("+\(additions)").foregroundStyle(OCColor.success)
-            Text("−\(deletions)").foregroundStyle(OCColor.danger)
+            Text(verbatim: "+\(additions)").foregroundStyle(OCColor.success)
+            Text(verbatim: "−\(deletions)").foregroundStyle(OCColor.danger)
         }.fixedSize()
     }
 }

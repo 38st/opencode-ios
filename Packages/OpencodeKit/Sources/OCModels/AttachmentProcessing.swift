@@ -12,9 +12,9 @@ public enum AttachmentError: Error, LocalizedError, Sendable {
     case tooLarge, unsupported, invalidImage
     public var errorDescription: String? {
         switch self {
-        case .tooLarge: "Each attachment must be 20 MiB or smaller."
-        case .unsupported: "Attach an image, PDF or text file. The server drops audio, video and other binary files."
-        case .invalidImage: "This image could not be read."
+        case .tooLarge: localized("Each attachment must be 20 MiB or smaller.")
+        case .unsupported: localized("Attach an image, PDF or text file. The server drops audio, video and other binary files.")
+        case .invalidImage: localized("This image could not be read.")
         }
     }
 }

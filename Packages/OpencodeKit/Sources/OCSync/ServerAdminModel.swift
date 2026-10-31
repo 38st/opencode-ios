@@ -49,6 +49,7 @@ import OCNetworking
         if directory == nil || !projects.contains(where: { $0.canonical == directory }) { directory = projects.first?.canonical }
     }
     public func isBusy(_ key: String) -> Bool { busy.contains(key) }
+    func belongs(to other: ReadStore) -> Bool { store === other }
 
     // MARK: Loading
     public func loadIntegrations() async {
@@ -100,7 +101,7 @@ import OCNetworking
         let succeeded = await perform("connect:" + integration.id) { api in
             try await api.send(AdminEndpoints.connectKey(integration.id, directory: directory, key: key, answers: answers, label: label))
         }
-        if succeeded { notice = "\(integration.name) connected"; integrations.invalidate(); await loadIntegrations() }
+        if succeeded { notice = localized("\(integration.name) connected", comment: "%@ is a provider or integration name"); integrations.invalidate(); await loadIntegrations() }
         return succeeded
     }
     /// Starts an OAuth or command sign-in; the flow reports back through `connect`.
@@ -112,7 +113,7 @@ import OCNetworking
                               clock: clock, now: now) { [weak self] phase in
             guard let self else { return }
             if phase == .complete {
-                self.notice = "\(integration.name) connected"
+                self.notice = localized("\(integration.name) connected", comment: "%@ is a provider or integration name")
                 self.integrations.invalidate(); self.catalog?.mcp.invalidate()
                 self.owned { await $0.loadIntegrations() }
             }
@@ -169,7 +170,7 @@ import OCNetworking
         guard let directory, !targets.isEmpty else { return }
         let done = await perform("plugins:update") { api in try await api.send(AdminEndpoints.updatePlugins(directory, targets: targets)) }
         if done {
-            notice = targets.count == 1 ? "Updating \(targets[0])" : "Updating \(targets.count) plugins"
+            notice = targets.count == 1 ? localized("Updating \(targets[0])", comment: "%@ is a plugin name") : localized("Updating \(targets.count) plugins", comment: "%lld is a number of plugins")
             plugins.invalidate(); await loadPlugins()
         }
     }
@@ -211,7 +212,7 @@ import OCNetworking
     public func reloadLocations() async {
         let done = await perform("reload") { api in try await api.send(AdminEndpoints.reloadLocations) }
         if done {
-            notice = "Configuration reloaded"
+            notice = localized("Configuration reloaded")
             integrations.invalidate(); plugins.invalidate(); config.invalidate(); catalog?.invalidate()
         }
     }
@@ -314,9 +315,27 @@ import OCNetworking
 }
 
 extension ReadStore {
-    /// The server's settings model, kept for the life of the server's store.
+    /// A settings model outside any window (previews and snapshots), kept for the life of the server's store.
     public var admin: ServerAdminModel {
         if let admin = adminModel { return admin }
-        let admin = ServerAdminModel(store: self); adminModel = admin; return admin
+        let admin = makeAdmin(); adminModel = admin; return admin
+    }
+    /// A new settings model with its own project choice, sign-in, errors and notices.
+    public func makeAdmin() -> ServerAdminModel {
+        let admin = ServerAdminModel(store: self); register(admin); return admin
+    }
+}
+
+struct WeakAdminModel { weak var model: ServerAdminModel? }
+
+/// One window's settings models, one per server: two windows on the same server never share a pending sign-in, a
+/// project choice, an error or a notice, while sections opened one after another in a window keep them.
+@MainActor public final class ServerAdminScope {
+    private var models: [String: ServerAdminModel] = [:]
+    public init() {}
+    public func model(for store: ReadStore) -> ServerAdminModel {
+        // A server removed and added again gets a new store; a model of the old one would read nothing.
+        if let model = models[store.serverID], model.belongs(to: store) { return model }
+        let model = store.makeAdmin(); models[store.serverID] = model; return model
     }
 }

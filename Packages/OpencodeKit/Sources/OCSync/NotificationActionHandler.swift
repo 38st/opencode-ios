@@ -23,67 +23,67 @@ import OCShared
         self.store = store; self.clock = clock; self.connect = connect; self.queue = queue
     }
     public func handle(shownID: String, receipt: String?, route: String? = nil, action: NotificationAction.ID, text: String? = nil) async -> String {
-        guard action != .open else { return "Open" }
+        guard action != .open else { return localized("Open", comment: "Notification action outcome: the app opened") }
         let shown = try? store.shown(shownID)
         let routed = route.flatMap(URL.init(string:)).flatMap(DeepLink.init(url:))?.serverID.uuidString
         var audit = NotificationAuditEntry(server: shown?.server ?? routed ?? "", requestID: shownID,
-            action: action.rawValue, result: "Started; outcome not yet confirmed", date: clock.date())
-        do { try store.append(audit) } catch { return "Could not save the notification audit. Open the app to review" }
-        var result = "Open the app to review"
+            action: action.rawValue, result: localized("Started; outcome not yet confirmed"), date: clock.date())
+        do { try store.append(audit) } catch { return localized("Could not save the notification audit. Open the app to review") }
+        var result = localized("Open the app to review")
         do {
             if let shown, receipt != shown.receipt.uuidString {
-                result = "The request changed. Open the app to review"
+                result = localized("The request changed. Open the app to review")
             } else if let shown {
                 result = try await withActionDeadline(seconds: .seconds(28), clock: clock) { [self] in
                     try await perform(shown, action: action, text: text)
                 }
             }
-        } catch APIError.server(_, 404, _) { result = "Already handled" }
-        catch { result = "Couldn't reach your server" }
+        } catch APIError.server(_, 404, _) { result = localized("Already handled") }
+        catch { result = localized("Couldn't reach your server") }
         do {
             audit.result = result
             try store.append(audit)
-        } catch { return result + ". Could not save the notification audit." }
+        } catch { return localized("\(result). Could not save the notification audit.", comment: "%@ is the outcome of a notification action") }
         return result
     }
     private func perform(_ shown: ShownNotification, action: NotificationAction.ID, text: String?) async throws -> String {
-        guard shown.expiresAt > clock.date(), try store.server(keyID: shown.keyID) == shown.server else { return "Open the app to review" }
+        guard shown.expiresAt > clock.date(), try store.server(keyID: shown.keyID) == shown.server else { return localized("Open the app to review") }
         if action == .reply, ["finished", "failed"].contains(shown.kind) {
-            guard let text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return "Open the app to reply" }
+            guard let text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return localized("Open the app to reply") }
             try Task.checkCancellation()
-            return try await queue(shown, text) ? "Reply queued" : "Already replied"
+            return try await queue(shown, text) ? localized("Reply queued") : localized("Already replied")
         }
         guard try store.preferences().lockScreenApprovals, let session = shown.sessionID, let expected = shown.digest,
-              ["permission", "question"].contains(shown.kind) else { return "Open the app to review" }
+              ["permission", "question"].contains(shown.kind) else { return localized("Open the app to review") }
         let connection = try await connect(shown.server)
         let path = "/api/session/\(session)/\(shown.kind == "permission" ? "permission" : "form")/\(shown.id)"
         let raw = try await connection.fetch(path)
         let digest = try shown.kind == "permission" ? PushDigest.permission(raw: raw) : PushDigest.form(raw: raw)
-        guard digest == expected else { return "The request changed. Open the app to review" }
+        guard digest == expected else { return localized("The request changed. Open the app to review") }
         let body: JSONValue
         let feedback: String
         if shown.kind == "permission" {
             let request = PermissionRequest(raw: raw)
             switch action {
             case .allow:
-                guard PermissionRisk.assess(request) != .high else { return "Open the app to review this high-risk request" }
-                body = .object(["decision": .string("once")]); feedback = "Approved"
+                guard PermissionRisk.assess(request) != .high else { return localized("Open the app to review this high-risk request") }
+                body = .object(["decision": .string("once")]); feedback = localized("Approved", comment: "Notification action outcome")
             case .reject, .rejectWithNote:
                 var fields: [String: JSONValue] = ["decision": .string("reject")]
                 if action == .rejectWithNote, let text, !text.isEmpty { fields["message"] = .string(text) }
-                body = .object(fields); feedback = "Rejected"
-            default: return "Open the app to review"
+                body = .object(fields); feedback = localized("Rejected", comment: "Notification action outcome")
+            default: return localized("Open the app to review")
             }
         } else {
             let form = FormInfo(raw: raw)
             guard action == .answer, form.fields.count == 1, case .string(let field) = form.fields[0],
-                  field.options.isEmpty || field.custom, let text else { return "Open the app to answer" }
+                  field.options.isEmpty || field.custom, let text else { return localized("Open the app to answer") }
             let answer = [field.key: JSONValue.string(text)]
-            guard FormValidation.errors(form, answers: answer).isEmpty else { return "Open the app to review your answer" }
-            body = .object(["answer": .object(answer)]); feedback = "Answered"
+            guard FormValidation.errors(form, answers: answer).isEmpty else { return localized("Open the app to review your answer") }
+            body = .object(["answer": .object(answer)]); feedback = localized("Answered", comment: "Notification action outcome")
         }
         // Recheck after network waits; a replacement or expiry may have invalidated the alert.
-        guard shown.expiresAt > clock.date(), try store.preferences().lockScreenApprovals, try store.shown(shown.id) == shown else { return "Already handled" }
+        guard shown.expiresAt > clock.date(), try store.preferences().lockScreenApprovals, try store.shown(shown.id) == shown else { return localized("Already handled") }
         try Task.checkCancellation()
         try await connection.reply(path + "/reply", body)
         return feedback

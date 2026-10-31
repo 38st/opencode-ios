@@ -17,14 +17,14 @@ public struct OCLineCommentEditor: View {
     }
     public var body: some View {
         VStack(alignment: .leading, spacing: OCSpacing.md) {
-            Text("Comment").font(OCType.button)
+            Text(localized("Comment", comment: "Noun: title of the line comment editor")).font(OCType.button)
             if showsFile { Text(file).font(OCType.small).foregroundStyle(OCColor.textMuted).lineLimit(2) }
             ZStack(alignment: .topLeading) {
-                if text.isEmpty { Text("Add context for this change").foregroundStyle(OCColor.textFaint).padding(OCSpacing.sm) }
+                if text.isEmpty { Text(localized("Add context for this change")).foregroundStyle(OCColor.textFaint).padding(OCSpacing.sm) }
                 #if os(iOS)
                 CommentTextView(text: $text, submit: { submit(text) }, cancel: cancel).frame(height: min(160, fieldHeight))
                 #else
-                TextEditor(text: $text).focused($focused).scrollContentBackground(.hidden).frame(height: min(160, fieldHeight)).accessibilityLabel("Add context for this change")
+                TextEditor(text: $text).focused($focused).scrollContentBackground(.hidden).frame(height: min(160, fieldHeight)).accessibilityLabel(localized("Add context for this change"))
                 #endif
             }.font(OCType.small).background(OCColor.background, in: RoundedRectangle(cornerRadius: OCRadius.md))
                 .overlay(RoundedRectangle(cornerRadius: OCRadius.md).strokeBorder(OCColor.focus, lineWidth: OCBorder.hairline))
@@ -34,8 +34,8 @@ public struct OCLineCommentEditor: View {
                 if !typeSize.isAccessibilitySize { Spacer(minLength: 0) }
                 // Return and Escape belong to the comment's text view while it has focus; ⌘↩ stays the menu's Send.
                 HStack(spacing: OCSpacing.sm) {
-                    Button("Cancel", action: cancel).buttonStyle(OCButtonStyle(.ghost))
-                    Button(editing ? "Save" : "Comment") { submit(text) }.buttonStyle(OCButtonStyle(.contrast)).disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    Button(localized("Cancel"), action: cancel).buttonStyle(OCButtonStyle(.ghost))
+                    Button(editing ? localized("Save") : localized("Comment", comment: "Verb: button that adds a line comment")) { submit(text) }.buttonStyle(OCButtonStyle(.contrast)).disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
         }.padding(OCSpacing.md).frame(maxWidth: 400)
@@ -63,7 +63,7 @@ public struct OCCommentCard: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: OCSpacing.sm) {
             HStack { OCFileIcon(comment.file); Text((comment.file as NSString).lastPathComponent).font(OCType.small).lineLimit(1); Spacer(minLength: 0)
-                if edit != nil || delete != nil { Menu { if let edit { Button("Edit", action: edit) }; if let delete { Button("Delete", action: delete) } } label: { OCIcon("dot-grid").frame(width: 44, height: 44) }.accessibilityLabel("More options") }
+                if edit != nil || delete != nil { Menu { if let edit { Button(localized("Edit", comment: "Menu action that edits a line comment"), action: edit) }; if let delete { Button(localized("Delete", comment: "Menu action that deletes a line comment"), action: delete) } } label: { OCIcon("dot-grid").frame(width: 44, height: 44) }.accessibilityLabel(localized("More options")) }
             }
             if let selection = comment.selection { Text(selection.label).font(OCType.micro).foregroundStyle(OCColor.textMuted) }
             Text(comment.comment).font(OCType.small).fixedSize(horizontal: false, vertical: true)

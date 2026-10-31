@@ -47,12 +47,12 @@ public struct NewSessionView: View {
         GeometryReader { geometry in
             ScrollView {
                 VStack(spacing: OCSpacing.xxl) {
-                    Text("New session").font(OCType.title).accessibilityAddTraits(.isHeader)
+                    Text(localized("New session")).font(OCType.title).accessibilityAddTraits(.isHeader)
                     if !draftDirectory.isEmpty {
                         ComposerDock(store: server.readPath, model: server.readPath.composer(directory: draftDirectory), start: start, opened: opened, ownsCommands: ownsCommands)
                             .id(draftDirectory)
-                    } else { ProgressView("Loading projects…") }
-                    if creatingWorktree { ProgressView("Creating worktree").font(OCType.small) }
+                    } else { ProgressView(localized("Loading projects…")) }
+                    if creatingWorktree { ProgressView(localized("Creating worktree")).font(OCType.small) }
                     ViewThatFits(in: .horizontal) {
                         HStack { serverSelector; projectSelector; worktreeSelector }
                         VStack { serverSelector; projectSelector; worktreeSelector }
@@ -70,7 +70,7 @@ public struct NewSessionView: View {
                     if let initialDirectory {
                         let location = try await server.readPath.resolveDirectory(initialDirectory)
                         directory = location.directory; projectID = location.project?.id ?? ""
-                        error = "Failed to create session. Your prompt has been restored."
+                        error = localized("Failed to create session. Your prompt has been restored.")
                     } else if let project = server.projects.first(where: { $0.id == initialProject }) ?? server.projects.first {
                         directory = project.canonical; projectID = project.id
                     }
@@ -78,7 +78,7 @@ public struct NewSessionView: View {
                         let location = try await server.readPath.resolveDirectory("")
                         directory = location.directory; projectID = location.project?.id ?? ""
                     }
-                } catch { if !Task.isCancelled { self.error = "Could not open a project." } }
+                } catch { if !Task.isCancelled { self.error = localized("Could not open a project.") } }
             }
             .task(id: draftDirectory) {
                 guard !draftDirectory.isEmpty else { return }
@@ -86,7 +86,7 @@ public struct NewSessionView: View {
                 do {
                     try await server.readPath.refreshCatalogs(draftDirectory)
                     if !projectID.isEmpty { worktrees = try await server.readPath.worktrees(projectID: projectID) }
-                } catch { if !Task.isCancelled { choicesError = "Could not load project choices." } }
+                } catch { if !Task.isCancelled { choicesError = localized("Could not load project choices.") } }
             }
             .sheet(isPresented: $browser, onDismiss: {
                 if let destination = browserDestination { browserDestination = nil; select(destination) }
@@ -99,11 +99,11 @@ public struct NewSessionView: View {
             .sheet(isPresented: $choosingBranch) {
                 BranchPicker(store: server.readPath, directory: directory) { branch = $0; choosingBranch = false }.ocSheet()
             }
-            .alert("Which draft would you like to keep?", isPresented: $draftConflict) {
-                Button("Keep current draft") { if let pendingSelection { select(pendingSelection, keeping: .current) } }
-                Button("Use saved draft") { if let pendingSelection { select(pendingSelection, keeping: .saved) } }
-                Button("Cancel", role: .cancel) { pendingSelection = nil }
-            } message: { Text("This project already has a draft. Keeping your current draft replaces it. Using the saved draft keeps your current draft in its original project.") }
+            .alert(localized("Which draft would you like to keep?"), isPresented: $draftConflict) {
+                Button(localized("Keep current draft")) { if let pendingSelection { select(pendingSelection, keeping: .current) } }
+                Button(localized("Use saved draft")) { if let pendingSelection { select(pendingSelection, keeping: .saved) } }
+                Button(localized("Cancel"), role: .cancel) { pendingSelection = nil }
+            } message: { Text(localized("This project already has a draft. Keeping your current draft replaces it. Using the saved draft keeps your current draft in its original project.")) }
             .onDisappear { selectionTask?.cancel() }
     }
     /// Names the server the session starts on, so a same-named project on another computer can't be mistaken for it.
@@ -114,44 +114,44 @@ public struct NewSessionView: View {
                     Button(value.record.name) { if value.id != server.id { selectServer(value) } }
                 }
             } label: { OCLabel(server.record.name, icon: "server").font(OCType.small).frame(minHeight: OCLayout.touchTarget) }
-                .accessibilityLabel("Server").accessibilityValue(server.record.name)
+                .accessibilityLabel(localized("Server")).accessibilityValue(server.record.name)
                 .accessibilityIdentifier("newSessionServer").disabled(selectionDisabled)
         }
     }
     private var projectSelector: some View {
         Menu {
             // Inline pickers mark the current project and worktree with the system checkmark and selected trait.
-            Picker("Project", selection: Binding(get: { projectID }, set: { id in
+            Picker(localized("Project"), selection: Binding(get: { projectID }, set: { id in
                 if let value = server.projects.first(where: { $0.id == id }) { select(.init(directory: value.canonical, projectID: value.id, worktree: "")) }
             })) {
                 ForEach(server.projects) { value in Text(value.name ?? URL(fileURLWithPath: value.canonical).lastPathComponent).tag(value.id) }
             }.pickerStyle(.inline).labelsHidden()
             Divider()
-            Button("Open project…") { browser = true }
+            Button(localized("Open project…")) { browser = true }
         } label: { OCLabel(projectTitle, icon: "folder").font(OCType.small).frame(minHeight: OCLayout.touchTarget) }
-            .accessibilityLabel("Project").accessibilityValue(projectTitle).accessibilityIdentifier("newSessionProject").disabled(selectionDisabled)
+            .accessibilityLabel(localized("Project")).accessibilityValue(projectTitle).accessibilityIdentifier("newSessionProject").disabled(selectionDisabled)
     }
     private var worktreeSelector: some View {
         HStack {
             Menu {
-                Picker("Worktree", selection: Binding(get: { worktree }, set: selectWorktree)) {
-                    Text("Local repository").tag("")
-                    Text("New worktree").tag("new").disabled(project?.vcs == nil)
+                Picker(localized("Worktree"), selection: Binding(get: { worktree }, set: selectWorktree)) {
+                    Text(localized("Local repository")).tag("")
+                    Text(localized("New worktree")).tag("new").disabled(project?.vcs == nil)
                     ForEach(worktrees) { value in Text(value.branch ?? URL(fileURLWithPath: value.directory).lastPathComponent).tag(value.directory) }
                 }.pickerStyle(.inline).labelsHidden()
             } label: {
                 OCLabel(worktreeTitle, icon: "branch").font(OCType.small).frame(minHeight: OCLayout.touchTarget)
-            }.accessibilityLabel("Worktree").accessibilityValue(worktreeTitle).accessibilityHint("Where the agent runs")
+            }.accessibilityLabel(localized("Worktree")).accessibilityValue(worktreeTitle).accessibilityHint(localized("Where the agent runs"))
                 .accessibilityIdentifier("newSessionWorktree").disabled(selectionDisabled)
-            if project?.vcs == nil { OCBadge("No Git") }
+            if project?.vcs == nil { OCBadge(localized("No Git", comment: "Badge: the project is not a Git repository")) }
             else if worktree == "new" {
-                Button("from \(branch ?? currentBranch ?? "default")") { choosingBranch = true }.buttonStyle(OCButtonStyle(.ghost))
+                Button(localized("from \(branch ?? currentBranch ?? localized("default", comment: "Stands in for the default git branch name"))", comment: "Base branch of a new worktree; %@ is a git branch name")) { choosingBranch = true }.buttonStyle(OCButtonStyle(.ghost))
             }
         }
     }
     private var projectTitle: String { project?.name ?? URL(fileURLWithPath: directory).lastPathComponent }
     private var worktreeTitle: String {
-        worktree == "new" ? "New worktree" : worktree.isEmpty ? "Local repository" : URL(fileURLWithPath: worktree).lastPathComponent
+        worktree == "new" ? localized("New worktree") : worktree.isEmpty ? localized("Local repository") : URL(fileURLWithPath: worktree).lastPathComponent
     }
     private var selectionDisabled: Bool {
         changingSelection || creatingWorktree || (!draftDirectory.isEmpty && server.readPath.composer(directory: draftDirectory).busy)
@@ -183,7 +183,9 @@ public struct NewSessionView: View {
             defer { creatingWorktree = false }
             do { destination = try await server.readPath.createWorktree(projectID: projectID, from: project?.canonical ?? directory, branch: branch).directory }
             catch {
-                self.error = "Failed to create worktree" + ((error as? WorktreeFailure)?.forceRequired == true ? ". The server requires resolving the worktree conflict first." : ". " + WriteErrorMessage.message(error))
+                self.error = (error as? WorktreeFailure)?.forceRequired == true
+                    ? localized("Failed to create worktree. The server requires resolving the worktree conflict first.")
+                    : localized("Failed to create worktree. \(WriteErrorMessage.message(error))", comment: "%@ is the error message")
                 throw error
             }
         }
@@ -204,19 +206,19 @@ private struct DirectoryBrowser: View {
     var body: some View {
         NavigationStack {
             List {
-                TextField("Absolute directory path", text: $path).font(OCType.code).textInputAutocapitalization(.never).autocorrectionDisabled()
-                Button("Parent directory") { path = URL(fileURLWithPath: path).deletingLastPathComponent().path }
+                TextField(localized("Absolute directory path"), text: $path).font(OCType.code).textInputAutocapitalization(.never).autocorrectionDisabled()
+                Button(localized("Parent directory")) { path = URL(fileURLWithPath: path).deletingLastPathComponent().path }
                 ForEach(entries.filter { $0.type == .directory }) { entry in
                     let resolved = URL(fileURLWithPath: ComposerInput.absolute(entry.path, directory: directory)).standardizedFileURL
                     Button(resolved.lastPathComponent) { path = resolved.path }
                 }
                 if let error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger) }
-            }.accessibilityIdentifier("directoryBrowser").font(OCType.body).navigationTitle("Open project…")
+            }.accessibilityIdentifier("directoryBrowser").font(OCType.body).navigationTitle(localized("Open project…"))
                 .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-                    ToolbarItem(placement: .confirmationAction) { Button("Open") {
+                    ToolbarItem(placement: .cancellationAction) { Button(localized("Cancel")) { dismiss() } }
+                    ToolbarItem(placement: .confirmationAction) { Button(localized("Open", comment: "Opens the chosen directory as a project")) {
                         resolving?.cancel(); resolving = Task {
-                            do { selected(try await store.resolveDirectory(path)) } catch { self.error = "Could not open directory." }
+                            do { selected(try await store.resolveDirectory(path)) } catch { self.error = localized("Could not open directory.") }
                         }
                     }.disabled(!path.hasPrefix("/")) }
                 }
@@ -224,7 +226,7 @@ private struct DirectoryBrowser: View {
             .task(id: path) {
                 guard path.hasPrefix("/") else { return }
                 do { entries = try await store.listDirectory(path, directory: directory); error = nil }
-                catch is CancellationError {} catch { self.error = "Could not list directory." }
+                catch is CancellationError {} catch { self.error = localized("Could not list directory.") }
             }.onDisappear { resolving?.cancel() }
     }
 }
@@ -237,7 +239,7 @@ private struct BranchPicker: View {
     var body: some View {
         NavigationStack {
             List(branches, id: \.self) { branch in Button(branch) { selected(branch) }.font(OCType.body) }
-                .navigationTitle("From branch").searchable(text: $search, prompt: "Search branches")
+                .navigationTitle(localized("From branch")).searchable(text: $search, prompt: localized("Search branches"))
         }.ocTheme().task(id: search) {
             do { branches = try await store.branches(search, directory: directory) } catch { branches = [] }
         }

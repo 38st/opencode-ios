@@ -51,32 +51,32 @@ public struct SessionScreen: View {
                     if !compactChrome { header }
                     HStack {
                         if compactChrome {
-                            OCMenuButton("Session information", identifier: "sessionInformation",
-                                         items: header.metadata + [OCMenuItem("Context details", action: showContext)], isOpen: $informationOpen) {
+                            OCMenuButton(localized("Session information"), identifier: "sessionInformation",
+                                         items: header.metadata + [OCMenuItem(localized("Context details"), action: showContext)], isOpen: $informationOpen) {
                                 OCIcon("info").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget)
                             }
                         }
                         Menu {
-                            Picker("Timeline detail", selection: $detail) {
+                            Picker(localized("Timeline detail"), selection: $detail) {
                                 ForEach(TimelineDetail.allCases, id: \.rawValue) { Text($0.title).tag($0.rawValue) }
                             }
-                            Button("Copy session link") {
+                            Button(localized("Copy session link")) {
                                 OCCopy.text("opencodeios://server/" + server.id.rawValue.uuidString + "/session/" + sessionID)
                             }
-                            Button("Select text") { selection = Selection(text: selectionText(session)) }
+                            Button(localized("Select text")) { selection = Selection(text: selectionText(session)) }
                             if sizeClass != .regular {
-                                Button("Terminals") { terminals = true }.accessibilityIdentifier("openTerminals")
+                                Button(localized("Terminals")) { terminals = true }.accessibilityIdentifier("openTerminals")
                             }
                         } label: {
                             if compactChrome { OCIcon("sliders").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
-                            else { OCLabel(TimelineDetail(rawValue: detail)?.title ?? "Compact", icon: "sliders").font(OCType.small).padding(.horizontal, OCSpacing.md).frame(minHeight: OCLayout.touchTarget) }
-                        }.buttonStyle(.plain).accessibilityLabel("Timeline detail").accessibilityValue(TimelineDetail(rawValue: detail)?.title ?? "Compact")
+                            else { OCLabel(TimelineDetail(rawValue: detail)?.title ?? TimelineDetail.compact.title, icon: "sliders").font(OCType.small).padding(.horizontal, OCSpacing.md).frame(minHeight: OCLayout.touchTarget) }
+                        }.buttonStyle(.plain).accessibilityLabel(localized("Timeline detail")).accessibilityValue(TimelineDetail(rawValue: detail)?.title ?? TimelineDetail.compact.title)
                             .accessibilityIdentifier("timelineDetail")
                         Spacer(minLength: 0)
                         SessionActions(store: server.readPath, session: session, command: $composerCommand, opened: openRoot, deleted: deleted)
-                        if session.info.parentID != nil && !compactChrome { OCBadge("Subagent · read only") }
+                        if session.info.parentID != nil && !compactChrome { OCBadge(localized("Subagent · read only")) }
                         if sizeClass != .regular {
-                            OCIconButton("Review panel", icon: "sidebar-right") { review = true }.accessibilityIdentifier("sessionReview")
+                            OCIconButton(localized("Review panel"), icon: "sidebar-right") { review = true }.accessibilityIdentifier("sessionReview")
                         }
                     }.padding(.horizontal, OCSpacing.lg)
                     if server.connectionNotice != nil { connectionBanner.padding(.horizontal, OCSpacing.md) }
@@ -84,7 +84,7 @@ public struct SessionScreen: View {
                         SessionTimeline(store: server.readPath, session: session, transcript: transcript,
                                         detail: TimelineDetail(rawValue: detail) ?? .compact, requestID: requestID, openChild: openChild, openRoot: openRoot)
                             .frame(minHeight: OCLayout.timelineMinimumHeight)
-                    } else { Spacer(); ProgressView("Loading conversation…").font(OCType.small); Spacer() }
+                    } else { Spacer(); ProgressView(localized("Loading conversation…")).font(OCType.small); Spacer() }
                     if let error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding(OCSpacing.md).ocAnnounce(error, initial: true) }
                     if let error = server.readPath.writeError { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding(OCSpacing.md).ocAnnounce(error, initial: true) }
                     if hasPendingInput(session) {
@@ -103,28 +103,28 @@ public struct SessionScreen: View {
                                  newSession: newSession, clientCommand: { composerCommand = $0 }, ownsCommands: ownsCommands).padding(OCSpacing.md)
                     #if DEBUG
                     if ProcessInfo.processInfo.environment["OPENCODE_UI_TEST_ID"] != nil, let elapsed = server.readPath.lastApprovalRoundTrip {
-                        Color.clear.frame(height: 1).accessibilityElement().accessibilityLabel("Approval round trip")
+                        Color.clear.frame(height: 1).accessibilityElement().accessibilityLabel(Text(verbatim: "Approval round trip"))
                             .accessibilityValue(String(elapsed)).accessibilityIdentifier("approvalTiming")
                     }
                     if ProcessInfo.processInfo.environment["OPENCODE_UI_TEST_ID"] != nil, let elapsed = server.readPath.lastAnswerRoundTrip {
-                        Color.clear.frame(height: 1).accessibilityElement().accessibilityLabel("Answer round trip")
+                        Color.clear.frame(height: 1).accessibilityElement().accessibilityLabel(Text(verbatim: "Answer round trip"))
                             .accessibilityValue(String(elapsed)).accessibilityIdentifier("answerTiming")
                     }
                     #endif
                 } else {
                     Spacer()
-                    OCEmptyState(error == nil ? "Opening session…" : "Session unavailable", detail: error ?? "Loading the conversation from your server.", icon: "bubble-5") { EmptyView() }
+                    OCEmptyState(error == nil ? localized("Opening session…") : localized("Session unavailable"), detail: error ?? localized("Loading the conversation from your server."), icon: "bubble-5") { EmptyView() }
                     Spacer()
                 }
             }
         }.environment(\.ocFileLinks, fileLinks)
             .background(OCColor.background).clipShape(RoundedRectangle(cornerRadius: OCRadius.xl))
-            .navigationTitle(server.sessions[sessionID]?.info.title ?? "Session").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(server.sessions[sessionID]?.info.title ?? localized("Session", comment: "Fallback title for a session without a title")).navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $review) {
                 // Close the sheet first, as the context sheet does, so the session does not open beneath it.
                 WorkspaceReviewPanel(server: server, sessionID: sessionID, openSession: { id in review = false; openSession(id) },
                                      openTerminal: { id in review = false; terminalOpen = id; terminals = true })
-                    .safeAreaInset(edge: .top) { HStack { Spacer(); OCIconButton("Close review", icon: "close") { review = false }.accessibilityIdentifier("closeReview") }.padding(.horizontal, OCSpacing.sm) }.ocSheet()
+                    .safeAreaInset(edge: .top) { HStack { Spacer(); OCIconButton(localized("Close review"), icon: "close") { review = false }.accessibilityIdentifier("closeReview") }.padding(.horizontal, OCSpacing.sm) }.ocSheet()
             }
             .sheet(isPresented: $context) {
                 ContextSheet(store: server.readPath, sessionID: sessionID, openSession: { id in context = false; openSession(id) }, showChanges: {
@@ -152,12 +152,12 @@ public struct SessionScreen: View {
                     try Task.checkCancellation()
                     try await server.readPath.loadFamily(sessionID)
                     error = nil
-                } catch is CancellationError {} catch { self.error = "Could not refresh this session. Cached messages are shown when available." }
+                } catch is CancellationError {} catch { self.error = localized("Could not refresh this session. Cached messages are shown when available.") }
             }
             .task(id: ViewStamp(idle: server.sessions[sessionID]?.info.time.idle, active: phase == .active)) {
                 guard phase == .active else { return }
                 do { try await server.readPath.markViewed(sessionID) }
-                catch is CancellationError {} catch { self.error = "Could not mark this session read." }
+                catch is CancellationError {} catch { self.error = localized("Could not mark this session read.") }
             }
             .onDisappear { server.readPath.close(sessionID) }
     }
@@ -253,7 +253,7 @@ private struct SessionHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: OCSpacing.sm) {
             if showsTitle {
-                Text(session.info.title ?? "Untitled session").font(OCType.heading).fixedSize(horizontal: false, vertical: true)
+                Text(session.info.title ?? localized("Untitled session")).font(OCType.heading).fixedSize(horizontal: false, vertical: true)
             }
             // One line where the model name truncates, so a long id or a new selection never reflows the header.
             if typeSize.isAccessibilitySize {
@@ -268,28 +268,31 @@ private struct SessionHeader: View {
     }
     /// The header's labels as the compact chrome's Session information rows.
     var metadata: [OCMenuItem] {
-        var rows = [OCMenuItem("Agent: " + ((session.info.agent ?? lastAssistant?.agent)?.capitalized ?? "Agent")), OCMenuItem("Model: " + (modelName ?? "—"))]
-        if let variant = session.info.model?.variant, variant != "default" { rows.append(OCMenuItem("Variant: " + variant)) }
-        if composer.pendingSelection { rows.append(OCMenuItem("Agent or model choice pending")) }
+        let agent = (session.info.agent ?? lastAssistant?.agent)?.capitalized ?? localized("Agent", comment: "Fallback when the session agent is unknown")
+        let model = modelName ?? "—"
+        var rows = [OCMenuItem(localized("Agent: \(agent)", comment: "%@ is the agent name")), OCMenuItem(localized("Model: \(model)", comment: "%@ is the model name"))]
+        if let variant = session.info.model?.variant, variant != "default" { rows.append(OCMenuItem(localized("Variant: \(variant)", comment: "%@ is the model variant name"))) }
+        if composer.pendingSelection { rows.append(OCMenuItem(localized("Agent or model choice pending"))) }
         rows.append(OCMenuItem(usage))
-        rows.append(OCMenuItem("Family cost: " + server.readPath.family(session.id).reduce(0) { $0 + $1.info.cost }.formatted(.currency(code: "USD"))))
-        if session.info.parentID != nil { rows.append(OCMenuItem("Subagent · read only")) }
+        let cost = server.readPath.family(session.id).reduce(0) { $0 + $1.info.cost }.formatted(.currency(code: "USD"))
+        rows.append(OCMenuItem(localized("Family cost: \(cost)", comment: "%@ is the total cost of the session and its subagents")))
+        if session.info.parentID != nil { rows.append(OCMenuItem(localized("Subagent · read only"))) }
         return rows
     }
     @ViewBuilder private var labels: some View {
         let fixed = !typeSize.isAccessibilitySize
-        Text((session.info.agent ?? lastAssistant?.agent)?.capitalized ?? "Agent").font(OCType.small).foregroundStyle(OCColor.textMuted)
+        Text((session.info.agent ?? lastAssistant?.agent)?.capitalized ?? localized("Agent", comment: "Fallback when the session agent is unknown")).font(OCType.small).foregroundStyle(OCColor.textMuted)
             .lineLimit(1).fixedSize(horizontal: fixed, vertical: false)
-        Text(modelName ?? "Model —").font(OCType.small).foregroundStyle(OCColor.textMuted)
+        Text(modelName ?? localized("Model —", comment: "Shown when the session model is unknown")).font(OCType.small).foregroundStyle(OCColor.textMuted)
             .lineLimit(fixed ? 1 : nil).truncationMode(.middle).layoutPriority(-1)
         if let variant = session.info.model?.variant, variant != "default" {
             Text(variant).font(OCType.small).foregroundStyle(OCColor.textMuted).lineLimit(1).fixedSize(horizontal: fixed, vertical: false)
         }
         Button(action: showContext) { OCBadge(usage) }.buttonStyle(.plain).ocHover(RoundedRectangle(cornerRadius: OCRadius.xs))
-            .accessibilityHint("Shows context and token usage").accessibilityIdentifier("sessionContext")
+            .accessibilityHint(localized("Shows context and token usage")).accessibilityIdentifier("sessionContext")
             .fixedSize(horizontal: fixed, vertical: false)
         Text(server.readPath.family(session.id).reduce(0) { $0 + $1.info.cost }.formatted(.currency(code: "USD")))
-            .font(OCType.micro).foregroundStyle(OCColor.textMuted).accessibilityLabel("Family cost")
+            .font(OCType.micro).foregroundStyle(OCColor.textMuted).accessibilityLabel(localized("Family cost"))
             .lineLimit(1).fixedSize(horizontal: fixed, vertical: false)
     }
 }

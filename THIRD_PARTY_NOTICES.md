@@ -2,6 +2,69 @@
 
 This is an independent native client, licensed under the GPL-3.0-only (see [LICENSE](LICENSE)). Bundled third-party material keeps its own licence and is credited below.
 
+
+## Components shipped in the app and the push packages
+
+Every library, grammar, font and icon set compiled into or bundled with the app, and every runtime npm package of the push plugin and relay, with its exact version and licence. Each full licence text is bundled under `Packages/OpencodeKit/Sources/OCDesign/Resources/Licenses`. Test-only and build-only tools are listed further down.
+
+<!-- acknowledgements:start -->
+
+Generated from `Packages/OpencodeKit/Sources/OCDesign/Resources/Licenses/acknowledgements.json` by
+`node Tools/notices/generate.mjs`; the app's Acknowledgements screen shows the same list and licence texts.
+
+### Libraries
+
+| Component | Version | Licence | Copyright |
+| --- | --- | --- | --- |
+| [GRDB.swift](https://github.com/groue/GRDB.swift) | 7.8.0 | MIT | Copyright (C) 2015-2025 Gwendal Roué |
+| [SwiftTerm](https://github.com/migueldeicaza/SwiftTerm) | 1.99.1 | MIT | Copyright (c) 2019-2026 Miguel de Icaza; the xterm.js authors; SourceLair Private Company; Christopher Jeffrey |
+| [Textual](https://github.com/gonzalezreal/textual) | 0.5.0 | MIT | Copyright (c) 2024 Guille Gonzalez |
+| [SwiftUIMath](https://github.com/gonzalezreal/swiftui-math) | 0.1.0 | MIT | Copyright (c) 2026 Guille Gonzalez; (c) 2023 Computer Inspirations (SwiftMath); (c) 2013 MathChat (iosMath) |
+| [swift-concurrency-extras](https://github.com/pointfreeco/swift-concurrency-extras) | 1.4.3 | MIT | Copyright (c) 2023 Point-Free |
+| [swift-markdown](https://github.com/swiftlang/swift-markdown) | 0.7.3 | Apache-2.0 | Copyright (c) 2021 Apple Inc. and the Swift project authors |
+| [swift-cmark](https://github.com/swiftlang/swift-cmark) | 0.9.0 | BSD-2-Clause | Copyright (c) 2014, John MacFarlane |
+| [SwiftTreeSitter](https://github.com/tree-sitter/swift-tree-sitter) | 0.10.0 | BSD-3-Clause | Copyright (c) 2021, Chime |
+| [tree-sitter](https://github.com/tree-sitter/tree-sitter) | 0.25.10 | MIT | Copyright (c) 2018-2024 Max Brunsfeld |
+
+### Syntax highlighting grammars
+
+| Component | Version | Licence | Copyright |
+| --- | --- | --- | --- |
+| [tree-sitter-swift](https://github.com/alex-pinkus/tree-sitter-swift) | eda05af | MIT | Copyright (c) 2021 alex-pinkus |
+| [tree-sitter-typescript](https://github.com/tree-sitter/tree-sitter-typescript) | 0.23.2 | MIT | Copyright (c) 2017 Max Brunsfeld |
+| [tree-sitter-tsx](https://github.com/tree-sitter/tree-sitter-typescript) | 0.23.2 | MIT | Copyright (c) 2017 Max Brunsfeld |
+| [tree-sitter-javascript](https://github.com/tree-sitter/tree-sitter-javascript) | 0.23.1 | MIT | Copyright (c) 2014 Max Brunsfeld |
+| [tree-sitter-python](https://github.com/tree-sitter/tree-sitter-python) | 0.23.6 | MIT | Copyright (c) 2016 Max Brunsfeld |
+| [tree-sitter-json](https://github.com/tree-sitter/tree-sitter-json) | 0.24.8 | MIT | Copyright (c) 2014 Max Brunsfeld |
+| [tree-sitter-bash](https://github.com/tree-sitter/tree-sitter-bash) | 0.23.3 | MIT | Copyright (c) 2017 Max Brunsfeld |
+| [tree-sitter-go](https://github.com/tree-sitter/tree-sitter-go) | 0.23.4 | MIT | Copyright (c) 2014 Max Brunsfeld |
+| [tree-sitter-rust](https://github.com/tree-sitter/tree-sitter-rust) | 0.23.2 | MIT | Copyright (c) 2017 Maxim Sokolov |
+| [tree-sitter-markdown](https://github.com/tree-sitter-grammars/tree-sitter-markdown) | 0.5.1 | MIT | Copyright (c) 2021 Matthias Deiml |
+| [tree-sitter-yaml](https://github.com/tree-sitter-grammars/tree-sitter-yaml) | 0.7.1 | MIT | Copyright (c) 2024 tree-sitter-grammars contributors; Copyright (c) 2019-2021 Ika |
+| [tree-sitter-html](https://github.com/tree-sitter/tree-sitter-html) | 0.23.2 | MIT | Copyright (c) 2014 Max Brunsfeld |
+| [tree-sitter-css](https://github.com/tree-sitter/tree-sitter-css) | 0.23.2 | MIT | Copyright (c) 2018 Max Brunsfeld |
+
+### Fonts, icons and design
+
+| Component | Version | Licence | Copyright |
+| --- | --- | --- | --- |
+| [OpenCode design tokens and icons](https://github.com/anomalyco/opencode) | d0732ea | MIT | Copyright (c) 2025 opencode |
+| [Material Icon Theme file-type artwork](https://github.com/material-extensions/vscode-material-icon-theme) | 5.39.0 | MIT | Copyright (c) 2025 Material Extensions; (c) 2021 Philipp Kief |
+| [Inter](https://github.com/rsms/inter) | d0732ea | OFL-1.1 | Copyright 2016 The Inter Project Authors |
+| [JetBrains Mono Nerd Font Mono](https://github.com/JetBrains/JetBrainsMono) | d0732ea | OFL-1.1 | Copyright 2020 The JetBrains Mono Project Authors |
+
+### Push plugin and relay
+
+| Component | Version | Licence | Copyright |
+| --- | --- | --- | --- |
+| [@hpke/core](https://github.com/dajiaji/hpke-js) | 1.9.0 | MIT | Copyright (c) 2023 Ajitomi Daisuke |
+| [@hpke/common](https://github.com/dajiaji/hpke-js) | 1.10.1 | MIT | Copyright (c) 2024 Ajitomi Daisuke |
+| [@hpke/dhkem-x25519](https://github.com/dajiaji/hpke-js) | 1.8.0 | MIT | Copyright (c) 2023 Ajitomi Daisuke |
+| [@hpke/chacha20poly1305](https://github.com/dajiaji/hpke-js) | 1.8.0 | MIT | Copyright (c) 2023 Ajitomi Daisuke |
+| [hono](https://github.com/honojs/hono) | 4.13.13 | MIT | Copyright (c) 2021 - present, Yusuke Wada and Hono contributors |
+
+<!-- acknowledgements:end -->
+
 ## OpenCode design tokens and icons — MIT
 
 The default OpenCode (OC-2) theme, component measurements and 149 SVG icons were ported from `packages/ui` in the read-only OpenCode reference, with layout references from `packages/app` and `packages/session-ui`. The original icon geometry is preserved; SVGs are template assets. The complete licence is bundled at `Packages/OpencodeKit/Sources/OCDesign/Resources/Licenses/opencode-MIT.txt`.

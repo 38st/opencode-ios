@@ -1,0 +1,27 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Failed" : {
+      "comment" : "Live Activity session status"
+    },
+    "Finished" : {
+      "comment" : "Live Activity session status"
+    },
+    "Needs you" : {
+      "comment" : "Live Activity session status"
+    },
+    "Open for status" : {
+      "comment" : "Shown in Session Activity Attributes"
+    },
+    "Retrying" : {
+      "comment" : "Live Activity session status"
+    },
+    "Running" : {
+      "comment" : "Live Activity session status"
+    },
+    "Stopped" : {
+      "comment" : "Live Activity session status"
+    }
+  },
+  "version" : "1.0"
+}

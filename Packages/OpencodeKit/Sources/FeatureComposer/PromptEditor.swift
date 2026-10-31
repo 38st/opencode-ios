@@ -38,7 +38,7 @@ struct PromptEditor: UIViewRepresentable {
         view.backgroundColor = .clear
         view.textContainerInset = .init(top: OCSpacing.lg, left: OCSpacing.md, bottom: OCSpacing.sm, right: OCSpacing.md)
         view.adjustsFontForContentSizeCategory = true
-        view.accessibilityLabel = "Prompt"
+        view.accessibilityLabel = localized("Prompt", comment: "Accessibility label of the prompt editor")
         view.accessibilityIdentifier = "promptEditor"
         view.keyboardDismissMode = .interactive
         view.updateStyle(shell: shell)
@@ -195,7 +195,7 @@ final class EditorView: UITextView {
                 let toolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: bounds.width, height: OCLayout.touchTarget))
                 toolbar.autoresizingMask = .flexibleWidth
                 toolbar.tintColor = UIColor(OCColor.text)
-                let hide = UIBarButtonItem(title: "Hide keyboard", style: .plain, target: self, action: #selector(hideKeyboard))
+                let hide = UIBarButtonItem(title: localized("Hide keyboard"), style: .plain, target: self, action: #selector(hideKeyboard))
                 hide.setTitleTextAttributes([.font: OCType.editorFont(shell: false, traits: traitCollection)], for: .normal)
                 toolbar.items = [UIBarButtonItem(systemItem: .flexibleSpace), hide]
                 inputAccessoryView = toolbar

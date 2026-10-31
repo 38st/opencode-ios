@@ -68,7 +68,7 @@ import UserNotifications
                     await self?.controller?.registered(token: bytes)
                     let state = self?.controller?.registration.relayState ?? ""
                     await self?.report(.object(["id": .string("token"), "event": .string("tokenRegistered"),
-                        "registered": .bool(state == "Registered"), "relayState": .string(state),
+                        "registered": .bool(self?.controller?.registration.isRelayRegistered == true), "relayState": .string(state),
                         "at": .double(Date().timeIntervalSince1970 * 1000)]))
                 }
             }
@@ -160,7 +160,7 @@ import UserNotifications
             output["pending"] = .integer(Int64(pending))
         case "health":
             await controller.refresh()
-            output["registered"] = .bool(controller.health.contains { $0.registration == "Registered" })
+            output["registered"] = .bool(controller.health.contains { $0.isRegistered })
             output["server"] = controller.registry?.servers.first.map { .string($0.id.rawValue.uuidString) } ?? .null
         default: output["error"] = .string("Unknown harness operation")
         }

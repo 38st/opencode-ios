@@ -22,6 +22,7 @@ public struct HomeView: View {
     let shortcut: (SessionRef) -> String?
     /// The session open beside Home; its root row is highlighted.
     let selectedSession: SessionRef?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// The search and the hidden-sessions toggle, owned by the window when it passes them, so ⌘1–9 follow the rows
     /// Home shows.
     private let searchBinding: Binding<String>?
@@ -86,13 +87,13 @@ public struct HomeView: View {
                     let listed = sections
                     ForEach(listed.prefix(2)) { section($0.title, items: $0.items) }
                     if HomeOrdering.all(registry.servers, hidden: showHidden, search: search).isEmpty {
-                        Text(search.isEmpty ? "Your sessions will appear here" : "No matching sessions")
+                        Text(search.isEmpty ? localized("Your sessions will appear here") : localized("No matching sessions"))
                             .font(OCType.small).foregroundStyle(OCColor.textMuted).listRowSeparator(.hidden)
                             .listRowBackground(OCColor.background)
                     }
                     ForEach(listed.dropFirst(2)) { section($0.title, items: $0.items) }
                     if !cursors.isEmpty || (!loadedScope && servers.contains(where: { $0.readPath.rootCursor != nil })) {
-                        Button(loading ? "Loading…" : "Load older sessions") { run(failureMessage: "Could not load older sessions.") { try await loadMore() } }
+                        Button(loading ? localized("Loading…") : localized("Load older sessions")) { run(failureMessage: localized("Could not load older sessions.")) { try await loadMore() } }
                             .disabled(loading).buttonStyle(OCButtonStyle()).listRowSeparator(.hidden).listRowBackground(OCColor.background)
                     }
                     if let error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).listRowBackground(OCColor.background) }
@@ -109,11 +110,11 @@ public struct HomeView: View {
                                 try Task.checkCancellation(); cursors[server.id] = next
                             }
                             loadedScope = true; error = nil
-                        } catch is CancellationError {} catch { self.error = "Could not refresh sessions. Pull to try again." }
+                        } catch is CancellationError {} catch { self.error = localized("Could not refresh sessions. Pull to try again.") }
                     }
                     .onChange(of: selectedRowID, initial: true) { _, id in
                         guard let id else { return }
-                        withAnimation { proxy.scrollTo(id) }
+                        withAnimation(reduceMotion ? nil : .default) { proxy.scrollTo(id) }
                     }
             }
         }.background(OCColor.backgroundDeep).onDisappear { action?.cancel() }
@@ -121,18 +122,18 @@ public struct HomeView: View {
     private var header: some View {
         HStack(spacing: OCSpacing.xs) {
             OCIcon("grid-plus").foregroundStyle(OCColor.iconMuted)
-            Text("Home").font(OCType.body).accessibilityAddTraits(.isHeader)
+            Text(localized("Home", comment: "Title of the sessions home screen")).font(OCType.body).accessibilityAddTraits(.isHeader)
             Spacer(minLength: 0)
-            if let openPalette { OCIconButton("Command palette", icon: "magnifying-glass-menu", action: openPalette).accessibilityIdentifier("openCommandPalette") }
-            OCIconButton("New session", icon: "plus", action: newSession).accessibilityIdentifier("newSession")
-            OCIconButton("Settings", icon: "settings-gear", action: openSettings).accessibilityIdentifier("openSettings")
+            if let openPalette { OCIconButton(localized("Command palette"), icon: "magnifying-glass-menu", action: openPalette).accessibilityIdentifier("openCommandPalette") }
+            OCIconButton(localized("New session"), icon: "plus", action: newSession).accessibilityIdentifier("newSession")
+            OCIconButton(localized("Settings"), icon: "settings-gear", action: openSettings).accessibilityIdentifier("openSettings")
         }.padding(.leading, OCSpacing.lg).padding(.trailing, OCSpacing.xs)
     }
     private var filters: some View {
         VStack(spacing: OCSpacing.sm) {
             // A full-width row, so the server name is legible in the iPad sidebar.
             Menu {
-                Button("All servers") { selectedServer = nil; selectedProject = nil }
+                Button(localized("All servers")) { selectedServer = nil; selectedProject = nil }
                 ForEach(registry.servers) { server in
                     Button { selectedServer = server.id; selectedProject = nil } label: {
                         Text(server.record.name)
@@ -140,19 +141,19 @@ public struct HomeView: View {
                     }
                 }
                 Divider()
-                Toggle("Hidden sessions", isOn: showHiddenBinding ?? $ownShowHidden)
-                Button("Manage servers", action: openSettings)
+                Toggle(localized("Hidden sessions"), isOn: showHiddenBinding ?? $ownShowHidden)
+                Button(localized("Manage servers"), action: openSettings)
             } label: {
                 HStack {
                     OCIcon("server")
-                    Text(registry.servers.first { $0.id == selectedServer }?.record.name ?? "All servers").font(OCType.small)
+                    Text(registry.servers.first { $0.id == selectedServer }?.record.name ?? localized("All servers")).font(OCType.small)
                     Spacer(minLength: 0); OCIcon("chevron-down", size: 12)
                 }.frame(minHeight: OCLayout.touchTarget).contentShape(Rectangle())
-            }.buttonStyle(.plain).accessibilityLabel("Switch server")
-                .accessibilityValue(registry.servers.first { $0.id == selectedServer }?.record.name ?? "All servers")
+            }.buttonStyle(.plain).accessibilityLabel(localized("Switch server"))
+                .accessibilityValue(registry.servers.first { $0.id == selectedServer }?.record.name ?? localized("All servers"))
                 .accessibilityIdentifier("serverSwitcher")
             Menu {
-                Button("All projects") { selectedProject = nil }
+                Button(localized("All projects")) { selectedProject = nil }
                 ForEach(servers) { server in
                     Section(server.record.name) {
                         ForEach(server.projects) { project in
@@ -164,7 +165,7 @@ public struct HomeView: View {
                 }
                 if let openTerminals, let (server, project) = selectedProjectEntry {
                     Divider()
-                    Button("Terminals") { openTerminals(server.id, project.canonical) }.accessibilityIdentifier("projectTerminals")
+                    Button(localized("Terminals")) { openTerminals(server.id, project.canonical) }.accessibilityIdentifier("projectTerminals")
                 }
             } label: {
                 HStack {
@@ -175,7 +176,7 @@ public struct HomeView: View {
             }.buttonStyle(.plain).accessibilityIdentifier("projectPicker")
             HStack(spacing: OCSpacing.sm) {
                 OCIcon("magnifying-glass").foregroundStyle(OCColor.iconMuted)
-                TextField("Search sessions", text: searchBinding ?? $ownSearch).textFieldStyle(.plain).font(OCType.small).autocorrectionDisabled().accessibilityIdentifier("sessionSearch")
+                TextField(localized("Search sessions"), text: searchBinding ?? $ownSearch).textFieldStyle(.plain).font(OCType.small).autocorrectionDisabled().accessibilityIdentifier("sessionSearch")
             }.padding(.horizontal, OCSpacing.md).frame(minHeight: OCLayout.touchTarget)
                 .background(OCColor.layer1, in: RoundedRectangle(cornerRadius: OCRadius.md))
         }
@@ -192,7 +193,7 @@ public struct HomeView: View {
                 return project.name ?? URL(fileURLWithPath: project.canonical).lastPathComponent
             }
         }
-        return "All projects"
+        return localized("All projects")
     }
     private func section(_ title: String, items: [SessionSummary]) -> some View {
         Section {
@@ -204,11 +205,11 @@ public struct HomeView: View {
                         if selected { RoundedRectangle(cornerRadius: OCRadius.md).fill(OCColor.pressed).padding(.horizontal, OCSpacing.xs) }
                     })
                     .swipeActions(edge: .trailing) {
-                        Button("Mark read") { markRead(item) }.tint(OCColor.accent)
-                        Button(item.meta.hidden ? "Unhide" : "Hide") { toggleHidden(item) }.tint(OCColor.textMuted)
+                        Button(localized("Mark read")) { markRead(item) }.tint(OCColor.accent)
+                        Button(item.meta.hidden ? localized("Unhide") : localized("Hide", comment: "Hides a session from Home")) { toggleHidden(item) }.tint(OCColor.textMuted)
                     }
                     .swipeActions(edge: .leading) {
-                        Button(item.meta.pinned ? "Unpin" : "Pin") { togglePinned(item) }.tint(OCColor.info)
+                        Button(item.meta.pinned ? localized("Unpin") : localized("Pin", comment: "Pins a session to the top of Home")) { togglePinned(item) }.tint(OCColor.info)
                     }
                     .contextMenu { menu(item) }
                     // Dragging a row to the edge of the screen opens the session in a new window.
@@ -218,23 +219,23 @@ public struct HomeView: View {
     }
     @ViewBuilder private func menu(_ item: SessionSummary) -> some View {
         Button { selectSession(item.ref) } label: {
-            Text("Open")
+            Text(localized("Open", comment: "Opens the session"))
             if let shortcut = shortcut(item.ref) { Text(shortcut) }
         }
-        if let openInNewWindow { Button("Open in New Window") { openInNewWindow(item.ref) } }
-        if item.needsYou { Button("Review") { selectSession(item.reviewRef) } }
+        if let openInNewWindow { Button(localized("Open in New Window")) { openInNewWindow(item.ref) } }
+        if item.needsYou { Button(localized("Review", comment: "Button that opens the session's pending request")) { selectSession(item.reviewRef) } }
         Divider()
-        Button("Mark read") { markRead(item) }
-        Button(item.meta.pinned ? "Unpin" : "Pin") { togglePinned(item) }
-        Button(item.meta.hidden ? "Unhide" : "Hide") { toggleHidden(item) }
+        Button(localized("Mark read")) { markRead(item) }
+        Button(item.meta.pinned ? localized("Unpin") : localized("Pin", comment: "Pins a session to the top of Home")) { togglePinned(item) }
+        Button(item.meta.hidden ? localized("Unhide") : localized("Hide", comment: "Hides a session from Home")) { toggleHidden(item) }
         if let url = DeepLink.url(serverID: item.server.id.rawValue, sessionID: item.session.id) {
-            Button("Copy session link") { OCCopy.text(url.absoluteString) }
+            Button(localized("Copy session link")) { OCCopy.text(url.absoluteString) }
         }
     }
     private func markRead(_ item: SessionSummary) { run { try await item.server.readPath.markViewed(item.session.id) } }
     private func togglePinned(_ item: SessionSummary) { run { var meta = item.meta; meta.pinned.toggle(); try await item.server.readPath.setLocalMeta(meta, sessionID: item.session.id) } }
     private func toggleHidden(_ item: SessionSummary) { run { var meta = item.meta; meta.hidden.toggle(); try await item.server.readPath.setLocalMeta(meta, sessionID: item.session.id) } }
-    private func run(failureMessage: String = "Could not save the change. Try again.", _ operation: @escaping @MainActor () async throws -> Void) {
+    private func run(failureMessage: String = localized("Could not save the change. Try again."), _ operation: @escaping @MainActor () async throws -> Void) {
         action?.cancel(); action = Task { do { try await operation(); error = nil } catch is CancellationError {} catch { self.error = failureMessage } }
     }
     private func loadMore() async throws {

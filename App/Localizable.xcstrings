@@ -1,0 +1,30 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Application Support is unavailable. Relaunch the app to try again." : {
+      "comment" : "Shown in Opencode App"
+    },
+    "Could not open saved servers" : {
+      "comment" : "Empty state title in Opencode App"
+    },
+    "New prompt" : {
+      "comment" : "Shown in Opencode Shortcuts"
+    },
+    "Open session" : {
+      "comment" : "Shown in Opencode Shortcuts"
+    },
+    "Opening servers…" : {
+      "comment" : "Shown in Opencode App"
+    },
+    "Review approval" : {
+      "comment" : "Shown in Opencode Shortcuts"
+    },
+    "Send a prompt" : {
+      "comment" : "Shown in Opencode Shortcuts"
+    },
+    "Session status" : {
+      "comment" : "Shown in Opencode Shortcuts"
+    }
+  },
+  "version" : "1.0"
+}

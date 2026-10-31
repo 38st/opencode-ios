@@ -6,15 +6,15 @@ public enum GitQuickAction: String, CaseIterable, Identifiable, Sendable {
     case commitAndPush, openPullRequest
     public var id: String { rawValue }
     public var title: String {
-        switch self { case .commitAndPush: "Commit and push"; case .openPullRequest: "Open a pull request" }
+        switch self { case .commitAndPush: localized("Commit and push"); case .openPullRequest: localized("Open a pull request") }
     }
     public var confirmTitle: String {
-        switch self { case .commitAndPush: "Send commit prompt"; case .openPullRequest: "Send pull request prompt" }
+        switch self { case .commitAndPush: localized("Send commit prompt"); case .openPullRequest: localized("Send pull request prompt") }
     }
     public var message: String {
         switch self {
-        case .commitAndPush: "The agent will commit the current changes and push the branch, after its current turn if it is working. It sends this prompt:"
-        case .openPullRequest: "The agent will push the branch and open a pull request, after its current turn if it is working. It sends this prompt:"
+        case .commitAndPush: localized("The agent will commit the current changes and push the branch, after its current turn if it is working. It sends this prompt:")
+        case .openPullRequest: localized("The agent will push the branch and open a pull request, after its current turn if it is working. It sends this prompt:")
         }
     }
     public var prompt: String {

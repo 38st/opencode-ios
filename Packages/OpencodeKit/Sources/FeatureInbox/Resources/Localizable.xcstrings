@@ -1,0 +1,114 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%lld running" : {
+      "comment" : "%lld is the number of running agent sessions"
+    },
+    "All projects" : {
+      "comment" : "Button title in Home View"
+    },
+    "All servers" : {
+      "comment" : "Button title in Home View"
+    },
+    "Command palette" : {
+      "comment" : "Icon button label in Home View"
+    },
+    "Copy session link" : {
+      "comment" : "Button title in Home View"
+    },
+    "Could not load older sessions." : {
+      "comment" : "Shown in Home View"
+    },
+    "Could not refresh sessions. Pull to try again." : {
+      "comment" : "Shown in Home View"
+    },
+    "Could not save the change. Try again." : {
+      "comment" : "Shown in Home View"
+    },
+    "Hidden sessions" : {
+      "comment" : "Switch label in Home View"
+    },
+    "Hide" : {
+      "comment" : "Hides a session from Home"
+    },
+    "Home" : {
+      "comment" : "Title of the sessions home screen"
+    },
+    "Last seen running" : {
+      "comment" : "Shown in Home Session Row"
+    },
+    "Load older sessions" : {
+      "comment" : "Shown in Home View"
+    },
+    "Loading…" : {
+      "comment" : "Shown in Home View"
+    },
+    "Manage servers" : {
+      "comment" : "Button title in Home View"
+    },
+    "Mark read" : {
+      "comment" : "Button title in Home View"
+    },
+    "New session" : {
+      "comment" : "Icon button label in Home View"
+    },
+    "No matching sessions" : {
+      "comment" : "Shown in Home View"
+    },
+    "No servers yet" : {
+      "comment" : "Empty state title in Placeholder Root View"
+    },
+    "Offline" : {
+      "comment" : "Session row status while the server is unreachable"
+    },
+    "Open" : {
+      "comment" : "Opens the session"
+    },
+    "Open in New Window" : {
+      "comment" : "Button title in Home View"
+    },
+    "Pin" : {
+      "comment" : "Pins a session to the top of Home"
+    },
+    "Pinned" : {
+      "comment" : "Badge on a pinned session row"
+    },
+    "Review" : {
+      "comment" : "Button that opens the session's pending request"
+    },
+    "Search sessions" : {
+      "comment" : "Text field placeholder in Home View"
+    },
+    "Session" : {
+      "comment" : "Title of a session opened in a new window"
+    },
+    "Settings" : {
+      "comment" : "Icon button label in Home View"
+    },
+    "Switch server" : {
+      "comment" : "VoiceOver label in Home View"
+    },
+    "Terminals" : {
+      "comment" : "Button title in Home View"
+    },
+    "Unhide" : {
+      "comment" : "Shown in Home View"
+    },
+    "Unpin" : {
+      "comment" : "Shown in Home View"
+    },
+    "Unread" : {
+      "comment" : "Session row status"
+    },
+    "Untitled session" : {
+      "comment" : "Shown in Home Session Row"
+    },
+    "Version %@" : {
+      "comment" : "%@ is the app version number"
+    },
+    "Your sessions will appear here" : {
+      "comment" : "Shown in Home View"
+    }
+  },
+  "version" : "1.0"
+}

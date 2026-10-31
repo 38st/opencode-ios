@@ -10,13 +10,13 @@ public struct PlaceholderRootView: View {
     public var body: some View {
         VStack(spacing: 24) {
             VStack(spacing: 8) {
-                Text("Opencode")
+                Text(verbatim: "Opencode")
                     .font(.largeTitle.bold())
-                Text("Version \(version)")
+                Text(localized("Version \(version)", comment: "%@ is the app version number"))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
-            ContentUnavailableView("No servers yet", systemImage: "server.rack")
+            ContentUnavailableView(localized("No servers yet"), systemImage: "server.rack")
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding()

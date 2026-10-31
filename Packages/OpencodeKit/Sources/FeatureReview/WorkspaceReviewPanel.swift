@@ -38,7 +38,7 @@ private struct PanelContent: View {
     let openTerminal: ((String) -> Void)?
     private var store: ReadStore { server.readPath }
     var body: some View {
-        OCWorkspacePanel(selection: Binding(get: { model.tab }, set: { model.selectTab($0) }), title: model.files.isEmpty ? "Review" : "Files Changed \(model.files.count)") { tab in
+        OCWorkspacePanel(selection: Binding(get: { model.tab }, set: { model.selectTab($0) }), title: model.files.isEmpty ? localized("Review", comment: "Title of the review panel") : localized("Files Changed \(model.files.count)", comment: "Review panel title; %lld is the number of changed files")) { tab in
             switch tab {
             case "Changes": ReviewScreen(model: model, composer: composer) { path, line in
                 files.open(path, selection: line.map { .init(start: $0) }); model.selectTab("Files")

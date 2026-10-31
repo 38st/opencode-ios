@@ -14,52 +14,52 @@ struct AdministrationSection: View {
     @State private var task: Task<Void, Never>?
     var body: some View {
         OCForm {
-            OCSection("Server") {
-                LabeledContent("Version", value: server.version ?? "Checking…").accessibilityIdentifier("adminVersion")
-                LabeledContent("Persistent terminals", value: server.capabilities.persistentPty ? "Available" : "Unavailable")
+            OCSection(localized("Server")) {
+                LabeledContent(localized("Version"), value: server.version ?? localized("Checking…")).accessibilityIdentifier("adminVersion")
+                LabeledContent(localized("Persistent terminals"), value: server.capabilities.persistentPty ? localized("Available") : localized("Unavailable"))
             }.font(OCType.body)
             if let update = admin.availableUpdate {
-                OCSection("Update available") {
-                    OCLabel("opencode \(update) is available.", icon: "arrow-up").font(OCType.body)
-                    Text("Run opencode upgrade on the computer running the server, then reconnect.").font(OCType.small).foregroundStyle(OCColor.textMuted)
+                OCSection(localized("Update available")) {
+                    OCLabel(localized("opencode \(update) is available.", comment: "%@ is a version number"), icon: "arrow-up").font(OCType.body)
+                    Text(localized("Run opencode upgrade on the computer running the server, then reconnect.")).font(OCType.small).foregroundStyle(OCColor.textMuted)
                 }.accessibilityIdentifier("updateAvailable")
             }
-            OCSection("Loaded locations") {
-                Text("Directories whose services the server has started. Evicting one stops them until it is used again.")
+            OCSection(localized("Loaded locations")) {
+                Text(localized("Directories whose services the server has started. Evicting one stops them until it is used again."))
                     .font(OCType.small).foregroundStyle(OCColor.textMuted)
-                AdminLoadState(cell: admin.locations, empty: "No locations loaded") { (locations: [Location]) in
+                AdminLoadState(cell: admin.locations, empty: localized("No locations loaded")) { (locations: [Location]) in
                     ForEach(locations, id: \.directory) { location in
                         AdminRow(title: AdminText.shortPath(location.directory), detail: location.directory) {
-                            Button("Evict") { evicting = location }.buttonStyle(OCButtonStyle(.ghost))
+                            Button(localized("Evict")) { evicting = location }.buttonStyle(OCButtonStyle(.ghost))
                                 .disabled(admin.isBusy("evict:" + location.directory))
                                 .accessibilityIdentifier("evict-" + AdminText.shortPath(location.directory))
                         }
                     }
                 }
             }
-            OCSection("Configuration") {
-                AdminRow(title: "Reload configuration", detail: "Restarts every loaded location so changes to opencode.json, agents, skills and plugins apply.") {
-                    Button("Reload") { reloading = true }.buttonStyle(OCButtonStyle()).disabled(admin.isBusy("reload"))
+            OCSection(localized("Configuration")) {
+                AdminRow(title: localized("Reload configuration"), detail: localized("Restarts every loaded location so changes to opencode.json, agents, skills and plugins apply.")) {
+                    Button(localized("Reload")) { reloading = true }.buttonStyle(OCButtonStyle()).disabled(admin.isBusy("reload"))
                         .accessibilityIdentifier("reloadLocations")
                 }
             }
         }
         .task { await admin.loadLocations() }
         .refreshable { admin.locations.invalidate(); await admin.loadLocations() }
-        .confirmationDialog("Evict \(evicting.map { AdminText.shortPath($0.directory) } ?? "")?", isPresented: Binding(get: { evicting != nil }, set: { if !$0 { evicting = nil } }),
+        .confirmationDialog(localized("Evict \(evicting.map { AdminText.shortPath($0.directory) } ?? "")?", comment: "%@ is a directory name"), isPresented: Binding(get: { evicting != nil }, set: { if !$0 { evicting = nil } }),
                             titleVisibility: .visible) {
-            Button("Evict", role: .destructive) {
+            Button(localized("Evict"), role: .destructive) {
                 guard let location = evicting else { return }
                 evicting = nil
                 task = Task { await admin.evict(location) }
             }.accessibilityIdentifier("confirmEvict")
         } message: {
-            Text("The server stops this location's services. Pending permission requests and questions there are cancelled; running sessions continue at their next step.")
+            Text(localized("The server stops this location's services. Pending permission requests and questions there are cancelled; running sessions continue at their next step."))
         }
-        .confirmationDialog("Reload every location?", isPresented: $reloading, titleVisibility: .visible) {
-            Button("Reload", role: .destructive) { task = Task { await admin.reloadLocations() } }.accessibilityIdentifier("confirmReload")
+        .confirmationDialog(localized("Reload every location?"), isPresented: $reloading, titleVisibility: .visible) {
+            Button(localized("Reload"), role: .destructive) { task = Task { await admin.reloadLocations() } }.accessibilityIdentifier("confirmReload")
         } message: {
-            Text("Pending permission requests and questions on this server are cancelled; running sessions continue at their next step.")
+            Text(localized("Pending permission requests and questions on this server are cancelled; running sessions continue at their next step."))
         }
         .onDisappear { task?.cancel() }
     }
@@ -74,40 +74,40 @@ struct WorktreesSection: View {
     var body: some View {
         OCForm {
             VStack(alignment: .leading, spacing: OCSpacing.sm) {
-                Text("Review worktrees and manage disk usage").foregroundStyle(OCColor.textMuted)
+                Text(localized("Review worktrees and manage disk usage")).foregroundStyle(OCColor.textMuted)
                 AdminProjectPicker(admin: admin)
             }
             if let project = admin.project {
-                OCSection("Worktrees") {
-                    AdminLoadState(cell: admin.worktrees(for: project.id), empty: "No worktrees yet",
-                                   emptyDetail: "Worktrees created in opencode will appear here.") { (worktrees: [WorktreeInfo]) in
+                OCSection(localized("Worktrees")) {
+                    AdminLoadState(cell: admin.worktrees(for: project.id), empty: localized("No worktrees yet"),
+                                   emptyDetail: localized("Worktrees created in opencode will appear here.")) { (worktrees: [WorktreeInfo]) in
                         // The list includes the project's own checkout, which cannot be deleted here.
                         ForEach(worktrees.filter { $0.directory == project.canonical }) { main in
-                            AdminRow(title: "Main checkout", detail: main.directory) { OCBadge("Project") }
+                            AdminRow(title: localized("Main checkout"), detail: main.directory) { OCBadge(localized("Project", comment: "Badge marking the project's own checkout")) }
                         }
                         ForEach(worktrees.filter { $0.directory != project.canonical }) { worktree in
                             AdminRow(title: worktree.name, detail: worktree.directory) {
                                 Button { removing = worktree } label: { OCIcon("outline-trash").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
                                     .buttonStyle(.plain).foregroundStyle(OCColor.danger).disabled(admin.isBusy("worktree:" + worktree.directory))
-                                    .accessibilityLabel("Delete worktree \(worktree.name)").accessibilityIdentifier("deleteWorktree-" + worktree.name)
+                                    .accessibilityLabel(localized("Delete worktree \(worktree.name)", comment: "%@ is a worktree name")).accessibilityIdentifier("deleteWorktree-" + worktree.name)
                             }
                         }
                     }
-                    Button { task = Task { await admin.refreshWorktrees(projectID: project.id) } } label: { OCLabel("Refresh", icon: "refresh") }
+                    Button { task = Task { await admin.refreshWorktrees(projectID: project.id) } } label: { OCLabel(localized("Refresh"), icon: "refresh") }
                         .buttonStyle(OCButtonStyle(.ghost)).disabled(admin.isBusy("worktree:refresh"))
                 }
-                OCSection("New worktree") {
-                    TextField("Name (optional)", text: $newName).textInputAutocapitalization(.never).autocorrectionDisabled()
+                OCSection(localized("New worktree")) {
+                    TextField(localized("Name (optional)"), text: $newName).textInputAutocapitalization(.never).autocorrectionDisabled()
                         .accessibilityIdentifier("worktreeName")
-                    Button { create(project) } label: { OCLabel("Create worktree", icon: "plus") }.buttonStyle(OCButtonStyle(.contrast))
+                    Button { create(project) } label: { OCLabel(localized("Create worktree"), icon: "plus") }.buttonStyle(OCButtonStyle(.contrast))
                         .disabled(admin.isBusy("worktree:create")).accessibilityIdentifier("createWorktree")
                     if project.commands?["start"]?.stringValue?.isEmpty == false {
-                        Text("The project's startup script runs in the new worktree.").font(OCType.small).foregroundStyle(OCColor.textMuted)
+                        Text(localized("The project's startup script runs in the new worktree.")).font(OCType.small).foregroundStyle(OCColor.textMuted)
                     }
                 }
                 .task(id: project.id) { await admin.loadWorktrees(projectID: project.id) }
             } else {
-                Text("No projects yet").foregroundStyle(OCColor.textMuted)
+                Text(localized("No projects yet")).foregroundStyle(OCColor.textMuted)
             }
         }
         .refreshable {
@@ -123,7 +123,7 @@ struct WorktreesSection: View {
         let name = newName
         task = Task {
             if let created = await admin.createWorktree(projectID: project.id, name: name) {
-                newName = ""; admin.notice = "Created " + created.name
+                newName = ""; admin.notice = localized("Created \(created.name)", comment: "%@ is a worktree name")
             }
         }
     }
@@ -144,45 +144,45 @@ struct WorktreeRemovalSheet: View {
         NavigationStack {
             OCForm {
                 Text(worktree.directory).font(OCType.code).foregroundStyle(OCColor.textMuted).textSelection(.enabled)
-                Text("This permanently deletes the worktree and its branch.")
+                Text(localized("This permanently deletes the worktree and its branch."))
                 switch check {
                 case .checking:
-                    HStack(spacing: OCSpacing.sm) { ProgressView(); Text("Checking for unmerged changes…").foregroundStyle(OCColor.textMuted) }
+                    HStack(spacing: OCSpacing.sm) { ProgressView(); Text(localized("Checking for unmerged changes…")).foregroundStyle(OCColor.textMuted) }
                 case .clean:
-                    Text("No uncommitted changes.").foregroundStyle(OCColor.textMuted).accessibilityIdentifier("worktreeClean")
-                    Button("Delete worktree", role: .destructive) { remove(force: false) }.buttonStyle(OCButtonStyle(.danger))
+                    Text(localized("No uncommitted changes.")).foregroundStyle(OCColor.textMuted).accessibilityIdentifier("worktreeClean")
+                    Button(localized("Delete worktree"), role: .destructive) { remove(force: false) }.buttonStyle(OCButtonStyle(.danger))
                         .accessibilityIdentifier("confirmDeleteWorktree")
                 case .dirty(let files):
-                    OCLabel("Unmerged changes will be lost.", icon: "warning").foregroundStyle(OCColor.warning)
+                    OCLabel(localized("Unmerged changes will be lost."), icon: "warning").foregroundStyle(OCColor.warning)
                         .accessibilityIdentifier("worktreeDirty")
-                    OCSection("Uncommitted changes (\(files.count))") {
+                    OCSection(localized("Uncommitted changes (\(files.count))", comment: "%lld is the number of changed files")) {
                         ForEach(files, id: \.file) { file in
                             AdminRow(title: file.file, mono: true) {
-                                Text("+\(file.additions) −\(file.deletions)").font(OCType.small).foregroundStyle(OCColor.textMuted)
+                                Text(verbatim: "+\(file.additions) −\(file.deletions)").font(OCType.small).foregroundStyle(OCColor.textMuted)
                             }
                         }
                     }
-                    Button("Delete with uncommitted changes", role: .destructive) { confirmingForce = true }
+                    Button(localized("Delete with uncommitted changes"), role: .destructive) { confirmingForce = true }
                         .buttonStyle(OCButtonStyle(.danger)).accessibilityIdentifier("forceDeleteWorktree")
                 case .unknown(let message):
-                    Text(message ?? "Unable to verify git status. Uncommitted changes may be lost.").foregroundStyle(OCColor.warning)
+                    Text(message ?? localized("Unable to verify git status. Uncommitted changes may be lost.")).foregroundStyle(OCColor.warning)
                         .accessibilityIdentifier("worktreeUnknown")
-                    Button("Delete anyway", role: .destructive) { confirmingForce = true }.buttonStyle(OCButtonStyle(.danger))
+                    Button(localized("Delete anyway"), role: .destructive) { confirmingForce = true }.buttonStyle(OCButtonStyle(.danger))
                         .accessibilityIdentifier("forceDeleteWorktree")
                 }
             }
-            .ocNavigationTitle("Delete “\(worktree.name)”?")
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() }.accessibilityIdentifier("cancelDeleteWorktree") } }
+            .ocNavigationTitle(localized("Delete “\(worktree.name)”?", comment: "%@ is a worktree name"))
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(localized("Cancel")) { dismiss() }.accessibilityIdentifier("cancelDeleteWorktree") } }
             .confirmationDialog(forceTitle, isPresented: $confirmingForce, titleVisibility: .visible) {
-                Button("Delete worktree and changes", role: .destructive) { remove(force: true) }.accessibilityIdentifier("confirmForceDeleteWorktree")
-            } message: { Text("The uncommitted changes cannot be recovered.") }
+                Button(localized("Delete worktree and changes"), role: .destructive) { remove(force: true) }.accessibilityIdentifier("confirmForceDeleteWorktree")
+            } message: { Text(localized("The uncommitted changes cannot be recovered.")) }
         }
         .task { await inspect() }
         .onDisappear { task?.cancel() }
     }
     private var forceTitle: String {
-        if case .dirty(let files) = check { return "Delete \(files.count) uncommitted \(files.count == 1 ? "change" : "changes")?" }
-        return "Delete without checking for changes?"
+        if case .dirty(let files) = check { return localized("Delete \(files.count) uncommitted changes?", comment: "%lld is the number of changed files") }
+        return localized("Delete without checking for changes?")
     }
     private func inspect() async {
         check = .checking
@@ -192,7 +192,7 @@ struct WorktreeRemovalSheet: View {
     private func remove(force: Bool) {
         task = Task {
             switch await admin.removeWorktree(worktree, projectID: projectID, force: force) {
-            case .removed: admin.notice = "Deleted " + worktree.name; dismiss()
+            case .removed: admin.notice = localized("Deleted \(worktree.name)", comment: "%@ is a worktree name"); dismiss()
             // A freshly started location can answer an empty status first; the server's refusal is authoritative.
             case .forceRequired(let message):
                 await inspect()

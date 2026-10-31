@@ -16,7 +16,7 @@ struct CommentTextView: UIViewRepresentable {
         view.adjustsFontForContentSizeCategory = true
         view.textColor = UIColor(OCColor.text)
         view.tintColor = UIColor(OCColor.accent)
-        view.accessibilityLabel = "Add context for this change"
+        view.accessibilityLabel = localized("Add context for this change")
         view.delegate = context.coordinator
         return view
     }

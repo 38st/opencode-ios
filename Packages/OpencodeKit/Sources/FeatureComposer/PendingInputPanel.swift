@@ -20,7 +20,7 @@ public struct PendingInputPanel: View {
     public var body: some View {
         if !rows.isEmpty || !saved.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
-                if rows.count > 3 { Text("\(rows.count) queued").font(OCType.micro).foregroundStyle(OCColor.textMuted).padding(OCSpacing.sm) }
+                if rows.count > 3 { Text(localized("\(rows.count) queued", comment: "%lld is the number of queued prompts")).font(OCType.micro).foregroundStyle(OCColor.textMuted).padding(OCSpacing.sm) }
                 ScrollView {
                     VStack(spacing: 0) {
                         ForEach(rows, id: \.id) { item in queueRow(item) }
@@ -36,26 +36,26 @@ public struct PendingInputPanel: View {
     }
     private func queueRow(_ item: InboxItem) -> some View {
         row {
-            Text(item.fields.payload.text.isEmpty ? "Attachments" : item.fields.payload.text).font(OCType.small).lineLimit(typeSize.isAccessibilitySize ? 3 : 1)
+            Text(item.fields.payload.text.isEmpty ? localized("Attachments") : item.fields.payload.text).font(OCType.small).lineLimit(typeSize.isAccessibilitySize ? 3 : 1)
         } controls: {
-            Button(session.status.isRunning ? "Steer" : "Send") { run { try await store.changeDelivery(session.id, itemID: item.id, delivery: .steer) } }
+            Button(session.status.isRunning ? localized("Steer", comment: "Send a follow-up that redirects the running agent") : localized("Send", comment: "Sends the prompt")) { run { try await store.changeDelivery(session.id, itemID: item.id, delivery: .steer) } }
                 .buttonStyle(OCButtonStyle(.ghost))
-            OCIconButton("Undo", icon: "outline-undo") { run { try await store.cancelPending(session.id, itemID: item.id) } }
-            OCIconButton("Remove", icon: "outline-xmark") { run { try await store.cancelPending(session.id, itemID: item.id, restore: false) } }
+            OCIconButton(localized("Undo", comment: "Returns the queued prompt to the composer"), icon: "outline-undo") { run { try await store.cancelPending(session.id, itemID: item.id) } }
+            OCIconButton(localized("Remove", comment: "Removes the queued prompt"), icon: "outline-xmark") { run { try await store.cancelPending(session.id, itemID: item.id, restore: false) } }
         }.accessibilityElement(children: .contain).accessibilityIdentifier("queue-" + item.id)
     }
     private func outboxRow(_ item: SavedPrompt) -> some View {
         row {
-            Text(item.text.isEmpty ? "New session" : item.text).font(OCType.small).lineLimit(typeSize.isAccessibilitySize ? 2 : 1)
+            Text(item.text.isEmpty ? localized("New session") : item.text).font(OCType.small).lineLimit(typeSize.isAccessibilitySize ? 2 : 1)
         } controls: {
-            if item.state == "pending" { Text(store.offline ? "Waiting for connection" : "Sending").font(OCType.micro).foregroundStyle(OCColor.textMuted) }
+            if item.state == "pending" { Text(store.offline ? localized("Waiting for connection") : localized("Sending", comment: "Status of a prompt being sent")).font(OCType.micro).foregroundStyle(OCColor.textMuted) }
             else if item.state == "failed" {
-                Button("Edit and resend") { run { try await store.restoreFailedPrompt(item.id) } }.buttonStyle(OCButtonStyle(.ghost))
+                Button(localized("Edit and resend")) { run { try await store.restoreFailedPrompt(item.id) } }.buttonStyle(OCButtonStyle(.ghost))
             } else {
-                Text("Waiting for confirmation").font(OCType.micro)
-                Button("Send") { run { try await store.confirmOutbox(item.id) } }.buttonStyle(OCButtonStyle(.ghost))
+                Text(localized("Waiting for confirmation")).font(OCType.micro)
+                Button(localized("Send", comment: "Sends the prompt")) { run { try await store.confirmOutbox(item.id) } }.buttonStyle(OCButtonStyle(.ghost))
             }
-            if item.state != "pending" { OCIconButton("Discard", icon: "outline-xmark") { run { try await store.discardOutbox(item.id) } } }
+            if item.state != "pending" { OCIconButton(localized("Discard", comment: "Discards the unsent prompt"), icon: "outline-xmark") { run { try await store.discardOutbox(item.id) } } }
         }.accessibilityElement(children: .contain).accessibilityIdentifier("outbox-" + item.id)
     }
     private func row<Title: View, Controls: View>(@ViewBuilder title: () -> Title, @ViewBuilder controls: () -> Controls) -> some View {

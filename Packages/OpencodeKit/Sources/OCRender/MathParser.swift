@@ -30,7 +30,7 @@ public enum MathParser {
     public static func parse(_ source: String) throws -> MathNode {
         var parser = Parser(Array(source))
         let node = try parser.parseRow(until: nil)
-        guard parser.atEnd else { throw MathError(message: "Unexpected “\(parser.peek.map(String.init) ?? "")”") }
+        guard parser.atEnd else { throw MathError(message: localized("Unexpected “\(parser.peek.map(String.init) ?? "")”", comment: "%@ is a character in the formula")) }
         return node
     }
 
@@ -85,21 +85,21 @@ public enum MathParser {
         /// Parses until `terminator` (a closing character or `\right`, `\end`, `&`, `\\`), which is left in place.
         mutating func parseRow(until terminator: Character?, stopAtCells: Bool = false) throws -> MathNode {
             depth += 1; defer { depth -= 1 }
-            guard depth < 64 else { throw MathError(message: "Too deeply nested") }
+            guard depth < 64 else { throw MathError(message: localized("Too deeply nested")) }
             var items: [MathNode] = []
             while true {
                 skipSpaces()
                 guard let c = peek else {
-                    if terminator != nil { throw MathError(message: "Missing “\(terminator.map(String.init) ?? "")”") }
+                    if terminator != nil { throw MathError(message: localized("Missing “\(terminator.map(String.init) ?? "")”", comment: "%@ is a closing character")) }
                     break
                 }
                 if c == terminator { break }
                 if stopAtCells && (c == "&" || lookingAt("\\\\") || lookingAt("\\end")) { break }
                 if lookingAt("\\right") {
                     if terminator == nil { break }
-                    throw MathError(message: "Unexpected \\right")
+                    throw MathError(message: localized("Unexpected \\right"))
                 }
-                if lookingAt("\\end") { throw MathError(message: "Unexpected \\end") }
+                if lookingAt("\\end") { throw MathError(message: localized("Unexpected \\end")) }
                 if c == "^" || c == "_" {
                     index += 1
                     let script = try parseArgument()
@@ -134,7 +134,7 @@ public enum MathParser {
 
         mutating func parseArgument() throws -> MathNode {
             skipSpaces()
-            guard let c = peek else { throw MathError(message: "Missing argument") }
+            guard let c = peek else { throw MathError(message: localized("Missing argument")) }
             if c == "{" {
                 index += 1
                 let node = try parseRow(until: "}")
@@ -147,15 +147,15 @@ public enum MathParser {
         }
 
         mutating func parseAtom() throws -> MathNode {
-            guard let c = peek else { throw MathError(message: "Unexpected end") }
+            guard let c = peek else { throw MathError(message: localized("Unexpected end")) }
             if c == "{" {
                 index += 1
                 let node = try parseRow(until: "}")
                 index += 1
                 return node
             }
-            if c == "}" { throw MathError(message: "Unmatched “}”") }
-            if c == "&" { throw MathError(message: "Unexpected “&”") }
+            if c == "}" { throw MathError(message: localized("Unmatched “}”")) }
+            if c == "&" { throw MathError(message: localized("Unexpected “&”")) }
             if c == "\\" { return try parseCommand() }
             index += 1
             if c.isNumber || c == "." && (peek?.isNumber ?? false) {
@@ -184,7 +184,7 @@ public enum MathParser {
 
         mutating func readBraced() throws -> String {
             skipSpaces()
-            guard peek == "{" else { throw MathError(message: "Expected “{”") }
+            guard peek == "{" else { throw MathError(message: localized("Expected “{”")) }
             index += 1
             var level = 1, text = ""
             while let c = peek {
@@ -192,20 +192,20 @@ public enum MathParser {
                 if c == "{" { level += 1 } else if c == "}" { level -= 1; if level == 0 { return text } }
                 text.append(c)
             }
-            throw MathError(message: "Missing “}”")
+            throw MathError(message: localized("Missing “}”"))
         }
 
         mutating func readDelimiter() throws -> String {
             skipSpaces()
-            guard let c = peek else { throw MathError(message: "Missing delimiter") }
+            guard let c = peek else { throw MathError(message: localized("Missing delimiter")) }
             if c == "\\" {
                 index += 1
                 let name = "\\" + readName()
-                guard let value = MathParser.delimiters[name] else { throw MathError(message: "Unknown delimiter \(name)") }
+                guard let value = MathParser.delimiters[name] else { throw MathError(message: localized("Unknown delimiter \(name)", comment: "%@ is a TeX delimiter")) }
                 return value
             }
             index += 1
-            guard let value = MathParser.delimiters[String(c)] else { throw MathError(message: "Unknown delimiter \(c)") }
+            guard let value = MathParser.delimiters[String(c)] else { throw MathError(message: localized("Unknown delimiter \(String(c))", comment: "%@ is a TeX delimiter")) }
             return value
         }
 
@@ -238,7 +238,7 @@ public enum MathParser {
             case "left":
                 let left = try readDelimiter()
                 let body = try parseRow(until: nil)
-                guard lookingAt("\\right") else { throw MathError(message: "Missing \\right") }
+                guard lookingAt("\\right") else { throw MathError(message: localized("Missing \\right")) }
                 index += "\\right".count
                 return .delimited(left: left, body, right: try readDelimiter())
             case "big", "Big", "bigg", "Bigg", "bigl", "bigr", "Bigl", "Bigr", "biggl", "biggr": return .symbol(try readDelimiter())
@@ -249,12 +249,12 @@ public enum MathParser {
                 let over = try parseArgument()
                 return .scripts(base: try parseArgument(), sup: over, sub: nil)
             case "\\": return .space(0)
-            default: throw MathError(message: "Unsupported command \\\(name)")
+            default: throw MathError(message: localized("Unsupported command \\\(name)", comment: "%@ is a TeX command name"))
             }
         }
 
         mutating func parseEnvironment(_ name: String) throws -> MathNode {
-            guard let (left, right) = MathParser.environments[name] else { throw MathError(message: "Unsupported environment \(name)") }
+            guard let (left, right) = MathParser.environments[name] else { throw MathError(message: localized("Unsupported environment \(name)", comment: "%@ is a TeX environment name")) }
             if name == "array" { _ = try? readBraced() }
             var rows: [[MathNode]] = [], cells: [MathNode] = []
             while true {
@@ -265,11 +265,11 @@ public enum MathParser {
                 if lookingAt("\\end") {
                     index += 4
                     let end = try readBraced()
-                    guard end == name else { throw MathError(message: "\\end{\(end)} closes \(name)") }
+                    guard end == name else { throw MathError(message: localized("\\end{\(end)} closes \(name)", comment: "%1$@ and %2$@ are TeX environment names")) }
                     if !(cells.count == 1 && cells[0] == .row([])) || rows.isEmpty { rows.append(cells) }
                     break
                 }
-                throw MathError(message: "Missing \\end{\(name)}")
+                throw MathError(message: localized("Missing \\end{\(name)}", comment: "%@ is a TeX environment name"))
             }
             return .matrix(rows, left: left, right: right)
         }

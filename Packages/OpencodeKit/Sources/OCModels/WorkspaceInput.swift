@@ -22,7 +22,7 @@ public struct WorktreeFailure: Error, LocalizedError, Sendable, Equatable {
     public var errorDescription: String? { message }
     public init(raw: JSONValue) {
         let data = raw["data"] ?? raw
-        message = data["message"]?.stringValue ?? "Failed to create worktree"
+        message = data["message"]?.stringValue ?? localized("Failed to create worktree")
         forceRequired = data["forceRequired"]?.boolValue ?? false
     }
 }

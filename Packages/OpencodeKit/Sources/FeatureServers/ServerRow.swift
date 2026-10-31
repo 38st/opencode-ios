@@ -24,12 +24,12 @@ public struct ServerRow: View {
                 Text(detail).font(OCType.body).foregroundStyle(OCColor.textMuted).fixedSize(horizontal: false, vertical: true)
             }
             if isUnencrypted {
-                OCLabel("Unencrypted", icon: "lock")
+                OCLabel(localized("Unencrypted"), icon: "lock")
                     .font(OCType.small).foregroundStyle(OCColor.textMuted)
-                    .accessibilityLabel("Unencrypted HTTP connection")
+                    .accessibilityLabel(localized("Unencrypted HTTP connection"))
             }
             if expiresSoon {
-                OCLabel("Pairing expires soon", icon: "lock")
+                OCLabel(localized("Pairing expires soon"), icon: "lock")
                     .font(OCType.body).foregroundStyle(OCColor.warning)
             }
         }

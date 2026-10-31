@@ -7,11 +7,11 @@ public enum ServerSetupError: Error, LocalizedError {
     case invalidURL, lastEndpoint, invalidToken, notLoaded, duplicateServer
     public var errorDescription: String? {
         switch self {
-        case .invalidURL: "Enter a valid HTTP or HTTPS server URL without credentials or query parameters."
-        case .lastEndpoint: "Keep at least one endpoint for this server."
-        case .invalidToken: "The server returned an invalid pairing token. Create a new pairing link."
-        case .notLoaded: "Saved servers could not be loaded. Retry before adding a server."
-        case .duplicateServer: "This server record is already saved."
+        case .invalidURL: localized("Enter a valid HTTP or HTTPS server URL without credentials or query parameters.")
+        case .lastEndpoint: localized("Keep at least one endpoint for this server.")
+        case .invalidToken: localized("The server returned an invalid pairing token. Create a new pairing link.")
+        case .notLoaded: localized("Saved servers could not be loaded. Retry before adding a server.")
+        case .duplicateServer: localized("This server record is already saved.")
         }
     }
 }
@@ -47,7 +47,7 @@ extension ServerRegistry {
     public static func errorMessage(_ error: any Error) -> String {
         if case APIError.refused(let reason) = error { return reason.message }
         if let error = error as? any LocalizedError, let description = error.errorDescription { return description }
-        return "Could not save or connect to the server. Try again."
+        return localized("Could not save or connect to the server. Try again.")
     }
 }
 
@@ -55,15 +55,15 @@ private struct PairingDiagnosisError: LocalizedError {
     let endpoints: [EndpointRecord]
     let resolution: EndpointResolution
     var errorDescription: String? {
-        "None of the server addresses could be reached.\n" + endpoints.map { endpoint in
+        localized("None of the server addresses could be reached.") + "\n" + endpoints.map { endpoint in
             let message: String
             switch resolution.diagnoses[endpoint.id] {
             case .failure(let failure): message = failure.message
-            case .incompatible(.v1): message = "This is an opencode 1 server. Update opencode."
-            case .incompatible: message = "This server version is too old. Update opencode."
-            default: message = "Pairing is unavailable. Create a new link on the server."
+            case .incompatible(.v1): message = localized("This is an opencode 1 server. Update opencode.")
+            case .incompatible: message = localized("This server version is too old. Update opencode.")
+            default: message = localized("Pairing is unavailable. Create a new link on the server.")
             }
-            return "\(endpoint.url.host ?? "Endpoint"): \(message)"
+            return "\(endpoint.url.host ?? localized("Endpoint", comment: "Shown when a server address has no host name")): \(message)"
         }.joined(separator: "\n")
     }
 }

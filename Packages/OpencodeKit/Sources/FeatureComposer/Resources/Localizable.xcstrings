@@ -1,0 +1,491 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ input · %@ output / 1M tokens" : {
+      "comment" : "Model prices per million tokens; both placeholders are prices"
+    },
+    "%lld messages reverted" : {
+      "comment" : "%lld is the number of reverted messages",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld message reverted"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld messages reverted"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld queued" : {
+      "comment" : "%lld is the number of queued prompts"
+    },
+    "Absolute directory path" : {
+      "comment" : "Text field placeholder in New Session View"
+    },
+    "Add a question after /btw" : {
+      "comment" : "/btw is a command; do not translate"
+    },
+    "Add attachment or context" : {
+      "comment" : "VoiceOver label in Composer Dock"
+    },
+    "Add follow-up, / for commands, @ for context…" : {
+      "comment" : "Shown in Composer Dock"
+    },
+    "After queued prompts" : {
+      "comment" : "Shown in Session Tools"
+    },
+    "Agent" : {
+      "comment" : "Menu title in Selection Options"
+    },
+    "Agent and model" : {
+      "comment" : "VoiceOver label in Composer Dock"
+    },
+    "Ask anything, / for commands, @ for context…" : {
+      "comment" : "Shown in Composer Dock"
+    },
+    "Attachment" : {
+      "comment" : "Shown in Session Actions"
+    },
+    "Attachments" : {
+      "comment" : "Shown in Pending Input Panel"
+    },
+    "Audio stays on this device. Only the text you send leaves it." : {
+      "comment" : "Text in Session Tools"
+    },
+    "Camera" : {
+      "comment" : "Button title in Composer Dock"
+    },
+    "Cancel" : {
+      "comment" : "Button title in Composer Dock"
+    },
+    "Choose agent" : {
+      "comment" : "Menu title in Composer Dock"
+    },
+    "Choose model" : {
+      "comment" : "Button title in Composer Dock"
+    },
+    "Choose variant" : {
+      "comment" : "Menu title in Composer Dock"
+    },
+    "Commands" : {
+      "comment" : "Button title in Composer Dock"
+    },
+    "Compact session" : {
+      "comment" : "Button title in Selection Options"
+    },
+    "Context" : {
+      "comment" : "Inserts an @ mention for files, agents or references"
+    },
+    "Could not complete action" : {
+      "comment" : "Alert title in Session Actions"
+    },
+    "Could not list directory." : {
+      "comment" : "Shown in New Session View"
+    },
+    "Could not load project choices." : {
+      "comment" : "Shown in New Session View"
+    },
+    "Could not open a project." : {
+      "comment" : "Shown in New Session View"
+    },
+    "Could not open directory." : {
+      "comment" : "Shown in New Session View"
+    },
+    "Couldn’t answer that question. %@" : {
+      "comment" : "%@ is the error message"
+    },
+    "Creating worktree" : {
+      "comment" : "Shown in New Session View"
+    },
+    "Current: %@" : {
+      "comment" : "%@ is the session's directory path"
+    },
+    "Default" : {
+      "comment" : "The model's default variant"
+    },
+    "Delete session" : {
+      "comment" : "Button title in Selection Options"
+    },
+    "Delete session \"%@\"?" : {
+      "comment" : "%@ is the session title"
+    },
+    "Delete session \"%@\"? Its subagent sessions will be deleted too." : {
+      "comment" : "%@ is the session title"
+    },
+    "Dictate" : {
+      "comment" : "Button title in Composer Dock"
+    },
+    "Discard" : {
+      "comment" : "Discards the unsent prompt"
+    },
+    "Discard and send" : {
+      "comment" : "Shown in Composer Dock"
+    },
+    "Discard reverted messages?" : {
+      "comment" : "Shown in Composer Dock"
+    },
+    "Dismiss" : {
+      "comment" : "Dismisses the move banner"
+    },
+    "Dismiss side question" : {
+      "comment" : "Icon button label in Session Tools"
+    },
+    "Done" : {
+      "comment" : "Button title in Model Picker"
+    },
+    "Edit and resend" : {
+      "comment" : "Text in Composer Dock"
+    },
+    "End" : {
+      "comment" : "Ends the hands-free voice conversation"
+    },
+    "Enter shell command… git status" : {
+      "comment" : "Shown in Composer Dock"
+    },
+    "Exit" : {
+      "comment" : "Leaves shell command mode"
+    },
+    "Export session…" : {
+      "comment" : "Button title in Selection Options"
+    },
+    "Failed to create session. Your prompt has been restored." : {
+      "comment" : "Shown in New Session View"
+    },
+    "Failed to create worktree. %@" : {
+      "comment" : "%@ is the error message"
+    },
+    "Failed to create worktree. The server requires resolving the worktree conflict first." : {
+      "comment" : "Shown in New Session View"
+    },
+    "Failed to load worktrees. %@" : {
+      "comment" : "%@ is the error message"
+    },
+    "Failed to move session. %@" : {
+      "comment" : "%@ is the error message"
+    },
+    "Files" : {
+      "comment" : "Button title in Composer Dock"
+    },
+    "Fork from message" : {
+      "comment" : "Button title in Selection Options"
+    },
+    "From branch" : {
+      "comment" : "Screen title in New Session View"
+    },
+    "Hands-free conversation" : {
+      "comment" : "Button title in Composer Dock"
+    },
+    "Hide keyboard" : {
+      "comment" : "Shown in Prompt Editor"
+    },
+    "Interrupt and send" : {
+      "comment" : "Button title in Selection Options"
+    },
+    "Keep current draft" : {
+      "comment" : "Button title in New Session View"
+    },
+    "Leave the title empty to generate a new one." : {
+      "comment" : "Text in Session Actions"
+    },
+    "Listening · sends after a pause" : {
+      "comment" : "Shown in Session Tools"
+    },
+    "Listening…" : {
+      "comment" : "Shown in Session Tools"
+    },
+    "Loading projects…" : {
+      "comment" : "Shown in New Session View"
+    },
+    "Local repository" : {
+      "comment" : "Text in New Session View"
+    },
+    "Microphone access is off. Turn it on in Settings › Privacy & Security › Microphone." : {
+      "comment" : "Shown in Voice Engine"
+    },
+    "Move a running session?" : {
+      "comment" : "Shown in Session Tools"
+    },
+    "Move session" : {
+      "comment" : "Screen title in Session Tools"
+    },
+    "Move session…" : {
+      "comment" : "Button title in Selection Options"
+    },
+    "Move to" : {
+      "comment" : "Section heading in Session Tools"
+    },
+    "Moved to %@" : {
+      "comment" : "%@ is a folder name"
+    },
+    "Moved to a new worktree" : {
+      "comment" : "Shown in Session Tools"
+    },
+    "Moving session to %@ after queued prompts…" : {
+      "comment" : "%@ is a folder name"
+    },
+    "Moving session to %@…" : {
+      "comment" : "%@ is a folder name"
+    },
+    "Moving session to a new worktree after queued prompts…" : {
+      "comment" : "Shown in Session Tools"
+    },
+    "Moving session to a new worktree…" : {
+      "comment" : "Shown in Session Tools"
+    },
+    "Moving session…" : {
+      "comment" : "Shown in Session Tools"
+    },
+    "Mute notifications" : {
+      "comment" : "Shown in Selection Options"
+    },
+    "New session" : {
+      "comment" : "Text in New Session View"
+    },
+    "New worktree" : {
+      "comment" : "Text in New Session View"
+    },
+    "Next step" : {
+      "comment" : "Shown in Session Tools"
+    },
+    "No Git" : {
+      "comment" : "Badge: the project is not a Git repository"
+    },
+    "No matching items" : {
+      "comment" : "Text in Composer Dock"
+    },
+    "No matching prompts" : {
+      "comment" : "Text in Session Tools"
+    },
+    "No model results" : {
+      "comment" : "Text in Model Picker"
+    },
+    "OK" : {
+      "comment" : "Button title in Session Actions"
+    },
+    "On-device speech recognition does not support this device’s language." : {
+      "comment" : "Shown in Voice Engine"
+    },
+    "Open" : {
+      "comment" : "Opens the chosen directory as a project"
+    },
+    "Open project…" : {
+      "comment" : "Button title in New Session View"
+    },
+    "Parent directory" : {
+      "comment" : "Button title in New Session View"
+    },
+    "Pending" : {
+      "comment" : "Badge: the model or agent choice is not saved yet"
+    },
+    "Photos" : {
+      "comment" : "Button title in Composer Dock"
+    },
+    "Project" : {
+      "comment" : "Prompt history entry from another session of the project"
+    },
+    "Prompt" : {
+      "comment" : "Accessibility label of the prompt editor"
+    },
+    "Prompt history" : {
+      "comment" : "Button title in Composer Dock"
+    },
+    "Queue" : {
+      "comment" : "Send a follow-up after the agent's current turn"
+    },
+    "Reading the reply" : {
+      "comment" : "Shown in Session Tools"
+    },
+    "Redo" : {
+      "comment" : "Button title in Composer Dock"
+    },
+    "Redo last message" : {
+      "comment" : "Button title in Selection Options"
+    },
+    "Remove" : {
+      "comment" : "Removes the queued prompt"
+    },
+    "Remove attachment" : {
+      "comment" : "Icon button label in Composer Dock"
+    },
+    "Rename" : {
+      "comment" : "Button title in Selection Options"
+    },
+    "Rename session" : {
+      "comment" : "Alert title in Session Actions"
+    },
+    "Replace" : {
+      "comment" : "Confirms replacing the draft"
+    },
+    "Replace your draft?" : {
+      "comment" : "Shown in Composer Dock"
+    },
+    "Retry" : {
+      "comment" : "Button title in Session Tools"
+    },
+    "Save" : {
+      "comment" : "Button title in Session Actions"
+    },
+    "Search branches" : {
+      "comment" : "Shown in New Session View"
+    },
+    "Search models" : {
+      "comment" : "Shown in Model Picker"
+    },
+    "Search prompts" : {
+      "comment" : "Shown in Session Tools"
+    },
+    "Send" : {
+      "comment" : "Sends the prompt"
+    },
+    "Send now" : {
+      "comment" : "Button title in Session Tools"
+    },
+    "Send without interrupting" : {
+      "comment" : "VoiceOver hint in Composer Dock"
+    },
+    "Sending" : {
+      "comment" : "Status of a prompt being sent"
+    },
+    "Sending in %lld…" : {
+      "comment" : "%lld is a number of seconds"
+    },
+    "Server" : {
+      "comment" : "VoiceOver label in New Session View"
+    },
+    "Session actions" : {
+      "comment" : "VoiceOver label in Session Actions"
+    },
+    "Session title" : {
+      "comment" : "Text field placeholder in Session Actions"
+    },
+    "Shell command" : {
+      "comment" : "Label in Composer Dock"
+    },
+    "Show all models" : {
+      "comment" : "Switch label in Model Picker"
+    },
+    "Show more" : {
+      "comment" : "Button title in Session Actions"
+    },
+    "Side question · not added to the conversation" : {
+      "comment" : "Text in Session Tools"
+    },
+    "Side questions need a session with a conversation. Send a prompt first." : {
+      "comment" : "Shown in Composer Dock"
+    },
+    "Speech recognition is off. Turn it on in Settings › Privacy & Security › Speech Recognition." : {
+      "comment" : "Shown in Voice Engine"
+    },
+    "Starting…" : {
+      "comment" : "Shown in Session Tools"
+    },
+    "Steer" : {
+      "comment" : "Send a follow-up that redirects the running agent"
+    },
+    "Stop" : {
+      "comment" : "Stops the running agent"
+    },
+    "Subagent sessions are read only. Send prompts to the parent session." : {
+      "comment" : "Text in Composer Dock"
+    },
+    "Tap to dictate; hold for a hands-free conversation" : {
+      "comment" : "VoiceOver hint in Composer Dock"
+    },
+    "The microphone’s audio format is not supported." : {
+      "comment" : "Shown in Voice Engine"
+    },
+    "The reverted messages and their file changes will be permanently discarded when you send this prompt." : {
+      "comment" : "Shown in Composer Dock"
+    },
+    "The session keeps working here and moves to a new worktree after the prompts already queued. Its next steps read and change files there, not in the current directory." : {
+      "comment" : "Shown in Session Tools"
+    },
+    "The session keeps working here and moves to a new worktree at its next step. Its next steps read and change files there, not in the current directory." : {
+      "comment" : "Shown in Session Tools"
+    },
+    "The session keeps working here and moves to “%@” after the prompts already queued. Its next steps read and change files there, not in the current directory." : {
+      "comment" : "%@ is a directory path"
+    },
+    "The session keeps working here and moves to “%@” at its next step. Its next steps read and change files there, not in the current directory." : {
+      "comment" : "%@ is a directory path"
+    },
+    "This model does not support PDF input. Choose another model before sending." : {
+      "comment" : "Shown in Composer Dock"
+    },
+    "This model does not support image input. Choose another model before sending." : {
+      "comment" : "Shown in Composer Dock"
+    },
+    "This project already has a draft. Keeping your current draft replaces it. Using the saved draft keeps your current draft in its original project." : {
+      "comment" : "Text in New Session View"
+    },
+    "This session" : {
+      "comment" : "Shown in Session Tools"
+    },
+    "Undo" : {
+      "comment" : "Returns the queued prompt to the composer"
+    },
+    "Undo last message" : {
+      "comment" : "Button title in Selection Options"
+    },
+    "Unmute notifications" : {
+      "comment" : "Shown in Selection Options"
+    },
+    "Untitled session" : {
+      "comment" : "Shown in Session Actions"
+    },
+    "Use saved draft" : {
+      "comment" : "Button title in New Session View"
+    },
+    "Variant" : {
+      "comment" : "Model variant picker"
+    },
+    "Voice input" : {
+      "comment" : "VoiceOver label in Composer Dock"
+    },
+    "Waiting for confirmation" : {
+      "comment" : "Text in Pending Input Panel"
+    },
+    "Waiting for connection" : {
+      "comment" : "Shown in Pending Input Panel"
+    },
+    "Waiting for the reply…" : {
+      "comment" : "Shown in Session Tools"
+    },
+    "When" : {
+      "comment" : "Label for when a running session moves"
+    },
+    "Where the agent runs" : {
+      "comment" : "VoiceOver hint in New Session View"
+    },
+    "Which draft would you like to keep?" : {
+      "comment" : "Alert title in New Session View"
+    },
+    "Working" : {
+      "comment" : "Progress label while a side question is answered"
+    },
+    "Worktree" : {
+      "comment" : "VoiceOver label in New Session View"
+    },
+    "Your unsent text and attachments will be replaced by this prompt." : {
+      "comment" : "Shown in Composer Dock"
+    },
+    "default" : {
+      "comment" : "Stands in for the default git branch name"
+    },
+    "from %@" : {
+      "comment" : "Base branch of a new worktree; %@ is a git branch name"
+    }
+  },
+  "version" : "1.0"
+}

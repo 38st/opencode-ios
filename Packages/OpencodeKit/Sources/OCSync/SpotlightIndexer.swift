@@ -159,7 +159,7 @@ nonisolated public protocol SpotlightIndexing: Sendable {
                 guard session.info.parentID == nil, session.info.time.archived == nil,
                       server.readPath.localMeta[session.id]?.hidden != true else { return nil }
                 let summary = SessionSummary(server: server, session: session)
-                return SpotlightItem(server: server.id.rawValue.uuidString, session: session.id, title: session.info.title ?? "Untitled session",
+                return SpotlightItem(server: server.id.rawValue.uuidString, session: session.id, title: session.info.title ?? localized("Untitled session"),
                                      project: summary.projectName, serverName: server.record.name,
                                      day: Calendar(identifier: .gregorian).startOfDay(for: Date(timeIntervalSince1970: summary.activity / 1_000)))
             }

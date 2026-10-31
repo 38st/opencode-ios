@@ -1,0 +1,1076 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ (highest precedence)" : {
+      "comment" : "%@ is a configuration file name"
+    },
+    "%@ (lowest precedence)" : {
+      "comment" : "%@ is a configuration file name"
+    },
+    "%@ API key" : {
+      "comment" : "%@ is a provider name"
+    },
+    "%@ connected" : {
+      "comment" : "%@ is a provider name"
+    },
+    "%@ options" : {
+      "comment" : "%@ is an account name"
+    },
+    "%lld accounts" : {
+      "comment" : "%lld is the number of provider accounts",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld account"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld accounts"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld days" : {
+      "comment" : "%lld is the number of consecutive days",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld day"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld days"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld failed" : {
+      "comment" : "%lld is the number of failed tool calls"
+    },
+    "%lld steps" : {
+      "comment" : "%lld is the number of agent steps",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld step"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld steps"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld subagents" : {
+      "comment" : "%lld is the number of subagent sessions",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld subagent"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld subagents"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld unfinished" : {
+      "comment" : "%lld is the number of unfinished tool calls"
+    },
+    "A session finished its work." : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "A session needs your answer." : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "A session stopped with an error." : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "API key" : {
+      "comment" : "Shown in Providers Settings"
+    },
+    "API key is required" : {
+      "comment" : "Text in Providers Settings"
+    },
+    "Account name" : {
+      "comment" : "Text field placeholder in Providers Settings"
+    },
+    "Account name (optional)" : {
+      "comment" : "Text in Providers Settings"
+    },
+    "Acknowledgements" : {
+      "comment" : "Screen title in Acknowledgements View"
+    },
+    "Active" : {
+      "comment" : "Badge: the account in use"
+    },
+    "Active days" : {
+      "comment" : "Shown in Usage Statistics"
+    },
+    "Activity" : {
+      "comment" : "Section heading in Usage Statistics"
+    },
+    "Add account" : {
+      "comment" : "Shown in Providers Settings"
+    },
+    "Add references in opencode.json to @-mention other folders and repositories." : {
+      "comment" : "Shown in Catalog Settings"
+    },
+    "Add servers under mcp.servers in opencode.json on the computer running opencode." : {
+      "comment" : "Shown in Extensions Settings"
+    },
+    "Agent" : {
+      "comment" : "Section heading in Catalog Settings"
+    },
+    "Agents" : {
+      "comment" : "Shown in Catalog Settings"
+    },
+    "All projects" : {
+      "comment" : "Text in Usage Statistics"
+    },
+    "Allow always" : {
+      "comment" : "Section heading in Extensions Settings"
+    },
+    "Allow once requires unlocking. High-risk requests must be reviewed in the app." : {
+      "comment" : "Text in Notification Settings"
+    },
+    "Allows by default" : {
+      "comment" : "Shown in Catalog Settings"
+    },
+    "Approvals" : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Archived" : {
+      "comment" : "Section heading in Project Settings"
+    },
+    "Asks by default" : {
+      "comment" : "Shown in Catalog Settings"
+    },
+    "Authorization code" : {
+      "comment" : "Text field placeholder in Providers Settings"
+    },
+    "Authorization expired. Start again for a new link." : {
+      "comment" : "Text in Providers Settings"
+    },
+    "Authorization failed: %@" : {
+      "comment" : "%@ is the error message"
+    },
+    "Authorization in progress…" : {
+      "comment" : "Shown in Providers Settings"
+    },
+    "Auto (Default)" : {
+      "comment" : "Terminal shell choice"
+    },
+    "Auto-accept is not offered on the phone: every request without a saved rule asks first." : {
+      "comment" : "Text in Extensions Settings"
+    },
+    "Available" : {
+      "comment" : "Section of providers not yet connected"
+    },
+    "Best streak" : {
+      "comment" : "Shown in Usage Statistics"
+    },
+    "Blue" : {
+      "comment" : "Shown in Project Settings"
+    },
+    "Built in" : {
+      "comment" : "Shown in Catalog Settings"
+    },
+    "Busiest day" : {
+      "comment" : "Shown in Usage Statistics"
+    },
+    "Cache read · write" : {
+      "comment" : "Tokens read from and written to the cache"
+    },
+    "Calls" : {
+      "comment" : "Number of tool calls"
+    },
+    "Cancel" : {
+      "comment" : "Button title in Administration Settings"
+    },
+    "Catalog" : {
+      "comment" : "Shown in Catalog Settings"
+    },
+    "Change shell" : {
+      "comment" : "Button title in Project Settings"
+    },
+    "Change the terminal shell?" : {
+      "comment" : "Confirmation title in Project Settings"
+    },
+    "Check for updates" : {
+      "comment" : "Label in Catalog Settings"
+    },
+    "Checking" : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Checking for unmerged changes…" : {
+      "comment" : "Text in Administration Settings"
+    },
+    "Checking…" : {
+      "comment" : "Shown in Administration Settings"
+    },
+    "Choose a project" : {
+      "comment" : "Shown in Admin Components"
+    },
+    "Choosing Allow always on a request saves its patterns here." : {
+      "comment" : "Shown in Extensions Settings"
+    },
+    "Color" : {
+      "comment" : "Section heading in Project Settings"
+    },
+    "Colour" : {
+      "comment" : "Row label in Catalog Settings"
+    },
+    "Commands" : {
+      "comment" : "Shown in Catalog Settings"
+    },
+    "Configuration" : {
+      "comment" : "Section heading in Administration Settings"
+    },
+    "Connect" : {
+      "comment" : "Button title in Extensions Settings"
+    },
+    "Connect %@" : {
+      "comment" : "%@ is a provider name"
+    },
+    "Connect and Disconnect last until the server restarts. To change them for good, edit mcp.servers in opencode.json." : {
+      "comment" : "Text in Extensions Settings"
+    },
+    "Connect with an API key" : {
+      "comment" : "Shown in Providers Settings"
+    },
+    "Connected" : {
+      "comment" : "Shown in Extensions Settings"
+    },
+    "Connected accounts" : {
+      "comment" : "Section heading in Providers Settings"
+    },
+    "Connected providers" : {
+      "comment" : "Section heading in Providers Settings"
+    },
+    "Continue" : {
+      "comment" : "Button title in Providers Settings"
+    },
+    "Controls" : {
+      "comment" : "Control Center controls"
+    },
+    "Copy" : {
+      "comment" : "Verb: copy the link"
+    },
+    "Cost" : {
+      "comment" : "Shown in Usage Statistics"
+    },
+    "Could not complete action" : {
+      "comment" : "Alert title in Admin Components"
+    },
+    "Could not load statistics. %@" : {
+      "comment" : "%@ is the error message"
+    },
+    "Create worktree" : {
+      "comment" : "Label in Administration Settings"
+    },
+    "Created %@" : {
+      "comment" : "%@ is a worktree name"
+    },
+    "Credentials are stored on the server, never on this device. Models from a connected provider become available on this server." : {
+      "comment" : "Text in Providers Settings"
+    },
+    "Cyan" : {
+      "comment" : "Shown in Project Settings"
+    },
+    "Days in %@" : {
+      "comment" : "%@ is a time zone identifier"
+    },
+    "Decisions made from notifications appear here." : {
+      "comment" : "Text in Notification Settings"
+    },
+    "Default" : {
+      "comment" : "Default project color"
+    },
+    "Delete %lld uncommitted changes?" : {
+      "comment" : "%lld is the number of changed files",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Delete %lld uncommitted change?"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Delete %lld uncommitted changes?"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Delete anyway" : {
+      "comment" : "Button title in Administration Settings"
+    },
+    "Delete rule" : {
+      "comment" : "Button title in Extensions Settings"
+    },
+    "Delete rule %@ %@" : {
+      "comment" : "First %@ is a tool, second a pattern"
+    },
+    "Delete this rule?" : {
+      "comment" : "Confirmation title in Extensions Settings"
+    },
+    "Delete with uncommitted changes" : {
+      "comment" : "Button title in Administration Settings"
+    },
+    "Delete without checking for changes?" : {
+      "comment" : "Shown in Administration Settings"
+    },
+    "Delete worktree" : {
+      "comment" : "Button title in Administration Settings"
+    },
+    "Delete worktree %@" : {
+      "comment" : "%@ is a worktree name"
+    },
+    "Delete worktree and changes" : {
+      "comment" : "Button title in Administration Settings"
+    },
+    "Delete “%@”?" : {
+      "comment" : "%@ is a worktree name"
+    },
+    "Deleted %@" : {
+      "comment" : "%@ is a worktree name"
+    },
+    "Denies by default" : {
+      "comment" : "Shown in Catalog Settings"
+    },
+    "Directories whose services the server has started. Evicting one stops them until it is used again." : {
+      "comment" : "Text in Administration Settings"
+    },
+    "Directory" : {
+      "comment" : "Shown in Project Settings"
+    },
+    "Disabled" : {
+      "comment" : "Shown in Extensions Settings"
+    },
+    "Disconnect" : {
+      "comment" : "Button title in Extensions Settings"
+    },
+    "Done" : {
+      "comment" : "Shown in Providers Settings"
+    },
+    "Edit project" : {
+      "comment" : "Screen title in Project Settings"
+    },
+    "Enable notifications" : {
+      "comment" : "Button title in Notification Settings"
+    },
+    "Enter your %@ API key to connect your account and use %@ models on this server." : {
+      "comment" : "Both %@ are the provider name"
+    },
+    "Environment" : {
+      "comment" : "Credential comes from environment variables"
+    },
+    "Environment variable" : {
+      "comment" : "Shown in Providers Settings"
+    },
+    "Evict" : {
+      "comment" : "Button title in Administration Settings"
+    },
+    "Evict %@?" : {
+      "comment" : "%@ is a directory name"
+    },
+    "External" : {
+      "comment" : "Account managed outside opencode"
+    },
+    "Failed" : {
+      "comment" : "Badge in Catalog Settings"
+    },
+    "Failed sessions" : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Failed: %@" : {
+      "comment" : "%@ is the failure message"
+    },
+    "Finish signing in to %@ in a browser. If the page sends you to localhost, open the link on the computer running opencode: that is where the server listens for the answer." : {
+      "comment" : "%@ is a provider name"
+    },
+    "Finished sessions" : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Fonts, icons and design" : {
+      "comment" : "Shown in Acknowledgements View"
+    },
+    "From" : {
+      "comment" : "Start time of quiet hours"
+    },
+    "Gray" : {
+      "comment" : "Shown in Project Settings"
+    },
+    "Green" : {
+      "comment" : "Shown in Project Settings"
+    },
+    "Hide QR code" : {
+      "comment" : "Shown in Providers Settings"
+    },
+    "Inline configuration" : {
+      "comment" : "Shown in Project Settings"
+    },
+    "Input" : {
+      "comment" : "Input tokens"
+    },
+    "Installed · %@" : {
+      "comment" : "%@ is the plugin version"
+    },
+    "Last delivery" : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Libraries" : {
+      "comment" : "Shown in Acknowledgements View"
+    },
+    "Live Activity" : {
+      "comment" : "Switch label in Notification Settings"
+    },
+    "Loaded locations" : {
+      "comment" : "Section heading in Administration Settings"
+    },
+    "Loading statistics…" : {
+      "comment" : "Shown in Usage Statistics"
+    },
+    "Loading…" : {
+      "comment" : "Text in Admin Components"
+    },
+    "Local" : {
+      "comment" : "Plugin source: local files"
+    },
+    "Lock-screen approvals" : {
+      "comment" : "Text in Notification Settings"
+    },
+    "Lower the alert level during these hours. Approvals keep theirs." : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "MCP servers configured on this server. Their resources can be mentioned with @ in the composer." : {
+      "comment" : "Text in Extensions Settings"
+    },
+    "Main checkout" : {
+      "comment" : "Shown in Administration Settings"
+    },
+    "Manage projects and their settings" : {
+      "comment" : "Text in Project Settings"
+    },
+    "Manage provider connections and the accounts used for each provider." : {
+      "comment" : "Text in Providers Settings"
+    },
+    "Mode" : {
+      "comment" : "Row label in Catalog Settings"
+    },
+    "Model" : {
+      "comment" : "Row label in Catalog Settings"
+    },
+    "Model: %@" : {
+      "comment" : "%@ is a provider/model id"
+    },
+    "Models" : {
+      "comment" : "Section heading in Usage Statistics"
+    },
+    "Muted sessions: %lld" : {
+      "comment" : "%lld is the number of muted sessions"
+    },
+    "Name (optional)" : {
+      "comment" : "Text field placeholder in Administration Settings"
+    },
+    "Needs auth" : {
+      "comment" : "MCP status: sign-in required"
+    },
+    "Needs sign-in" : {
+      "comment" : "Badge in Providers Settings"
+    },
+    "Needs you, Running and Recent show session titles on the Home Screen. On the Lock Screen titles stay hidden until you unlock; counts stay visible." : {
+      "comment" : "Shown in System Integration Settings"
+    },
+    "New prompt and Review approval work in Control Center, on the Lock Screen and with the Action button." : {
+      "comment" : "Shown in System Integration Settings"
+    },
+    "New worktree" : {
+      "comment" : "Section heading in Administration Settings"
+    },
+    "No MCPs configured" : {
+      "comment" : "Shown in Extensions Settings"
+    },
+    "No activity" : {
+      "comment" : "Shown in Usage Statistics"
+    },
+    "No agents" : {
+      "comment" : "Shown in Catalog Settings"
+    },
+    "No archived projects" : {
+      "comment" : "Shown in Project Settings"
+    },
+    "No commands" : {
+      "comment" : "Shown in Catalog Settings"
+    },
+    "No configuration documents" : {
+      "comment" : "Shown in Project Settings"
+    },
+    "No locations loaded" : {
+      "comment" : "Shown in Administration Settings"
+    },
+    "No plugins yet" : {
+      "comment" : "Shown in Catalog Settings"
+    },
+    "No projects yet" : {
+      "comment" : "Text in Administration Settings"
+    },
+    "No providers connected" : {
+      "comment" : "Text in Providers Settings"
+    },
+    "No providers found" : {
+      "comment" : "Shown in Providers Settings"
+    },
+    "No references" : {
+      "comment" : "Shown in Catalog Settings"
+    },
+    "No saved rules" : {
+      "comment" : "Shown in Extensions Settings"
+    },
+    "No sessions ran in this range." : {
+      "comment" : "Shown in Usage Statistics"
+    },
+    "No shells found" : {
+      "comment" : "Shown in Project Settings"
+    },
+    "No skills yet" : {
+      "comment" : "Shown in Catalog Settings"
+    },
+    "No uncommitted changes." : {
+      "comment" : "Text in Administration Settings"
+    },
+    "No worktrees yet" : {
+      "comment" : "Shown in Administration Settings"
+    },
+    "None yet" : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Not installed" : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Not loaded. Pull to refresh." : {
+      "comment" : "Text in Admin Components"
+    },
+    "Notification decisions" : {
+      "comment" : "Text in Notification Settings"
+    },
+    "Notifications" : {
+      "comment" : "Screen title in Notification Settings"
+    },
+    "Notify me about" : {
+      "comment" : "Text in Notification Settings"
+    },
+    "OK" : {
+      "comment" : "Button title in Admin Components"
+    },
+    "On request" : {
+      "comment" : "Badge: skill runs only when requested"
+    },
+    "On, with risk tiers" : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Open Siri & Search settings" : {
+      "comment" : "Button title in System Integration Settings"
+    },
+    "Open link" : {
+      "comment" : "Label in Providers Settings"
+    },
+    "Open only" : {
+      "comment" : "Approvals can only be opened, not answered, from the lock screen"
+    },
+    "Opencode is free software under the GNU General Public License, version 3. It includes the components below, each under its own licence." : {
+      "comment" : "Text in Acknowledgements View"
+    },
+    "Opening sign-in…" : {
+      "comment" : "Shown in Providers Settings"
+    },
+    "Opens this app's page in the Settings app" : {
+      "comment" : "VoiceOver hint in System Integration Settings"
+    },
+    "Orange" : {
+      "comment" : "Shown in Project Settings"
+    },
+    "Output" : {
+      "comment" : "Output tokens"
+    },
+    "Pending" : {
+      "comment" : "Shown in Extensions Settings"
+    },
+    "Pending permission requests and questions on this server are cancelled; running sessions continue at their next step." : {
+      "comment" : "Text in Administration Settings"
+    },
+    "Permissions" : {
+      "comment" : "Section heading in Catalog Settings"
+    },
+    "Persistent terminals" : {
+      "comment" : "Row label in Administration Settings"
+    },
+    "Pink" : {
+      "comment" : "Shown in Project Settings"
+    },
+    "Plugin" : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Plugins" : {
+      "comment" : "Shown in Catalog Settings"
+    },
+    "Project" : {
+      "comment" : "Badge marking the project's own checkout"
+    },
+    "Project name" : {
+      "comment" : "Section heading in Project Settings"
+    },
+    "Project saved" : {
+      "comment" : "Shown in Project Settings"
+    },
+    "Project: %@" : {
+      "comment" : "%@ is a project name"
+    },
+    "Project: none" : {
+      "comment" : "Shown in Admin Components"
+    },
+    "Projects" : {
+      "comment" : "Section heading in Project Settings"
+    },
+    "Prompts" : {
+      "comment" : "Shown in Usage Statistics"
+    },
+    "Provider" : {
+      "comment" : "Shown in Providers Settings"
+    },
+    "Purple" : {
+      "comment" : "Shown in Project Settings"
+    },
+    "Push plugin and relay" : {
+      "comment" : "Components of the separately installed server plugin and push relay"
+    },
+    "QR code of the sign-in link" : {
+      "comment" : "VoiceOver label in Providers Settings"
+    },
+    "Questions" : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Quiet hours" : {
+      "comment" : "Text in Notification Settings"
+    },
+    "Range" : {
+      "comment" : "Date range for usage statistics"
+    },
+    "Reasoning" : {
+      "comment" : "Reasoning tokens"
+    },
+    "Red" : {
+      "comment" : "Shown in Project Settings"
+    },
+    "References" : {
+      "comment" : "Shown in Catalog Settings"
+    },
+    "Refresh" : {
+      "comment" : "Label in Administration Settings"
+    },
+    "Registration" : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Relay" : {
+      "comment" : "Push notification relay server"
+    },
+    "Reload" : {
+      "comment" : "Button title in Administration Settings"
+    },
+    "Reload configuration" : {
+      "comment" : "Shown in Administration Settings"
+    },
+    "Reload every location?" : {
+      "comment" : "Confirmation title in Administration Settings"
+    },
+    "Remove" : {
+      "comment" : "Button title in Providers Settings"
+    },
+    "Remove %@?" : {
+      "comment" : "%@ is an account name"
+    },
+    "Remove account?" : {
+      "comment" : "Shown in Providers Settings"
+    },
+    "Removed servers" : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Rename" : {
+      "comment" : "Button title in Providers Settings"
+    },
+    "Rename account" : {
+      "comment" : "Alert title in Providers Settings"
+    },
+    "Requests to run commands or edit files." : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Restarts every loaded location so changes to opencode.json, agents, skills and plugins apply." : {
+      "comment" : "Shown in Administration Settings"
+    },
+    "Review worktrees and manage disk usage" : {
+      "comment" : "Text in Administration Settings"
+    },
+    "Revocation pending for %lld; retried at the next launch" : {
+      "comment" : "%lld is the number of removed servers"
+    },
+    "Rules apply in order; the last one that matches decides." : {
+      "comment" : "Text in Catalog Settings"
+    },
+    "Rules saved with Allow always. opencode allows matching requests in this project without asking." : {
+      "comment" : "Text in Extensions Settings"
+    },
+    "Run opencode upgrade on the computer running the server, then reconnect." : {
+      "comment" : "Text in Administration Settings"
+    },
+    "Runs once after creating a new worktree. Use $OPENCODE_WORKTREE_BASE for the base worktree and $OPENCODE_WORKTREE_PATH for the new one." : {
+      "comment" : "Text in Project Settings"
+    },
+    "Save" : {
+      "comment" : "Button title in Project Settings"
+    },
+    "Saved %@" : {
+      "comment" : "%@ is a date"
+    },
+    "Searched for agents, commands and skills" : {
+      "comment" : "Text in Project Settings"
+    },
+    "Send a prompt, Get session status, Open a session, Review the next approval and New prompt. Requests are always answered in the app." : {
+      "comment" : "Shown in System Integration Settings"
+    },
+    "Send test push" : {
+      "comment" : "Button title in Notification Settings"
+    },
+    "Server" : {
+      "comment" : "Section heading in Administration Settings"
+    },
+    "Server settings" : {
+      "comment" : "Section heading in Server Admin View"
+    },
+    "Servers" : {
+      "comment" : "Section heading in Extensions Settings"
+    },
+    "Session titles, project names and server names appear in search, never what a session says. Turning this off removes them." : {
+      "comment" : "Shown in System Integration Settings"
+    },
+    "Sessions" : {
+      "comment" : "Shown in Usage Statistics"
+    },
+    "Sessions waiting for your approval will no longer alert you, on every server, including at night. They stay in Notification Center." : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Set %@ on the computer running opencode." : {
+      "comment" : "%@ is a list of environment variable names"
+    },
+    "Set in the server's environment. Change it on the computer running opencode." : {
+      "comment" : "Shown in Providers Settings"
+    },
+    "Set up on the computer running opencode." : {
+      "comment" : "Shown in Providers Settings"
+    },
+    "Share" : {
+      "comment" : "Verb: share the link"
+    },
+    "Shell used by the terminal and agent tools" : {
+      "comment" : "Text in Project Settings"
+    },
+    "Shortcuts and Siri" : {
+      "comment" : "Shown in System Integration Settings"
+    },
+    "Show QR code" : {
+      "comment" : "Shown in Providers Settings"
+    },
+    "Show progress for prompts you send from this phone." : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Show sessions in Spotlight" : {
+      "comment" : "Switch label in System Integration Settings"
+    },
+    "Sign in" : {
+      "comment" : "Button title in Extensions Settings"
+    },
+    "Sign-in cancelled." : {
+      "comment" : "Text in Providers Settings"
+    },
+    "Signed in" : {
+      "comment" : "Shown in Providers Settings"
+    },
+    "Skills" : {
+      "comment" : "Shown in Catalog Settings"
+    },
+    "Skills available to opencode will appear here." : {
+      "comment" : "Shown in Catalog Settings"
+    },
+    "Stay connected when you leave the app." : {
+      "comment" : "Text in Notification Settings"
+    },
+    "Steps" : {
+      "comment" : "Row label in Catalog Settings"
+    },
+    "Succeeded · failed" : {
+      "comment" : "Tool call outcomes"
+    },
+    "Syntax highlighting grammars" : {
+      "comment" : "Shown in Acknowledgements View"
+    },
+    "System permission" : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Terminal shell" : {
+      "comment" : "Section heading in Project Settings"
+    },
+    "The configuration this project's location reads, read-only. Values whose names look secret are hidden." : {
+      "comment" : "Text in Project Settings"
+    },
+    "The key is sent to the server once and is not kept on this device." : {
+      "comment" : "Text in Providers Settings"
+    },
+    "The name shown for this project throughout opencode" : {
+      "comment" : "Text in Project Settings"
+    },
+    "The project's startup script runs in the new worktree." : {
+      "comment" : "Text in Administration Settings"
+    },
+    "The server installs the newest version of %@ and reloads it for every project." : {
+      "comment" : "%@ is a list of plugin names"
+    },
+    "The server stops this location's services. Pending permission requests and questions there are cancelled; running sessions continue at their next step." : {
+      "comment" : "Text in Administration Settings"
+    },
+    "The uncommitted changes cannot be recovered." : {
+      "comment" : "Text in Administration Settings"
+    },
+    "This deletes the credential %@ from the server." : {
+      "comment" : "%@ is an account name"
+    },
+    "This deletes the credential from the server. %@ models will no longer be available." : {
+      "comment" : "%@ is a provider name"
+    },
+    "This permanently deletes the worktree and its branch." : {
+      "comment" : "Text in Administration Settings"
+    },
+    "This project has a custom icon. Change it from the desktop app." : {
+      "comment" : "Shown in Project Settings"
+    },
+    "This provider is no longer available on the server." : {
+      "comment" : "Text in Providers Settings"
+    },
+    "This sets shell to %@ in the server's global configuration, for every project. New terminals and agent commands use it." : {
+      "comment" : "%@ is a shell path"
+    },
+    "This sets shell to the server's default in the server's global configuration, for every project. New terminals and agent commands use it." : {
+      "comment" : "Shown in Project Settings"
+    },
+    "Tokens and cost" : {
+      "comment" : "Section heading in Usage Statistics"
+    },
+    "Tools" : {
+      "comment" : "Section heading in Usage Statistics"
+    },
+    "Turn off" : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Turn off approval notifications?" : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Turned-off notifications still arrive in Notification Center, without sound or banner. Muted sessions do the same, except approvals." : {
+      "comment" : "Text in Notification Settings"
+    },
+    "Unable to verify git status. Uncommitted changes may be lost." : {
+      "comment" : "Shown in Administration Settings"
+    },
+    "Unavailable" : {
+      "comment" : "Shown in Administration Settings"
+    },
+    "Uncommitted changes (%lld)" : {
+      "comment" : "%lld is the number of changed files"
+    },
+    "Unknown" : {
+      "comment" : "Shown in Extensions Settings"
+    },
+    "Unknown server" : {
+      "comment" : "Shown in Notification Settings"
+    },
+    "Unmerged changes will be lost." : {
+      "comment" : "Label in Administration Settings"
+    },
+    "Unmute a session from its menu." : {
+      "comment" : "Text in Notification Settings"
+    },
+    "Until" : {
+      "comment" : "End time of quiet hours"
+    },
+    "Up to %lld steps" : {
+      "comment" : "%lld is the maximum number of agent steps",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Up to %lld step"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Up to %lld steps"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Update" : {
+      "comment" : "Verb: update plugins"
+    },
+    "Update %@?" : {
+      "comment" : "%@ is a plugin name"
+    },
+    "Update %lld plugins?" : {
+      "comment" : "%lld is the number of plugins",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Update %lld plugin?"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Update %lld plugins?"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Update all (%lld)" : {
+      "comment" : "%lld is the number of outdated plugins"
+    },
+    "Update available" : {
+      "comment" : "Section heading in Administration Settings"
+    },
+    "Updating" : {
+      "comment" : "Badge in Catalog Settings"
+    },
+    "Use this account" : {
+      "comment" : "Button title in Providers Settings"
+    },
+    "Used for the project icon when no custom image is set" : {
+      "comment" : "Shown in Project Settings"
+    },
+    "Version" : {
+      "comment" : "Row label in Administration Settings"
+    },
+    "Version %@" : {
+      "comment" : "%@ is a version number"
+    },
+    "Waiting for authorization…" : {
+      "comment" : "Shown in Providers Settings"
+    },
+    "Waiting for command to finish…" : {
+      "comment" : "Shown in Providers Settings"
+    },
+    "Widgets" : {
+      "comment" : "Shown in System Integration Settings"
+    },
+    "Widgets and Shortcuts" : {
+      "comment" : "Section heading in System Integration Settings"
+    },
+    "Worktree startup script" : {
+      "comment" : "Section heading in Project Settings"
+    },
+    "Worktrees" : {
+      "comment" : "Section heading in Administration Settings"
+    },
+    "Worktrees created in opencode will appear here." : {
+      "comment" : "Shown in Administration Settings"
+    },
+    "Yellow" : {
+      "comment" : "Shown in Project Settings"
+    },
+    "Your browser opens so you can sign in to %@. Paste the authorization code it gives you below." : {
+      "comment" : "%@ is a provider name"
+    },
+    "asks before %@" : {
+      "comment" : "%@ is a list of tool names"
+    },
+    "denies %@" : {
+      "comment" : "%@ is a list of tool names"
+    },
+    "e.g. bun install" : {
+      "comment" : "Placeholder; bun install is a shell command"
+    },
+    "opencode %@ is available." : {
+      "comment" : "%@ is a version number"
+    },
+    "opencode archives a project when its folder no longer exists. It returns when you open the folder again." : {
+      "comment" : "Text in Project Settings"
+    },
+    "opencode is running %@ on the server. Follow its instructions there or below." : {
+      "comment" : "%@ is a login method name"
+    },
+    "opencode will ask again before %@ on %@ in %@." : {
+      "comment" : "%1$@ is a tool, %2$@ a pattern, %3$@ a project name"
+    },
+    "opencode will ask again before %@ on %@ in this project." : {
+      "comment" : "%1$@ is a tool, %2$@ a pattern"
+    },
+    "primary and subagent" : {
+      "comment" : "Agent mode badge"
+    }
+  },
+  "version" : "1.0"
+}

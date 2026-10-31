@@ -22,7 +22,7 @@ final class CodeCell: UICollectionViewCell {
         super.init(frame: frame); isOpaque = true; isAccessibilityElement = true; contentView.isHidden = true
         more.setImage(UIImage(named: "dot-grid", in: .module, compatibleWith: nil), for: .normal)
         more.tintColor = UIColor(OCColor.iconMuted); more.showsMenuAsPrimaryAction = true
-        more.accessibilityLabel = "More options"; addSubview(more)
+        more.accessibilityLabel = localized("More options"); addSubview(more)
     }
     required init?(coder: NSCoder) { nil }
     func configure(_ row: DiffRow, split: Bool, wrap: Bool, fontSize: CGFloat, offset: CGFloat, selected: LineSelection?, comments: [LineComment], gutter: CGFloat, source: Bool, matches: [NSRange], currentMatch: CodeSearchMatch?) {
@@ -32,33 +32,34 @@ final class CodeCell: UICollectionViewCell {
         more.isHidden = row.commentID == nil
         left = attributed(row.left); right = attributed(row.right)
         let line = row.right ?? row.left
-        accessibilityLabel = row.label ?? "Line \(line?.newLine ?? line?.oldLine ?? 0), \(line?.kind == .addition ? "added" : line?.kind == .deletion ? "deleted" : "context"), \(line?.text ?? "")"
+        let number = line?.newLine ?? line?.oldLine ?? 0, text = line?.text ?? ""
+        accessibilityLabel = row.label ?? (line?.kind == .addition ? localized("Line \(number), added, \(text)", comment: "Diff line; %lld is the line number, %@ its text") : line?.kind == .deletion ? localized("Line \(number), deleted, \(text)", comment: "Diff line; %lld is the line number, %@ its text") : localized("Line \(number), context, \(text)", comment: "Unchanged diff line; %lld is the line number, %@ its text"))
         accessibilityCustomActions = [
-            UIAccessibilityCustomAction(name: "Comment on line") { [weak self] _ in self?.comment?(line?.kind == .deletion ? .deletions : .additions); return true },
-            UIAccessibilityCustomAction(name: "Extend selection to this line") { [weak self] _ in self?.extend?(line?.kind == .deletion ? .deletions : .additions); return true },
-            UIAccessibilityCustomAction(name: "Copy line") { _ in OCCopy.text(line?.text ?? ""); return true }
+            UIAccessibilityCustomAction(name: localized("Comment on line")) { [weak self] _ in self?.comment?(line?.kind == .deletion ? .deletions : .additions); return true },
+            UIAccessibilityCustomAction(name: localized("Extend selection to this line")) { [weak self] _ in self?.extend?(line?.kind == .deletion ? .deletions : .additions); return true },
+            UIAccessibilityCustomAction(name: localized("Copy line")) { _ in OCCopy.text(line?.text ?? ""); return true }
         ]
         if split, let deleted = row.left, deleted.oldLine != nil {
-            accessibilityCustomActions?.append(UIAccessibilityCustomAction(name: "Comment on deleted line") { [weak self] _ in self?.comment?(.deletions); return true })
-            accessibilityCustomActions?.append(UIAccessibilityCustomAction(name: "Extend selection to deleted line") { [weak self] _ in self?.extend?(.deletions); return true })
-            accessibilityCustomActions?.append(UIAccessibilityCustomAction(name: "Copy deleted line") { _ in OCCopy.text(deleted.text); return true })
-            accessibilityLabel = "Old line \(deleted.oldLine ?? 0), \(deleted.text). " + (accessibilityLabel ?? "")
+            accessibilityCustomActions?.append(UIAccessibilityCustomAction(name: localized("Comment on deleted line")) { [weak self] _ in self?.comment?(.deletions); return true })
+            accessibilityCustomActions?.append(UIAccessibilityCustomAction(name: localized("Extend selection to deleted line")) { [weak self] _ in self?.extend?(.deletions); return true })
+            accessibilityCustomActions?.append(UIAccessibilityCustomAction(name: localized("Copy deleted line")) { _ in OCCopy.text(deleted.text); return true })
+            accessibilityLabel = localized("Old line \(deleted.oldLine ?? 0), \(deleted.text). \(accessibilityLabel ?? "")", comment: "Split diff row; %1$lld is the old line number, %2$@ its text, %3$@ the new line's description")
         }
         setNeedsDisplay()
     }
     func commentActions(edit: @escaping () -> Void, delete: @escaping () -> Void) {
-        more.menu = UIMenu(title: "More options", children: [UIAction(title: "Edit") { _ in edit() }, UIAction(title: "Delete", attributes: .destructive) { _ in delete() }])
-        accessibilityCustomActions = [UIAccessibilityCustomAction(name: "Edit") { _ in edit(); return true }, UIAccessibilityCustomAction(name: "Delete") { _ in delete(); return true }]
+        more.menu = UIMenu(title: localized("More options"), children: [UIAction(title: localized("Edit", comment: "Menu action that edits a line comment")) { _ in edit() }, UIAction(title: localized("Delete", comment: "Menu action that deletes a line comment"), attributes: .destructive) { _ in delete() }])
+        accessibilityCustomActions = [UIAccessibilityCustomAction(name: localized("Edit", comment: "Menu action that edits a line comment")) { _ in edit(); return true }, UIAccessibilityCustomAction(name: localized("Delete", comment: "Menu action that deletes a line comment")) { _ in delete(); return true }]
     }
     func contextActions(above: @escaping () -> Void, below: @escaping () -> Void, all: @escaping () -> Void) {
         accessibilityCustomActions = [
-            UIAccessibilityCustomAction(name: "Expand 20 lines above") { _ in above(); return true },
-            UIAccessibilityCustomAction(name: "Expand 20 lines below") { _ in below(); return true },
-            UIAccessibilityCustomAction(name: "Expand all") { _ in all(); return true },
+            UIAccessibilityCustomAction(name: localized("Expand 20 lines above")) { _ in above(); return true },
+            UIAccessibilityCustomAction(name: localized("Expand 20 lines below")) { _ in below(); return true },
+            UIAccessibilityCustomAction(name: localized("Expand all", comment: "Reveals every hidden unchanged line in a diff")) { _ in all(); return true },
         ]
     }
     func fileAction(_ open: @escaping () -> Void) {
-        accessibilityCustomActions = [UIAccessibilityCustomAction(name: "Open file") { _ in open(); return true }]
+        accessibilityCustomActions = [UIAccessibilityCustomAction(name: localized("Open file")) { _ in open(); return true }]
     }
     override func layoutSubviews() {
         super.layoutSubviews()
@@ -97,19 +98,19 @@ final class CodeCell: UICollectionViewCell {
                 UIColor(OCColor.border).setStroke(); shape.lineWidth = 0.5; shape.stroke()
                 let parts = label.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: false)
                 let body = parts.count > 1 ? String(parts[1]) : label
-                let meta = parts.count > 1 ? String(parts[0]) : "Comment"
+                let meta = parts.count > 1 ? String(parts[0]) : localized("Comment", comment: "Noun: label on a line comment card")
                 let bodyFont = UIFont(name: "Inter-Regular", size: fontSize) ?? font
                 let metaFont = UIFont(name: "Inter-Regular", size: max(11, fontSize * 11 / 13)) ?? font
                 let area = CGRect(x: card.minX + 12, y: card.minY + 12, width: max(1, card.width - 68), height: card.height - 24)
                 let bodySize = (body as NSString).boundingRect(with: CGSize(width: area.width, height: .greatestFiniteMagnitude), options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: bodyFont], context: nil).size
                 (body as NSString).draw(in: CGRect(origin: area.origin, size: CGSize(width: area.width, height: ceil(bodySize.height))), withAttributes: [.font: bodyFont, .foregroundColor: UIColor(OCColor.text)])
                 (meta as NSString).draw(in: CGRect(x: area.minX, y: area.minY + ceil(bodySize.height) + 8, width: area.width, height: metaFont.lineHeight), withAttributes: [.font: metaFont, .foregroundColor: UIColor(OCColor.textFaint)])
-                accessibilityHint = "More options: Edit or Delete"
+                accessibilityHint = localized("More options: Edit or Delete")
                 return
             }
             let area = row.commentID == nil ? bounds.insetBy(dx: 12, dy: 3) : commentFrame.insetBy(dx: 12, dy: 12)
             let labelFont = row.commentID == nil ? font : UIFont(name: "Inter-Regular", size: fontSize) ?? font
-            let display = label == "Binary file" || label == "Diff too large to render" ? label + "  ·  Open file" : label
+            let display = DiffPlaceholder.opensFile(label) ? label + "  ·  " + localized("Open file") : label
             (display as NSString).draw(in: area, withAttributes: [.font: labelFont, .foregroundColor: UIColor(OCColor.textMuted)])
             return
         }
@@ -181,9 +182,9 @@ final class CodeHeader: UICollectionReusableView {
         self.toggle.imageView?.contentMode = .scaleAspectFit
         self.toggle.titleLabel?.lineBreakMode = .byTruncatingMiddle
         self.open.isHidden = !expanded
-        self.toggle.accessibilityValue = expanded ? "Expanded" : "Collapsed"
-        self.toggle.setTitle(title, for: .normal); self.open.setTitle(summary + "  ·  Open file", for: .normal)
-        self.toggle.accessibilityLabel = title; self.open.accessibilityLabel = "Open file " + title
+        self.toggle.accessibilityValue = expanded ? localized("Expanded") : localized("Collapsed")
+        self.toggle.setTitle(title, for: .normal); self.open.setTitle(summary + "  ·  " + localized("Open file"), for: .normal)
+        self.toggle.accessibilityLabel = summary.isEmpty ? title : localized("\(title), \(summary)", comment: "Diff file header; %1$@ is the file path, %2$@ its change summary"); self.toggle.accessibilityIdentifier = title; self.open.accessibilityLabel = localized("Open file \(title)", comment: "%@ is a file path")
         toggled = toggle; opened = open; setNeedsLayout()
     }
     override func layoutSubviews() { super.layoutSubviews(); toggle.frame = CGRect(x: 12, y: 0, width: bounds.width - 24, height: 44); open.frame = CGRect(x: 12, y: 44, width: bounds.width - 24, height: 44) }

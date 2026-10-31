@@ -1,0 +1,290 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%lld hidden lines" : {
+      "comment" : "%lld is the number of folded unchanged lines",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hidden line"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hidden lines"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "(%lld matches)" : {
+      "comment" : "%lld is the number of search matches",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "(%lld match)"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "(%lld matches)"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "A link needs a target in “%@”" : {
+      "comment" : "%@ is a line of diagram source"
+    },
+    "Added file" : {
+      "comment" : "Shown in Tool Presenter"
+    },
+    "Agent" : {
+      "comment" : "Title of a subagent tool call"
+    },
+    "Agent switched to %@" : {
+      "comment" : "%@ is an agent name"
+    },
+    "Agent switched to unknown" : {
+      "comment" : "Shown in Timeline Row Builder"
+    },
+    "Attempt %lld" : {
+      "comment" : "Retry badge; %lld is the attempt number"
+    },
+    "Cannot read “%@”" : {
+      "comment" : "%@ is a line of diagram source"
+    },
+    "Changed %lld files" : {
+      "comment" : "%lld is the number of files changed in a turn",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Changed %lld file"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Changed %lld files"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Compact" : {
+      "comment" : "Timeline detail level"
+    },
+    "Compacting conversation" : {
+      "comment" : "Shown in Timeline Row Builder"
+    },
+    "Detailed" : {
+      "comment" : "Timeline detail level"
+    },
+    "Edit" : {
+      "comment" : "Title of a tool call that edited a file"
+    },
+    "Empty diagram" : {
+      "comment" : "Shown in Mermaid"
+    },
+    "Everything" : {
+      "comment" : "Timeline detail level"
+    },
+    "Exit %lld" : {
+      "comment" : "Badge; %lld is the shell exit code"
+    },
+    "Expected “{”" : {
+      "comment" : "Shown in Math Parser"
+    },
+    "Image" : {
+      "comment" : "Name of an image with no file name"
+    },
+    "Interrupted" : {
+      "comment" : "Shown in Timeline Row Builder"
+    },
+    "Loaded %@" : {
+      "comment" : "%@ is a skill name"
+    },
+    "Loaded skill" : {
+      "comment" : "Shown in Timeline Row Builder"
+    },
+    "Location switched to %@" : {
+      "comment" : "%@ is a directory path"
+    },
+    "Location switched to unknown" : {
+      "comment" : "Shown in Timeline Row Builder"
+    },
+    "Messages only" : {
+      "comment" : "Timeline detail level"
+    },
+    "Missing \\end{%@}" : {
+      "comment" : "%@ is a TeX environment name"
+    },
+    "Missing \\right" : {
+      "comment" : "Shown in Math Parser"
+    },
+    "Missing argument" : {
+      "comment" : "Shown in Math Parser"
+    },
+    "Missing delimiter" : {
+      "comment" : "Shown in Math Parser"
+    },
+    "Missing “%@”" : {
+      "comment" : "%@ is a closing character"
+    },
+    "Missing “}”" : {
+      "comment" : "Shown in Math Parser"
+    },
+    "Model switched to %@" : {
+      "comment" : "%@ is a model id"
+    },
+    "Model switched to unknown" : {
+      "comment" : "Shown in Timeline Row Builder"
+    },
+    "Patch" : {
+      "comment" : "Title of a tool call that applied a patch"
+    },
+    "Permission needed: %@" : {
+      "comment" : "%@ is the permission's action name"
+    },
+    "Permission needed: Request" : {
+      "comment" : "Shown in Announcements"
+    },
+    "Question" : {
+      "comment" : "VoiceOver announcement for a new question"
+    },
+    "Question: %@" : {
+      "comment" : "%@ is the question's title"
+    },
+    "Questions" : {
+      "comment" : "Shown in Tool Presenter"
+    },
+    "Quiet" : {
+      "comment" : "Timeline detail level"
+    },
+    "Read" : {
+      "comment" : "Title of a tool call that read a file"
+    },
+    "Run failed" : {
+      "comment" : "Shown in Announcements"
+    },
+    "Run finished" : {
+      "comment" : "Shown in Announcements"
+    },
+    "Shell" : {
+      "comment" : "Title of a shell command row"
+    },
+    "Tasks" : {
+      "comment" : "Title of a to-do list tool call"
+    },
+    "The diagram has no participants" : {
+      "comment" : "Shown in Mermaid"
+    },
+    "The flowchart has no nodes" : {
+      "comment" : "Shown in Mermaid"
+    },
+    "Thinking" : {
+      "comment" : "Group of model reasoning rows"
+    },
+    "Timed out" : {
+      "comment" : "Shown in Tool Presenter"
+    },
+    "Too deeply nested" : {
+      "comment" : "Shown in Math Parser"
+    },
+    "Turn complete" : {
+      "comment" : "Shown in Timeline Row Builder"
+    },
+    "Unexpected \\end" : {
+      "comment" : "Shown in Math Parser"
+    },
+    "Unexpected \\right" : {
+      "comment" : "Shown in Math Parser"
+    },
+    "Unexpected end" : {
+      "comment" : "Shown in Math Parser"
+    },
+    "Unexpected “%@”" : {
+      "comment" : "%@ is a character in the formula"
+    },
+    "Unexpected “&”" : {
+      "comment" : "Shown in Math Parser"
+    },
+    "Unknown delimiter %@" : {
+      "comment" : "%@ is a TeX delimiter"
+    },
+    "Unmatched “}”" : {
+      "comment" : "Shown in Math Parser"
+    },
+    "Unsupported command \\%@" : {
+      "comment" : "%@ is a TeX command name"
+    },
+    "Unsupported content: %@" : {
+      "comment" : "%@ is the server's content type"
+    },
+    "Unsupported environment %@" : {
+      "comment" : "%@ is a TeX environment name"
+    },
+    "Updates" : {
+      "comment" : "Noun: group of timeline rows"
+    },
+    "Used %lld %@" : {
+      "comment" : "%lld is a tool call count, %@ a list of tool names"
+    },
+    "Used %lld tools" : {
+      "comment" : "Shown in Timeline Row Builder",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Used %lld tool"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Used %lld tools"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Voice" : {
+      "comment" : "Badge on a prompt sent by voice"
+    },
+    "Write" : {
+      "comment" : "Title of a tool call that wrote a file"
+    },
+    "\\end{%@} closes %@" : {
+      "comment" : "%1$@ and %2$@ are TeX environment names"
+    },
+    "“%@” diagrams are shown as source" : {
+      "comment" : "%@ is a Mermaid diagram type"
+    }
+  },
+  "version" : "1.0"
+}

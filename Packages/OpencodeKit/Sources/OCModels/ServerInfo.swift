@@ -22,10 +22,13 @@ public struct ServerInfo: Codable, Equatable, Sendable {
         self.capabilities = capabilities
     }
 
-    public var supportsPairing: Bool { isAtLeast("2.0.25") }
+    /// The oldest opencode server the app accepts: 2.0.25 added pairing, which the app relies on. Older 2.x servers
+    /// get the update screen, which names this version.
+    public static let minimumVersion = "2.0.25"
+    public var supportsPairing: Bool { isAtLeast(Self.minimumVersion) }
     /// Session info carries `time.busy`, the start of the latest turn (seen on 2.2.2, absent on 2.0.32).
     public var reportsBusyTime: Bool { isAtLeast("2.2.0") }
-    public var isSupported: Bool { isAtLeast("2.0.10") && SemVer(version)?.major == 2 }
+    public var isSupported: Bool { isAtLeast(Self.minimumVersion) && SemVer(version)?.major == 2 }
     private func isAtLeast(_ minimum: String) -> Bool {
         guard let version = SemVer(version), let minimum = SemVer(minimum) else { return false }
         return version >= minimum

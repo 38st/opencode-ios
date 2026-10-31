@@ -93,7 +93,7 @@ import OCPersistence
                 try await Task.sleep(for: .milliseconds(120))
                 let values = try await store.findFiles(query, directory: self?.directory ?? "", type: "file", limit: 200)
                 try Task.checkCancellation(); self?.results = values
-            } catch { if !Task.isCancelled { self?.error = "Could not search files." } }
+            } catch { if !Task.isCancelled { self?.error = ComposerModel.searchFailed } }
         }
     }
     /// Cached answers for every candidate, or nil while any is unknown or stale.
@@ -161,7 +161,7 @@ import OCPersistence
             else if matches.count > 1 { self.query = query; allFiles(); if present { presentRequest = UUID() }; return }
             else if let only = matches.first { path = only }
         }
-        guard let target = ReviewPath(path, root: .location, location: directory, project: projectDirectory) else { error = "File not found: \(path)"; return }
+        guard let target = ReviewPath(path, root: .location, location: directory, project: projectDirectory) else { error = localized("File not found: \(path)", comment: "%@ is a file path"); return }
         open(target, selection: link.selection, present: present)
     }
     public func allFiles() {
@@ -209,7 +209,7 @@ import OCPersistence
         }
     }
     private static func message(_ error: any Error, path: String) -> String {
-        if case APIError.server(_, 404, _) = error { return "File not found: \((path as NSString).lastPathComponent)" }
+        if case APIError.server(_, 404, _) = error { return localized("File not found: \((path as NSString).lastPathComponent)", comment: "%@ is a file path") }
         return WriteErrorMessage.message(error)
     }
     public func loadMore(all: Bool = false) {
@@ -246,7 +246,7 @@ import OCPersistence
 }
 public enum FileReadError: Error, LocalizedError {
     case invalidRange, changed
-    public var errorDescription: String? { self == .changed ? "The file changed. Open it again to refresh." : "The requested range is unavailable." }
+    public var errorDescription: String? { self == .changed ? localized("The file changed. Open it again to refresh.") : localized("The requested range is unavailable.") }
 }
 extension ReadStore {
     public func files(sessionID: String, directory: String) -> FilesModel {

@@ -27,6 +27,8 @@ settings:
     SWIFT_UPCOMING_FEATURE_INFER_ISOLATED_CONFORMANCES: YES
     SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY: YES
     SWIFT_UPCOMING_FEATURE_EXISTENTIAL_ANY: YES
+    # The compiler lists every localizable literal, so Tools/strings/sync.mjs can keep the String Catalogs complete.
+    SWIFT_EMIT_LOC_STRINGS: YES
 targets:
   Opencode:
     type: application
@@ -382,6 +384,8 @@ targets:
         product: FeatureSettings
       - package: OpencodeKit
         product: FeatureComposer
+      - package: OpencodeKit
+        product: FeatureApprovals
       - package: OpencodeKit
         product: OCRender
       - package: OpencodeKit

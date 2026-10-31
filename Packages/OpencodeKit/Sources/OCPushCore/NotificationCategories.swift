@@ -22,14 +22,14 @@ public enum NotificationCategories {
         }
     }
     public static func actions(for category: String) -> [NotificationAction] {
-        let open = NotificationAction(id: .open, title: "Open", foreground: true)
-        let reject = NotificationAction(id: .reject, title: "Reject", destructive: true)
+        let open = NotificationAction(id: .open, title: localized("Open", comment: "Notification action: open the session"), foreground: true)
+        let reject = NotificationAction(id: .reject, title: localized("Reject", comment: "Notification action: reject a permission request"), destructive: true)
         switch category {
-        case "PERMISSION": return [open, .init(id: .allow, title: "Allow once", authenticationRequired: true), reject,
-                                    .init(id: .rejectWithNote, title: "Reject with note…", destructive: true, textInput: true)]
+        case "PERMISSION": return [open, .init(id: .allow, title: localized("Allow once"), authenticationRequired: true), reject,
+                                    .init(id: .rejectWithNote, title: localized("Reject with note…"), destructive: true, textInput: true)]
         case "PERMISSION_HIGH_RISK": return [open, reject]
-        case "QUESTION": return [open, .init(id: .answer, title: "Answer…", textInput: true)]
-        case "FINISHED", "FAILED": return [open, .init(id: .reply, title: "Reply…", authenticationRequired: true, textInput: true)]
+        case "QUESTION": return [open, .init(id: .answer, title: localized("Answer…", comment: "Notification action: answer a question"), textInput: true)]
+        case "FINISHED", "FAILED": return [open, .init(id: .reply, title: localized("Reply…", comment: "Notification action: reply to a session"), authenticationRequired: true, textInput: true)]
         default: return [open]
         }
     }
@@ -47,7 +47,7 @@ public extension NotificationCategories {
                 if action.destructive { options.insert(.destructive) }
                 if action.textInput {
                     return UNTextInputNotificationAction(identifier: action.id.rawValue, title: action.title, options: options,
-                                                         textInputButtonTitle: "Send", textInputPlaceholder: "Message")
+                                                         textInputButtonTitle: localized("Send", comment: "Notification text input button"), textInputPlaceholder: localized("Message", comment: "Notification text input placeholder"))
                 }
                 return UNNotificationAction(identifier: action.id.rawValue, title: action.title, options: options)
             }, intentIdentifiers: [], options: [])

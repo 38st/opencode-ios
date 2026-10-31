@@ -35,7 +35,7 @@ public struct OCResizeHandle: View {
             value = clamp(origin + (edge == .leading ? drag.translation.width : -drag.translation.width))
         }.onEnded { _ in start = nil })
         .onTapGesture(count: 2) { value = clamp(reset) }
-        .accessibilityElement().accessibilityLabel(title).accessibilityValue("\(Int(value)) points")
+        .accessibilityElement().accessibilityLabel(title).accessibilityValue(localized("\(Int(value)) points", comment: "Panel width; %lld is a number of screen points"))
         .accessibilityAdjustableAction { direction in value = clamp(value + (direction == .increment ? 20 : -20)) }
     }
     private func clamp(_ next: Double) -> Double { min(max(next, range.lowerBound), max(range.lowerBound, range.upperBound)) }

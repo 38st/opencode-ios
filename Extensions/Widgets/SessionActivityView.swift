@@ -13,12 +13,12 @@ struct SessionActivityView: View {
         VStack(alignment: .leading, spacing: 12) {
             if typeSize.isAccessibilitySize {
                 heading
-                Text(stale ? "Open for status" : state.label).font(.subheadline)
+                Text(stale ? String(localized: "Open for status") : state.label).font(.subheadline)
             } else {
                 HStack(alignment: .top) {
                     heading
                     Spacer(minLength: 8)
-                    Text(stale ? "Open for status" : state.label).font(.subheadline)
+                    Text(stale ? String(localized: "Open for status") : state.label).font(.subheadline)
                 }
             }
             HStack {

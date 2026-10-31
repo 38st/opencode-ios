@@ -111,7 +111,7 @@ extension ReadStore {
                     if running { try await store.clock.sleep(.seconds(1)) }
                 } while running && !Task.isCancelled
             } catch is CancellationError {} catch {
-                if !Task.isCancelled { self?.error = "Could not load shell output." }
+                if !Task.isCancelled { self?.error = localized("Could not load shell output.") }
             }
         }
     }

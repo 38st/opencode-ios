@@ -42,7 +42,19 @@ public struct KeyChord: Hashable, Sendable, CustomStringConvertible {
 }
 
 /// The menus, in the desktop's command categories.
-public enum WorkspaceMenu: String, CaseIterable, Sendable { case file = "File", edit = "Edit", view = "View", session = "Session", model = "Model", terminal = "Terminal" }
+public enum WorkspaceMenu: String, CaseIterable, Sendable {
+    case file = "File", edit = "Edit", view = "View", session = "Session", model = "Model", terminal = "Terminal"
+    public var title: String {
+        switch self {
+        case .file: localized("File", comment: "Menu bar menu")
+        case .edit: localized("Edit", comment: "Menu bar menu")
+        case .view: localized("View", comment: "Menu bar menu")
+        case .session: localized("Session", comment: "Menu bar menu")
+        case .model: localized("Model", comment: "Menu bar menu")
+        case .terminal: localized("Terminal", comment: "Menu bar menu")
+        }
+    }
+}
 
 public enum WorkspaceCommand: Hashable, Sendable {
     case newSession, newWindow, addFiles
@@ -83,25 +95,25 @@ public enum WorkspaceCommand: Hashable, Sendable {
     }
     public var title: String {
         switch self {
-        case .newSession: "New session"
-        case .newWindow: "New Window"
-        case .addFiles: "Add files"
-        case .find: "Find"
-        case .toggleSidebar: "Toggle sidebar"
-        case .toggleReview: "Toggle review"
-        case .commandPalette: "Command palette"
-        case .send: "Send"
-        case .stop: "Stop"
-        case .reviewNextApproval: "Review next approval"
-        case .previousSession: "Previous session"
-        case .nextSession: "Next session"
-        case .previousUnread: "Previous unread session"
-        case .nextUnread: "Next unread session"
-        case .session(let index): "Session \(index)"
-        case .chooseModel: "Choose model"
-        case .cycleVariant: "Cycle thinking effort"
-        case .newTerminal: "New terminal"
-        case .closeTerminal: "Close terminal"
+        case .newSession: localized("New session")
+        case .newWindow: localized("New Window")
+        case .addFiles: localized("Add files")
+        case .find: localized("Find", comment: "Menu command: find text")
+        case .toggleSidebar: localized("Toggle sidebar")
+        case .toggleReview: localized("Toggle review")
+        case .commandPalette: localized("Command palette")
+        case .send: localized("Send", comment: "Menu command: send the prompt")
+        case .stop: localized("Stop", comment: "Menu command: stop the running session")
+        case .reviewNextApproval: localized("Review next approval")
+        case .previousSession: localized("Previous session")
+        case .nextSession: localized("Next session")
+        case .previousUnread: localized("Previous unread session")
+        case .nextUnread: localized("Next unread session")
+        case .session(let index): localized("Session \(index)", comment: "Menu command; %lld is the session's position, 1 to 9")
+        case .chooseModel: localized("Choose model")
+        case .cycleVariant: localized("Cycle thinking effort")
+        case .newTerminal: localized("New terminal")
+        case .closeTerminal: localized("Close terminal")
         }
     }
     public var menu: WorkspaceMenu {
@@ -245,11 +257,11 @@ public struct ComposerCommandState: Equatable, Sendable {
     public var commenting = false
     public var hasVariants = false
     /// "Send" while idle; while running ⌘↩ uses the other delivery, so the menu names it.
-    public var sendTitle = "Send"
+    public var sendTitle = localized("Send", comment: "Menu command: send the prompt")
     public init(loaded: Bool = false, busy: Bool = false, blank: Bool = true, running: Bool = false, shell: Bool = false,
-                composing: Bool = false, child: Bool = false, commenting: Bool = false, hasVariants: Bool = false, sendTitle: String = "Send") {
+                composing: Bool = false, child: Bool = false, commenting: Bool = false, hasVariants: Bool = false, sendTitle: String? = nil) {
         self.loaded = loaded; self.busy = busy; self.blank = blank; self.running = running; self.shell = shell
-        self.composing = composing; self.child = child; self.commenting = commenting; self.hasVariants = hasVariants; self.sendTitle = sendTitle
+        self.composing = composing; self.child = child; self.commenting = commenting; self.hasVariants = hasVariants; self.sendTitle = sendTitle ?? localized("Send", comment: "Menu command: send the prompt")
     }
 }
 

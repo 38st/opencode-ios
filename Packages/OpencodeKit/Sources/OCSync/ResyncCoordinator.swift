@@ -5,7 +5,7 @@ import OCModels
 public struct ServerCapabilities: Sendable, Equatable {
     public var pairing: Bool
     public var persistentPty: Bool
-    public static let pairingRequirement = "Pairing needs opencode 2.0.25 or later."
+    public static var pairingRequirement: String { localized("Pairing needs opencode \(ServerInfo.minimumVersion) or later.") }
     public init(info: ServerInfo? = nil) {
         pairing = info?.supportsPairing ?? false
         persistentPty = info?.capabilities.persistentPty ?? false

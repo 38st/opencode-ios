@@ -33,6 +33,8 @@ struct CodeCollection: UIViewControllerRepresentable {
         OCFonts.register()
         let layout = CodeLayout()
         let view = CodeCollectionView(frame: .zero, collectionViewLayout: layout)
+        // Code and diffs read left to right in every language.
+        view.semanticContentAttribute = .forceLeftToRight
         view.backgroundColor = UIColor(OCColor.backgroundDeep)
         view.register(CodeImageCell.self, forCellWithReuseIdentifier: "image")
         view.register(CodeEditorCell.self, forCellWithReuseIdentifier: "editor")
@@ -188,7 +190,7 @@ struct CodeCollection: UIViewControllerRepresentable {
                 cell.commentActions(edit: { self.parent.onEdit(comment) }, delete: { self.parent.onDelete(comment) })
             } else if let range = row.hidden {
                 cell.contextActions(above: { self.parent.onExpand(section.id, range, false, false) }, below: { self.parent.onExpand(section.id, range, true, false) }, all: { self.parent.onExpand(section.id, range, false, true) })
-            } else if row.label == "Binary file" || row.label == "Diff too large to render" {
+            } else if DiffPlaceholder.opensFile(row.label) {
                 cell.fileAction { self.parent.onOpen(section.id) }
             }
             cell.comment = { [weak self] side in
@@ -213,7 +215,7 @@ struct CodeCollection: UIViewControllerRepresentable {
             _ = view.next?.becomeFirstResponder()
             let section = parent.sections[path.section], row = section.rows[path.item]
             if let range = row.hidden { parent.onExpand(section.id, range, false, false) }
-            else if row.label == "Binary file" || row.label == "Diff too large to render" { parent.onOpen(section.id) }
+            else if DiffPlaceholder.opensFile(row.label) { parent.onOpen(section.id) }
         }
         func collectionView(_ view: UICollectionView, contextMenuConfigurationForItemAt path: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
             let section = parent.sections[path.section], row = section.rows[path.item]
@@ -222,15 +224,15 @@ struct CodeCollection: UIViewControllerRepresentable {
             return UIContextMenuConfiguration(actionProvider: { _ in
                 var actions: [UIMenuElement] = []
                 if let range = row.hidden {
-                    actions += [UIAction(title: "Expand 20 lines above") { _ in self.parent.onExpand(section.id, range, false, false) },
-                                UIAction(title: "Expand 20 lines below") { _ in self.parent.onExpand(section.id, range, true, false) },
-                                UIAction(title: "Expand all") { _ in self.parent.onExpand(section.id, range, false, true) }]
+                    actions += [UIAction(title: localized("Expand 20 lines above")) { _ in self.parent.onExpand(section.id, range, false, false) },
+                                UIAction(title: localized("Expand 20 lines below")) { _ in self.parent.onExpand(section.id, range, true, false) },
+                                UIAction(title: localized("Expand all", comment: "Reveals every hidden unchanged line in a diff")) { _ in self.parent.onExpand(section.id, range, false, true) }]
                 }
                 for comment in section.comments where comment.id == row.commentID || comment.selection?.upper == (row.right ?? row.left)?.newLine {
-                    actions += [UIAction(title: "Edit") { _ in self.parent.onEdit(comment) }, UIAction(title: "Delete", attributes: .destructive) { _ in self.parent.onDelete(comment) }]
+                    actions += [UIAction(title: localized("Edit", comment: "Menu action that edits a line comment")) { _ in self.parent.onEdit(comment) }, UIAction(title: localized("Delete", comment: "Menu action that deletes a line comment"), attributes: .destructive) { _ in self.parent.onDelete(comment) }]
                 }
-                actions.append(UIAction(title: "Copy line") { _ in OCCopy.text((row.right ?? row.left)?.text ?? row.label ?? "") })
-                return UIMenu(title: "More options", children: actions)
+                actions.append(UIAction(title: localized("Copy line")) { _ in OCCopy.text((row.right ?? row.left)?.text ?? row.label ?? "") })
+                return UIMenu(title: localized("More options"), children: actions)
             })
         }
         private func lineMenu(_ section: CodeSection, row: DiffRow, right: Bool) -> UIContextMenuConfiguration? {
@@ -239,9 +241,9 @@ struct CodeCollection: UIViewControllerRepresentable {
             let number = side == .deletions ? line.oldLine ?? line.newLine : line.newLine ?? line.oldLine
             return UIContextMenuConfiguration(actionProvider: { _ in
                 var actions: [UIMenuElement] = []
-                if let number { actions.append(UIAction(title: "Comment", image: nil) { _ in self.parent.onComment(section.id, .init(start: number, side: side)) }) }
-                actions.append(UIAction(title: "Copy line") { _ in OCCopy.text(line.text) })
-                if !section.source { actions.append(UIAction(title: "Open file") { _ in self.parent.onOpen(section.id) }) }
+                if let number { actions.append(UIAction(title: localized("Comment", comment: "Verb: menu action that comments on a diff line"), image: nil) { _ in self.parent.onComment(section.id, .init(start: number, side: side)) }) }
+                actions.append(UIAction(title: localized("Copy line")) { _ in OCCopy.text(line.text) })
+                if !section.source { actions.append(UIAction(title: localized("Open file")) { _ in self.parent.onOpen(section.id) }) }
                 return UIMenu(children: actions)
             })
         }

@@ -30,7 +30,7 @@ public struct WorkspaceCommands: Commands {
             Divider()
             item(.commandPalette)
         }
-        CommandMenu(WorkspaceMenu.session.rawValue) {
+        CommandMenu(WorkspaceMenu.session.title) {
             item(.send); item(.stop)
             Divider()
             item(.reviewNextApproval)
@@ -39,10 +39,10 @@ public struct WorkspaceCommands: Commands {
             Divider()
             ForEach(1...9, id: \.self) { item(.session($0)) }
         }
-        CommandMenu(WorkspaceMenu.model.rawValue) {
+        CommandMenu(WorkspaceMenu.model.title) {
             item(.chooseModel); item(.cycleVariant)
         }
-        CommandMenu(WorkspaceMenu.terminal.rawValue) {
+        CommandMenu(WorkspaceMenu.terminal.title) {
             item(.newTerminal); item(.closeTerminal)
         }
     }

@@ -54,8 +54,8 @@ public struct ComposerDock: View {
     private var showAgent: Bool { ComposerPickers.showAgent(model.catalog.agents.value ?? [], setting: showAgentSetting) }
     private var trigger: ComposerTrigger? { model.options.shell ? nil : ComposerTrigger.detect(model.text, caret: caret) }
     private var placeholder: String {
-        if model.options.shell { return "Enter shell command… git status" }
-        return running || model.session?.pending.isEmpty == false ? "Add follow-up, / for commands, @ for context…" : "Ask anything, / for commands, @ for context…"
+        if model.options.shell { return localized("Enter shell command… git status") }
+        return running || model.session?.pending.isEmpty == false ? localized("Add follow-up, / for commands, @ for context…") : localized("Ask anything, / for commands, @ for context…")
     }
     private var preference: Delivery { followUp == "queue" ? .queue : .steer }
     private var minimumEditorHeight: CGFloat { max(OCComposerMetrics.editorMinimum, editorLineHeight + OCSpacing.lg + OCSpacing.sm) }
@@ -63,7 +63,7 @@ public struct ComposerDock: View {
         VStack(spacing: OCSpacing.xs) {
             if model.session?.info.parentID != nil {
                 OCComposerSurface {
-                    Text("Subagent sessions are read only. Send prompts to the parent session.")
+                    Text(localized("Subagent sessions are read only. Send prompts to the parent session."))
                         .font(OCType.small).foregroundStyle(OCColor.textMuted).padding(OCSpacing.lg)
                 }
             } else {
@@ -111,13 +111,13 @@ public struct ComposerDock: View {
                                 cancel: { gitAction = nil }) { gitAction = nil; sendGitAction(action) }.ocSheet()
         }
         .sheet(isPresented: $model.confirmRevert) {
-            OCConfirmationSheet("Discard reverted messages?", message: "The reverted messages and their file changes will be permanently discarded when you send this prompt.",
-                                confirmTitle: "Discard and send", cancel: { model.confirmRevert = false }, confirm: { model.confirmSend() }).ocSheet()
+            OCConfirmationSheet(localized("Discard reverted messages?"), message: localized("The reverted messages and their file changes will be permanently discarded when you send this prompt."),
+                                confirmTitle: localized("Discard and send"), cancel: { model.confirmRevert = false }, confirm: { model.confirmSend() }).ocSheet()
         }
         .sheet(isPresented: Binding(get: { model.sessionID != nil && store.replacingDraftSessionID == model.sessionID },
                                     set: { if !$0 { store.resolveDraftReplacement(false) } })) {
-            OCConfirmationSheet("Replace your draft?", message: "Your unsent text and attachments will be replaced by this prompt.",
-                                confirmTitle: "Replace", cancel: { store.resolveDraftReplacement(false) },
+            OCConfirmationSheet(localized("Replace your draft?"), message: localized("Your unsent text and attachments will be replaced by this prompt."),
+                                confirmTitle: localized("Replace", comment: "Confirms replacing the draft"), cancel: { store.resolveDraftReplacement(false) },
                                 confirm: { store.resolveDraftReplacement(true) }).ocSheet()
         }
         .onDisappear {
@@ -131,9 +131,9 @@ public struct ComposerDock: View {
             if model.session?.info.revert != nil { revertNotice }
             if model.options.editingOutboxID != nil {
                 HStack {
-                    Text("Edit and resend").font(OCType.small)
+                    Text(localized("Edit and resend")).font(OCType.small)
                     Spacer(minLength: 0)
-                    Button("Cancel") { model.cancelEditingOutbox() }.buttonStyle(OCButtonStyle(.ghost))
+                    Button(localized("Cancel")) { model.cancelEditingOutbox() }.buttonStyle(OCButtonStyle(.ghost))
                 }.padding(.horizontal, OCSpacing.sm).accessibilityIdentifier("editingOutbox")
             }
             if !model.options.shell && !model.comments.isEmpty {
@@ -150,7 +150,7 @@ public struct ComposerDock: View {
                                         }.foregroundStyle(OCColor.textMuted)
                                     }.frame(width: 116, alignment: .leading).frame(minHeight: 44)
                                 }.buttonStyle(.plain)
-                                OCIconButton("Remove attachment", icon: "close") { model.removeComment(comment.id) }
+                                OCIconButton(localized("Remove attachment"), icon: "close") { model.removeComment(comment.id) }
                             }.frame(width: 160).padding(.vertical, OCSpacing.xs).background(OCColor.layer2, in: RoundedRectangle(cornerRadius: OCRadius.md))
                         }
                     }.padding(OCSpacing.sm)
@@ -158,9 +158,9 @@ public struct ComposerDock: View {
             }
             if model.options.shell {
                 HStack {
-                    OCLabel("Shell command", icon: "terminal").font(OCType.small)
+                    OCLabel(localized("Shell command"), icon: "terminal").font(OCType.small)
                     Spacer()
-                    Button("Exit") { model.shellMode(false) }.buttonStyle(OCButtonStyle(.ghost))
+                    Button(localized("Exit", comment: "Leaves shell command mode")) { model.shellMode(false) }.buttonStyle(OCButtonStyle(.ghost))
                 }.padding(.horizontal, OCSpacing.sm)
             } else if !model.attachments.isEmpty {
                 ScrollView(.horizontal) {
@@ -191,13 +191,13 @@ public struct ComposerDock: View {
                 HStack {
                     attachmentMenu
                     Menu {
-                        Button("Choose model") { showModels = true }
-                        if showAgent { Menu("Choose agent") { AgentOptions(agents: model.catalog.agents.value ?? [], selected: model.effectiveAgent, select: model.selectAgent) } }
+                        Button(localized("Choose model")) { showModels = true }
+                        if showAgent { Menu(localized("Choose agent")) { AgentOptions(agents: model.catalog.agents.value ?? [], selected: model.effectiveAgent, select: model.selectAgent) } }
                         if let selected = model.selectedModel {
-                            Menu("Choose variant") { VariantOptions(variants: selected.variants, selected: model.effectiveModel?.variant, select: selectVariant) }
+                            Menu(localized("Choose variant")) { VariantOptions(variants: selected.variants, selected: model.effectiveModel?.variant, select: selectVariant) }
                         }
                     } label: { OCIcon("sliders").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
-                        .accessibilityLabel("Agent and model").disabled(model.options.shell || model.busy)
+                        .accessibilityLabel(localized("Agent and model")).disabled(model.options.shell || model.busy)
                     Spacer(minLength: 0)
                     voiceButton
                     deliveryControls
@@ -209,15 +209,15 @@ public struct ComposerDock: View {
     }
     private var attachmentMenu: some View {
             Menu {
-                Button("Photos") { showPhotos = true }
-                Button("Camera") { showCamera = true }.disabled(!ComposerCamera.available)
-                Button("Files") { showFiles = true }
+                Button(localized("Photos")) { showPhotos = true }
+                Button(localized("Camera")) { showCamera = true }.disabled(!ComposerCamera.available)
+                Button(localized("Files")) { showFiles = true }
                 PasteButton(supportedContentTypes: [.image, .pdf, .text]) { providers in run { for provider in providers { try await importProvider(provider) } } }
                 Divider()
-                Button("Commands") { insert("/") }
-                Button("Context") { insert("@") }
-                Button("Shell command") { model.shellMode(true) }
-                Button("Prompt history") { showHistory = true }.disabled(promptEntries.isEmpty).accessibilityIdentifier("promptHistory")
+                Button(localized("Commands")) { insert("/") }
+                Button(localized("Context", comment: "Inserts an @ mention for files, agents or references")) { insert("@") }
+                Button(localized("Shell command")) { model.shellMode(true) }
+                Button(localized("Prompt history")) { showHistory = true }.disabled(promptEntries.isEmpty).accessibilityIdentifier("promptHistory")
                 if model.sessionID != nil && model.session?.info.parentID == nil {
                     Divider()
                     ForEach(GitQuickAction.allCases) { action in
@@ -225,7 +225,7 @@ public struct ComposerDock: View {
                     }
                 }
             } label: { OCIcon("plus").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
-                .accessibilityLabel("Add attachment or context").accessibilityIdentifier("composerAdd").disabled(model.busy)
+                .accessibilityLabel(localized("Add attachment or context")).accessibilityIdentifier("composerAdd").disabled(model.busy)
     }
     private var selectionControls: some View {
             ScrollView(.horizontal) {
@@ -235,33 +235,33 @@ public struct ComposerDock: View {
                             AgentOptions(agents: model.catalog.agents.value ?? [], selected: model.effectiveAgent, select: model.selectAgent)
                         } label: { OCComposerChoice(model.effectiveAgent.capitalized)
                             .foregroundStyle(OCMentionStyle.agentAccent(model.catalog.agents.value?.first { ComposerPickers.agentID($0) == model.effectiveAgent }?.color)) }
-                            .accessibilityLabel("Choose agent").accessibilityValue(model.effectiveAgent.capitalized).accessibilityIdentifier("composerAgent")
+                            .accessibilityLabel(localized("Choose agent")).accessibilityValue(model.effectiveAgent.capitalized).accessibilityIdentifier("composerAgent")
                     }
                     Button { showModels = true } label: {
-                        OCComposerChoice(model.selectedModel.map { ComposerPickers.displayName($0) } ?? model.effectiveModel?.id ?? "Choose model")
-                    }.accessibilityIdentifier("composerModel").accessibilityLabel("Choose model").accessibilityValue(model.selectedModel.map { ComposerPickers.displayName($0) } ?? model.effectiveModel?.id ?? "")
+                        OCComposerChoice(model.selectedModel.map { ComposerPickers.displayName($0) } ?? model.effectiveModel?.id ?? localized("Choose model"))
+                    }.accessibilityIdentifier("composerModel").accessibilityLabel(localized("Choose model")).accessibilityValue(model.selectedModel.map { ComposerPickers.displayName($0) } ?? model.effectiveModel?.id ?? "")
                     if let modelInfo = model.selectedModel, modelInfo.variants.contains(where: { $0.id != "default" }) {
                         Menu {
                             VariantOptions(variants: modelInfo.variants, selected: model.effectiveModel?.variant, select: selectVariant)
                         } label: { OCComposerChoice(variantTitle) }
-                            .accessibilityLabel("Choose variant").accessibilityValue(variantTitle).accessibilityIdentifier("composerVariant")
+                            .accessibilityLabel(localized("Choose variant")).accessibilityValue(variantTitle).accessibilityIdentifier("composerVariant")
                     }
-                    if model.pendingSelection { OCBadge("Pending") }
+                    if model.pendingSelection { OCBadge(localized("Pending", comment: "Badge: the model or agent choice is not saved yet")) }
                 }.foregroundStyle(OCColor.textMuted)
-            }.scrollIndicators(.hidden).opacity(model.options.shell ? 0.4 : 1).disabled(model.options.shell || model.busy)
+            }.scrollIndicators(.hidden).scrollEdgeEffectHidden(true).opacity(model.options.shell ? 0.4 : 1).disabled(model.options.shell || model.busy)
     }
     @ViewBuilder private var deliveryControls: some View {
             if running && !model.blank && !model.options.shell {
-                Button(followUp == "queue" ? "Steer" : "Queue") { send(alternate: true) }.font(OCType.small)
-                    .buttonStyle(OCButtonStyle(.ghost)).accessibilityHint("Send without interrupting").accessibilityIdentifier("alternateDelivery")
+                Button(followUp == "queue" ? localized("Steer", comment: "Send a follow-up that redirects the running agent") : localized("Queue", comment: "Send a follow-up after the agent's current turn")) { send(alternate: true) }.font(OCType.small)
+                    .buttonStyle(OCButtonStyle(.ghost)).accessibilityHint(localized("Send without interrupting")).accessibilityIdentifier("alternateDelivery")
             }
             Button { send() } label: {
                 OCIcon(running && model.blank ? "stop" : "arrow-up")
-            }.buttonStyle(OCSubmitIconButtonStyle()).accessibilityLabel(running && model.blank ? "Stop" : "Send")
+            }.buttonStyle(OCSubmitIconButtonStyle()).accessibilityLabel(running && model.blank ? localized("Stop", comment: "Stops the running agent") : localized("Send", comment: "Sends the prompt"))
                 .accessibilityIdentifier("composerSend").disabled(model.busy || !model.loaded || model.blank && !running)
                 .contextMenu {
                     if running && !model.blank {
-                        SendOptions(alternate: followUp == "queue" ? "Steer" : "Queue", sendAlternate: { send(alternate: true) }, interrupt: { send(interrupt: true) })
+                        SendOptions(alternate: followUp == "queue" ? localized("Steer", comment: "Send a follow-up that redirects the running agent") : localized("Queue", comment: "Send a follow-up after the agent's current turn"), sendAlternate: { send(alternate: true) }, interrupt: { send(interrupt: true) })
                     }
                 }
     }
@@ -269,7 +269,7 @@ public struct ComposerDock: View {
         ScrollViewReader { scroll in
             ScrollView {
                 VStack(spacing: 0) {
-                    if suggestions.isEmpty { Text("No matching items").font(OCType.small).padding(OCSpacing.lg) }
+                    if suggestions.isEmpty { Text(localized("No matching items")).font(OCType.small).padding(OCSpacing.lg) }
                     ForEach(Array(suggestions.enumerated()), id: \.element.id) { index, item in
                         Button { select(item) } label: {
                             HStack(spacing: OCSpacing.sm) {
@@ -293,15 +293,15 @@ public struct ComposerDock: View {
         case "agent": OCIcon("brain").foregroundStyle(OCMentionStyle.color("agent"))
         case "skill": OCIcon("post-skill")
         case "reference": OCIcon("folder").foregroundStyle(OCMentionStyle.color("reference"))
-        case "file": OCFileIcon(item.mention?.value ?? item.label, directory: item.description == "Directory")
+        case "file": OCFileIcon(item.mention?.value ?? item.label, directory: item.isDirectory)
         default: OCIcon("terminal")
         }
     }
     private var revertNotice: some View {
         HStack {
-            Text("\(revertedCount) \(revertedCount == 1 ? "message" : "messages") reverted").font(OCType.small)
+            Text(localized("\(revertedCount) messages reverted", comment: "%lld is the number of reverted messages")).font(OCType.small)
             Spacer()
-            Button("Redo") { clientCommand(.redo) }.buttonStyle(OCButtonStyle(.ghost))
+            Button(localized("Redo")) { clientCommand(.redo) }.buttonStyle(OCButtonStyle(.ghost))
         }.padding(.horizontal, OCSpacing.md).accessibilityIdentifier("revertNotice")
     }
     private var revertedCount: Int {
@@ -311,8 +311,8 @@ public struct ComposerDock: View {
     }
     private var capabilityWarning: String? {
         guard let selected = model.selectedModel else { return nil }
-        if model.attachments.contains(where: { $0.mime.hasPrefix("image/") }) && !selected.capabilities.input.contains("image") { return "This model does not support image input. Choose another model before sending." }
-        if model.attachments.contains(where: { $0.mime == "application/pdf" }) && !selected.capabilities.input.contains("pdf") { return "This model does not support PDF input. Choose another model before sending." }
+        if model.attachments.contains(where: { $0.mime.hasPrefix("image/") }) && !selected.capabilities.input.contains("image") { return localized("This model does not support image input. Choose another model before sending.") }
+        if model.attachments.contains(where: { $0.mime == "application/pdf" }) && !selected.capabilities.input.contains("pdf") { return localized("This model does not support PDF input. Choose another model before sending.") }
         return nil
     }
     private var recent: [String] { (try? JSONDecoder().decode([String: [String]].self, from: Data(history.utf8)))?[store.serverID] ?? [] }
@@ -320,8 +320,8 @@ public struct ComposerDock: View {
         guard model.loaded, !model.busy else { return }
         historyCursor.reset()
         if !model.options.shell, let question = ComposerSuggestions.sideQuestion(String(model.text.characters)) {
-            guard let sessionID = model.sessionID else { model.error = "Side questions need a session with a conversation. Send a prompt first."; return }
-            if question.isEmpty { model.error = "Add a question after /btw"; return }
+            guard let sessionID = model.sessionID else { model.error = localized("Side questions need a session with a conversation. Send a prompt first."); return }
+            if question.isEmpty { model.error = localized("Add a question after /btw", comment: "/btw is a command; do not translate"); return }
             store.askSideQuestion(sessionID, question: question)
             model.setText(AttributedString()); caret = 0; closedTrigger = nil
             return
@@ -349,7 +349,7 @@ public struct ComposerDock: View {
         records[store.serverID] = Array(([key] + recent.filter { $0 != key }).prefix(5))
         if let data = try? JSONEncoder().encode(records), let string = String(data: data, encoding: .utf8) { history = string }
     }
-    private var variantTitle: String { model.effectiveModel?.variant == "default" ? "Default" : model.effectiveModel?.variant ?? "Default" }
+    private var variantTitle: String { model.effectiveModel?.variant == "default" ? localized("Default", comment: "The model's default variant") : model.effectiveModel?.variant ?? localized("Default", comment: "The model's default variant") }
     private func selectVariant(_ value: String?) {
         guard var selection = model.effectiveModel else { return }
         selection["variant"] = value.map(JSONValue.string); model.selectModel(selection)
@@ -377,7 +377,7 @@ public struct ComposerDock: View {
                 model.clearSearchError()
                 suggestions = ComposerSuggestions.context(query: trigger.query, references: model.catalog.references.value, skills: model.catalog.skills.value, agents: model.catalog.agents.value ?? [], files: files)
             } catch {
-                if !Task.isCancelled && !WriteErrorMessage.isCancellation(error) { model.error = "Could not search files." }
+                if !Task.isCancelled && !WriteErrorMessage.isCancellation(error) { model.error = ComposerModel.searchFailed }
             }
         }
     }
@@ -419,7 +419,7 @@ public struct ComposerDock: View {
         ComposerCommandState(loaded: model.loaded, busy: model.busy, blank: model.blank, running: running, shell: model.options.shell,
                              composing: composing, child: model.session?.info.parentID != nil,
                              hasVariants: model.selectedModel?.variants.contains { $0.id != "default" } == true,
-                             sendTitle: running && !model.blank && !model.options.shell ? (followUp == "queue" ? "Steer" : "Queue") : "Send")
+                             sendTitle: running && !model.blank && !model.options.shell ? (followUp == "queue" ? localized("Steer", comment: "Send a follow-up that redirects the running agent") : localized("Queue", comment: "Send a follow-up after the agent's current turn")) : localized("Send", comment: "Sends the prompt"))
     }
     /// The menu bar's composer commands. ⌘↩ sends with the alternate delivery, as it did from the editor.
     private func perform(_ command: WorkspaceCommand) {
@@ -492,10 +492,10 @@ public struct ComposerDock: View {
     @ViewBuilder private var voiceButton: some View {
         if model.session?.info.parentID == nil && !model.options.shell {
             Menu {
-                Button("Dictate") { startVoice(.dictation) }
-                Button("Hands-free conversation") { startVoice(.handsFree) }.disabled(model.sessionID == nil)
+                Button(localized("Dictate")) { startVoice(.dictation) }
+                Button(localized("Hands-free conversation")) { startVoice(.handsFree) }.disabled(model.sessionID == nil)
             } label: { OCIcon("waveform").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) } primaryAction: { startVoice(.dictation) }
-                .accessibilityLabel("Voice input").accessibilityHint("Tap to dictate; hold for a hands-free conversation")
+                .accessibilityLabel(localized("Voice input")).accessibilityHint(localized("Tap to dictate; hold for a hands-free conversation"))
                 .accessibilityIdentifier("composerVoice").disabled(model.busy || voice?.active == true)
         }
     }

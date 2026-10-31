@@ -11,8 +11,8 @@ private struct SelectableText: ViewModifier {
             if #available(iOS 27, *) { content.textSelection(.enabled) }
             else {
                 content.contextMenu {
-                    Button("Select text") { selecting = true }
-                    Button("Copy") { OCCopy.text(text) }
+                    Button(localized("Select text")) { selecting = true }
+                    Button(localized("Copy", comment: "Verb: copies text to the clipboard")) { OCCopy.text(text) }
                 }
             }
         }.sheet(isPresented: $selecting) { OCTextSelectionSheet(text: text).ocSheet() }
@@ -33,9 +33,9 @@ public struct OCTextSelectionSheet: View {
                 #else
                 ScrollView { Text(text).font(OCType.body).textSelection(.enabled).padding(OCSpacing.lg) }
                 #endif
-            }.navigationTitle("Select text")
+            }.navigationTitle(localized("Select text"))
                 .toolbar {
-                    ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() }.buttonStyle(OCButtonStyle(.ghost)) }
+                    ToolbarItem(placement: .confirmationAction) { Button(localized("Done")) { dismiss() }.buttonStyle(OCButtonStyle(.ghost)) }
                 }.ocTheme()
         }
     }

@@ -55,17 +55,17 @@ public enum ComposerPickers {
             return l == r ? left.name.localizedStandardCompare(right.name) == .orderedAscending : l < r
         }
         let recents = recent.prefix(5).compactMap { id in visible.first { key($0) == id } }
-        if !recents.isEmpty { groups.insert(.init(id: "recent", name: "Recent", models: recents), at: 0) }
+        if !recents.isEmpty { groups.insert(.init(id: "recent", name: localized("Recent", comment: "Group of recently used models"), models: recents), at: 0) }
         return groups
     }
     public static func badges(_ model: ModelInfo, defaultModel: ModelInfo?) -> [String] {
         var result: [String] = []
-        if model.providerID == "opencode", (model.cost.first?.input ?? 0) == 0 { result.append("Free") }
-        if model.name.contains("(latest)") { result.append("Latest") }
-        if let defaultModel, key(model) == key(defaultModel) { result.append("Default") }
-        if model.capabilities.input.contains("image") { result.append("Image") }
-        if model.capabilities.input.contains("pdf") { result.append("PDF") }
-        if model.variants.contains(where: { $0.id != "default" }) { result.append("Variants") }
+        if model.providerID == "opencode", (model.cost.first?.input ?? 0) == 0 { result.append(localized("Free", comment: "Model badge: costs nothing")) }
+        if model.name.contains("(latest)") { result.append(localized("Latest", comment: "Model badge")) }
+        if let defaultModel, key(model) == key(defaultModel) { result.append(localized("Default", comment: "Model badge: the default model")) }
+        if model.capabilities.input.contains("image") { result.append(localized("Image", comment: "Model badge: accepts images")) }
+        if model.capabilities.input.contains("pdf") { result.append(localized("PDF", comment: "Model badge: accepts PDF files")) }
+        if model.variants.contains(where: { $0.id != "default" }) { result.append(localized("Variants", comment: "Model badge: has thinking-effort variants")) }
         return result
     }
 }

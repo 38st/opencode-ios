@@ -181,7 +181,7 @@ import OCPersistence
         creating = true
         store.performWrite { try await store.writeAPI().send(ReviewEndpoints.initialize(self.directory)) } completion: { [weak self] result in
             guard let self else { return }; self.creating = false
-            if case .failure = result { self.error = "Request failed" } else { self.refresh() }
+            if case .failure = result { self.error = localized("Request failed") } else { self.refresh() }
         }
     }
     private func persist() {
@@ -190,7 +190,7 @@ import OCPersistence
         saving = Task { [weak self] in
             await previous?.value
             do { try await store.cache?.writer.saveReviewState(serverID: store.serverID, sessionID: sessionID, state: state, reviewed: reviewed) }
-            catch { self?.error = "Could not save review state." }
+            catch { self?.error = localized("Could not save review state.") }
         }
     }
 }
