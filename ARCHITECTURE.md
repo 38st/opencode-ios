@@ -12,7 +12,7 @@ How the iPhone and iPad app, the push plugin and the relay are built. Paths unde
    - an outbox of unsent prompts that survives app restarts.
 3. **Hand-write the models and decode them tolerantly.** An unknown type, an unknown field or a malformed element must never crash the app, end the event stream or drop a page. The V2 OpenAPI document cannot feed a code generator: its unions are `anyOf` without discriminators, and almost every object sets `additionalProperties: false`, so generated code would fail on any new server field.
 4. **Use a GRDB/SQLite cache.** It stores the raw server JSON plus a few indexed columns, so the cache does not depend on the server's schema. Drafts and the outbox are persisted too. The server is always the source of truth.
-5. **Push = our opencode plugin + our relay + HPKE-sealed payloads + a Notification Service Extension (NSE).** opencode has no push notifications of its own. Approvals never pass through the relay. They go over the direct connection and are checked against a digest of exactly what the user saw.
+5. **Push = our opencode plugin + our relay + HPKE-sealed payloads + a Notification Service Extension (NSE).** opencode has no push notifications of its own. The plugin reaches Apple through the relay, or, in direct mode, itself with the server owner's APNs key. Approvals never pass through the relay. They go over the direct connection and are checked against a digest of exactly what the user saw.
 6. **Silence is never consent.** Nothing is approved automatically, and a request that times out is never treated as approved. Approving from the lock screen is on by default with risk tiers: Allow once needs an unlocked device, high-risk requests offer only Open and Reject, and "Allow always" exists only inside the app, behind device-owner authentication.
 7. **No vendor in the loop.** The app talks only to the user's own servers, on the same network, over Tailscale, behind HTTPS or through OpenTunnel, plus the relay and Apple's push service for notifications. There is no account, and no analytics or crash reporting.
 8. **Platform and look.** iOS and iPadOS 26.4 or later, in Swift 6 language mode, built with Xcode 27; the same build runs on Apple silicon Macs as "Designed for iPad". The app looks like the opencode desktop app, with its tokens, fonts and icons ported under their licences, but keeps a distinct name and icon so it is not mistaken for an official app.
@@ -39,17 +39,17 @@ How the iPhone and iPad app, the push plugin and the relay are built. Paths unde
 | `OCFoundation` | nonisolated | `JSONValue`, lenient decoding helpers, `LossyArray`, `OpencodeID` minting (`IDMinter`), `SemVer`, `ServerClock`, redacting `os.Logger` categories | — |
 | `OCModels` | `Sendable` value types | Wire models (`SessionInfo`, `SessionMessage`, `AssistantContent`, `ToolState`, `InboxItem`, `PermissionRequest`, `FormInfo`, catalogs, `FileDiff`, `PtyInfo`, `ServerInfo`, `ServerRecord`, `ConnectionState`, `ProbeOutcome`); `ServerEvent`; `StructuredError` | OCFoundation |
 | `OCNetworking` | nonisolated; `ServerConnection`, `EndpointResolver` and `APIClient` are actors | `APIClient` with about 95 `Endpoint`s; `SSEParser`; `ServerConnection`; `EndpointResolver`; `ServerProbe`; `PairingParser` and `PairingService`; the terminal WebSocket (`URLSessionWebSockets`); `DirectActionClient`; `PushRelayClient` | OCModels, OCFoundation |
-| `OCSecurity` | nonisolated | `KeychainStore`, `CredentialStore`, `BiometricGate`, push key material | OCFoundation, OCModels |
+| `OCSecurity` | nonisolated | `KeychainStore`, `CredentialStore`, `BiometricGate`, push key material, `AppAttestService` | OCFoundation, OCModels |
 | `OCPersistence` | writer actor | GRDB `CacheStore` (written by `PersistenceWriter`), `DraftStore`, `OutboxStore`, `FileCache`, migrations | OCModels, GRDB |
 | `OCShared` | nonisolated | App Group snapshots (JSON files written atomically), deep-link routes, shared constants | OCFoundation |
 | `OCPushCore` | nonisolated | Envelope format, HPKE open, payload schema, canonical digest, risk rules, notification categories | OCFoundation, OCModels, OCSecurity, OCShared |
 | `OCIntents` | nonisolated | Intents and entities shared by the app and Widgets: stopping a Live Activity's session, the control intents and the widget configuration | OCShared |
 | `OCAppIntents` | nonisolated | Intents only the app runs: Send a prompt, Get session status, Open a session | OCIntents, OCShared |
-| `OCSync` | main actor | `ServerRegistry`, `ServerStore`, `ReadStore` (the per-server sync engine: event handlers, resync and writes), `SessionModel`, `TranscriptModel`, `ResyncCoordinator`, `OutboxProcessor`, `HomeOrdering`, `LiveActivityCoordinator`, `PushController`, `TerminalSession` | OCNetworking, OCPersistence, OCSecurity, OCShared, OCPushCore, OCActivity, OCIntents, OCAppIntents |
+| `OCSync` | main actor | `ServerRegistry`, `ServerStore`, `ReadStore` (the per-server sync engine: event handlers, resync and writes), `SessionModel`, `TranscriptModel`, `ResyncCoordinator`, `OutboxProcessor`, `HomeOrdering`, `LiveActivityCoordinator`, `PushController`, `AppAttestClient`, `TerminalSession`; the in-app demo (`DemoMode`, played by `ScenarioTransport` from a recorded `demo.json`) | OCNetworking, OCPersistence, OCSecurity, OCShared, OCPushCore, OCActivity, OCIntents, OCAppIntents |
 | `OCRender` | nonisolated, `@concurrent` | Markdown block pipeline (swift-markdown); unified-diff parser and word diff; tree-sitter highlighting; `TimelineRowBuilder`; `ToolPresenter`s | OCModels |
 | `OCDesign` | main actor | Design system; `MarkdownBlockView` (Textual behind a `MarkdownBlockRenderer` protocol); `CodeBlockView`; `OCDiffView` and `CodeCollection`; status pills; composer chrome | OCRender |
 | `OCActivity` | nonisolated | `SessionActivityAttributes`, shared by the app and the widget | OCShared |
-| `Feature*` | main actor | `FeatureServers`, `FeatureInbox`, `FeatureTranscript`, `FeatureComposer`, `FeatureApprovals`, `FeatureReview`, `FeatureFiles`, `FeatureTerminal`, `FeatureSettings`. FeatureServers composes the others, and FeatureTranscript embeds approvals, the composer, review and terminals. | OCSync, OCDesign, OCRender; FeatureApprovals also OCPushCore and OCSecurity; FeatureTerminal also SwiftTerm |
+| `Feature*` | main actor | `FeatureServers`, `FeatureInbox`, `FeatureTranscript`, `FeatureComposer`, `FeatureApprovals`, `FeatureReview`, `FeatureFiles`, `FeatureTerminal`, `FeatureSettings`. FeatureServers composes the others and hosts the demo (`DemoRootView`), and FeatureTranscript embeds approvals, the composer, review and terminals. | OCSync, OCDesign, OCRender; FeatureApprovals also OCPushCore and OCSecurity; FeatureTerminal also SwiftTerm |
 
 **Rules**
 - Extensions never link OCSync or OCNetworking, which keeps the NSE small and fast to start.
@@ -85,22 +85,25 @@ How the iPhone and iPad app, the push plugin and the relay are built. Paths unde
  opencode V2 server (user's machine)        (HPKE open, rich alert)   (Live Activity,
   /api/*  /api/event  /api/pty/{id}/connect        ▲                   widgets, controls)
   plugin "mobilepush" ─HTTPS─► relay (Workers or Node) ─HTTP/2─► APNs
+                     └─HTTP/2─► APNs directly, with the server owner's key (direct mode)
 ```
 
 ### 1.3 Repository layout
 
 ```
 opencode-ios/
-  project.yml   Config/   App/   Extensions/{NotificationService,Widgets}/
+  project.yml   Config/ (signing, Version.xcconfig)   App/   Extensions/{NotificationService,Widgets}/
   Packages/OpencodeKit/{Package.swift, Sources/<target>/, Tests/<target>/, Grammars/<language>/}
   Tests/        the composer editor tests and the snapshot test host
   UITests/      XCUITest flows, driven by Tools/ui-smoke
   Fixtures/{foundation, source, v2/<server-version>/{rest,sse,ws,snapshots}}
   Tools/{opencode-sandbox, mock-llm, fixture-recorder, contract, push-e2e, ui-smoke,
-         review-fixture, mcp-fixture, design-reference, grammars}
+         review-fixture, mcp-fixture, design-reference, grammars, strings, notices,
+         demo, screenshots, spec-watch, release, onboarding}
   server/{contracts, plugin, relay}   the MIT-licensed push packages
   docs/   research/                   design notes and the V2 protocol reference
-  .github/workflows/{ci, contract, plugin, relay}.yml
+  web/                                the "Pair your phone" onboarding page
+  .github/workflows/{ci, contract, plugin, relay, release}.yml
 ```
 
 ## 2. Core engine
@@ -144,7 +147,7 @@ public enum Credential: Codable, Sendable { case password(String), pairingToken(
 
 **Endpoint racing** (`actor EndpointResolver`)
 - Sends an authenticated `GET /api/info` to every enabled endpoint (timeout 2 s on the LAN, 6 s elsewhere).
-- HTTPS endpoints rank above plain-HTTP ones, because the app cannot tell whether a network is trusted. Within each group the order is lan, then tailnet, then https, then tunnel. After the first 200, the resolver waits 500 ms for a better-ranked one. LAN endpoints join the race only after the user has seen the Local Network explanation.
+- Encrypted endpoints (HTTPS, or a Tailscale address, which WireGuard encrypts) race first, because the app cannot tell whether a network is trusted; the credential goes to a plain-HTTP endpoint only when none of them answers. Within a race the order is lan, then tailnet, then https, then tunnel, and after the first 200 the resolver waits 500 ms for a better-ranked one. LAN endpoints join only after the user has seen the Local Network explanation. Notification actions (§4.6) try their endpoints the same way.
 - The result carries a diagnosis per endpoint, so the UI can say *why* it failed:
   - `localNetworkDenied`, from `NWPath.unsatisfiedReason`;
   - DNS failure, for example a Pi-hole blocking `*.opentunnel.xyz`;
@@ -579,7 +582,7 @@ The request is removed from the UI as soon as the user replies. A 404 means it w
 4. The NSE decrypts it and shows the full notification.
 5. When the user taps an action, the app starts in the background and talks to the server **directly**. It re-reads the request, checks the digest and replies.
 
-The relay is never on the reply path.
+The relay is never on the reply path. In direct mode the plugin sends step 3's request to APNs itself, and there is no relay at all.
 
 ### 4.2 The opencode plugin
 
@@ -620,6 +623,8 @@ The relay is never on the reply path.
 - `digest`: lowercase hex SHA-256 of the RFC 8785 serialization of `{requestID, sessionID, action, resources, save}` for a permission request, or `{formID, sessionID, title, fields}` for a form;
 - expiry.
 
+**Direct mode.** With the plugin's `apns` option (the path to the server owner's `.p8` key, its key ID, the team ID, the app's bundle ID and the environment), the plugin sends to APNs itself: the same sealed payloads, collapse IDs, priorities, expiry and Live Activity updates, over one HTTP/2 connection per process with an ES256 provider token. It refuses a key file that other users can read, and never logs the key or returns it to the app. A device registers for it with `registerDevice {transport: "direct", apnsToken, bundleID, environment, …}` over the server connection, and the bundle ID and environment must match the key's. The app chooses relay or direct per server, under Notifications → Delivery.
+
 **Failures.** Network failures, 5xx answers and `rejected` are retried up to three times, after 1, 2 and 4 seconds, while the push is unexpired. `gone`, or a 401 because the app revoked this server's sender, removes the registration.
 
 ### 4.3 The relay
@@ -628,7 +633,9 @@ A Hono app, MIT-licensed, with two entry points that share every route. On Cloud
 
 | Method and path | Caller and auth | Body → result |
 |---|---|---|
-| `POST /v1/devices` | App. A per-IP limit of 20 registrations an hour. App Attest is a hook, switched off: `APP_ATTEST` is `off` by default, and `required` refuses every registration with 501. | `{apnsToken, env, bundleID}` → `{deviceID, deviceSecret}` |
+| `POST /v1/attest/challenge` | App, only with `APP_ATTEST=required` (404 otherwise). A per-IP limit of 60 an hour. | `{}` → `{challenge, expiresAt}`, single use, valid 5 minutes |
+| `POST /v1/attest/keys` | App, only with `APP_ATTEST=required` | `{keyID, challenge, attestation}` → `{keyID}`; the relay verifies the attestation against Apple's pinned root and stores the key |
+| `POST /v1/devices` | App. A per-IP limit of 20 registrations an hour. With `APP_ATTEST=required`, an App Attest assertion over a fresh challenge, in the `x-app-attest-key` and `x-app-attest-assertion` headers. `APP_ATTEST` is `off` by default. | `{apnsToken, env, bundleID}` → `{deviceID, deviceSecret}` |
 | `PUT /v1/devices/{id}`, `DELETE /v1/devices/{id}` | App, `deviceSecret` | Token rotation (sent on every launch; repeating it is harmless) and removal |
 | `POST /v1/devices/{id}/senders`, `DELETE …/senders/{sid}` | App, `deviceSecret` | One `sendToken` **per paired server**, so unpairing a server revokes only that one |
 | `PUT /v1/devices/{id}/activities/{ref}` | App, `deviceSecret` | `{pushToken, expiresAt}` |
@@ -689,9 +696,9 @@ On any failure, the generic text stays and the category stays `OPEN_ONLY`.
 
 | Category | Actions, in order |
 |---|---|
-| `PERMISSION` | Open (brings the app forward; first, so Apple Watch Double Tap never approves anything) · Allow once (`.authenticationRequired`) · Reject (`.destructive`) · Reject with note… (text input) |
+| `PERMISSION` | Open (brings the app forward; first, so Apple Watch Double Tap never approves anything) · Allow once (`.authenticationRequired`) · Reject (`.destructive`) · Reject with note… (text input, `.authenticationRequired`) |
 | `PERMISSION_HIGH_RISK` (any `rm`, `sudo`, `git push`, `external_directory`, unknown actions, …) | Open · Reject |
-| `QUESTION` | Open · Answer… (text input, only for a single free-text question) |
+| `QUESTION` | Open · Answer… (text input, `.authenticationRequired`; only for a single free-text question) |
 | `FINISHED`, `FAILED` | Open · Reply… (text input, `.authenticationRequired`; queued as a prompt) |
 | `OPEN_ONLY` | Open (an alert the NSE did not process, or any approval or question while Lock-screen approvals is off) |
 
@@ -734,13 +741,14 @@ There is no "Allow always" outside the app. Every approval made from a notificat
 - delivery health and "Send test push";
 - the badge;
 - a Live Activity for runs started from the phone;
+- direct mode, where the plugin sends to APNs itself with the server owner's key;
+- App Attest on registration, verified by the relay when `APP_ATTEST=required` (off by default until it has been checked on a device; the simulator has no App Attest);
 - notification settings: kinds can be turned off, a session and its subagents muted, and quiet hours set. A turned-off kind or a muted session arrives passive and silent; quiet hours lower time-sensitive alerts to active and the rest to passive. Approvals ignore quiet hours and mutes. The NSE applies these settings.
 
 **Not built**
 - push-to-start activities for runs started at the desk, and a multi-session "+N more" activity;
 - a Notification Content extension with real option buttons and a diff preview;
 - ID-only mode, where the NSE fetches the details over the direct path;
-- App Attest on registration (the relay has a hook for it, switched off);
 - Apple Watch;
 - signed approvals dropped at the relay for when the server is unreachable;
 - FCM, for an Android client.
@@ -764,7 +772,7 @@ There is no "Allow always" outside the app. Every approval made from a notificat
 
 **Plain HTTP on the LAN.** The Basic credential is readable by anyone on the same network. That credential gives full control of the machine, provider secrets included. Mitigations:
 - an "Unencrypted" badge on HTTP endpoints;
-- on every network, an HTTPS endpoint wins whenever it answers within 500 ms of the first successful endpoint, because the app cannot tell whether a network is trusted;
+- on every network, encrypted endpoints (HTTPS or a Tailscale address) are tried first, and the credential goes to a plain-HTTP endpoint only when none of them answers;
 - plain HTTP is refused for any host that is not local (private, link-local or loopback addresses, `.local` and unqualified names) or a Tailscale address;
 - pairing tokens rather than the server password. Tokens can only be revoked by changing the password, which signs out every device.
 
@@ -775,11 +783,11 @@ There is no "Allow always" outside the app. Every approval made from a notificat
   - approve anything (approvals use the direct path and are digest-checked).
 - *Can:*
   - drop or delay pushes, which delivery health makes visible;
-  - send generic spam, but only with a stolen send token (rate limits apply, and tokens are revocable per server).
+  - send generic spam, but only with a stolen send token (rate limits apply, and tokens are revocable per server). With `APP_ATTEST=required`, registering a device also needs an App Attest assertion from the genuine app.
 - A leaked APNs key allows generic spam only.
 
 **Approvals from the lock screen**
-- Allow once and Reply… require the device to be unlocked. Reject, Reject with note… and Answer… work from the lock screen.
+- Every action that sends text or approves (Allow once, Reject with note…, Answer…, Reply…) requires the device to be unlocked. A plain Reject works from the lock screen.
 - High-risk requests cannot be approved from a notification, and "always" is never offered there.
 - The digest is checked, the APNs expiration is short, and the alert is replaced once the request is resolved.
 - Nothing is approved when a timeout expires.
@@ -814,21 +822,22 @@ There is no "Allow always" outside the app. Every approval made from a notificat
    - 401 and 503 handling, network path changes, background and foreground.
 4. **Performance budgets.** `ReadPerformanceTests` and `TimelineCollectionTests` fail if a streamed delta costs 4 ms or more of main-thread work at 50 deltas a second, if building 2,000 messages off the main actor takes 250 ms or more, or if a rendered 5,000-row session takes 250 MiB or more. They also replay an hour of streamed events and scroll a 2,000-row transcript, and compare memory with the baselines in `Fixtures/performance/baselines.json`. `ReviewSmokeTests` checks frames, hitches and memory while scrolling a 5,000-line diff, and `PerformanceSmokeTests` times a cold launch to the cached Home.
 5. **Accessibility and localization.** `AccessibilitySmokeTests` runs XCUITest's accessibility audit on every main screen, in light and dark mode, on iPhone and iPad; the few exclusions name their reason. `LocalizationSnapshots` renders key screens with double-length strings and right to left, and `LocalizationLintTests` fails when a user-facing literal bypasses the String Catalogs.
-6. **Snapshot tests** (swift-snapshot-testing 1.18.7). Eight iOS test targets hold the reference images: transcript rows and every tool state, Home, sheets, diffs and review, approvals, the composer, push and Live Activity views, widgets, settings and terminals, in light and dark mode, at the largest accessibility size, at compact and regular widths.
-7. **UI smoke.** `node Tools/ui-smoke/index.mjs` builds the app once, runs the unit and snapshot tests on an iPhone simulator, and runs the XCUITest flows against the real npm server in `Tools/opencode-sandbox`, with the scripted model (`Tools/mock-llm`), on an iPhone and an iPad simulator. The flows cover pairing, reading, approvals and questions, the composer, review and files, server settings, the switcher, terminals, Shortcuts, Spotlight, widgets and the iPad workspace. A loopback fault proxy blocks requests, drops prompt responses and pauses the event stream. A failed UI test runs again, up to twice. The harness runs locally; no workflow runs it.
-8. **Live contract** (`contract.yml`, nightly and on demand, on a macOS runner). It starts two servers from npm inside a macOS sandbox: the newest stable 2.x release, or the exact version given to a manual run, and `opencode-ai@1.19.3` for V1 detection. It runs Node checks and the Swift live suites (`OCNetworkingLiveTests`) against them: pairing and 401, the first frame and heartbeats, recovery after the server is stopped for 60 seconds, prompt, steer and queue, interrupt, permission, question, revert and redo, fork, compaction, projection parity after a mid-turn disconnect, review and files, server settings, terminals, V1 detection and the push plugin. It also records a fresh fixture set and uploads it as an artifact; checked-in fixtures change only when someone runs the recorder and commits the result. No job tests older V2 releases. `node Tools/contract/check-events.mjs <types.ts>` checks by hand that `ServerEvent` decodes exactly the `V2Event` union.
-9. **Plugin and relay.** Vitest suites for the contracts and the plugin. The digest, envelope, padding, payload, risk and RFC 9180 vectors in `server/contracts/vectors` also run in `OCPushCoreTests`. The relay's suite runs in workerd and against its Node entry point, both against a mock APNs. `node Tools/push-e2e/index.mjs` sends a real permission request and question through the plugin, the relay in the local Workers runtime and a mock APNs, and opens the envelopes in TypeScript and in Swift; with `--simulator` it then delivers them to the app with `simctl push`. Real APNs delivery and the Notification Service Extension need a signed build on a device.
-10. **CI on every push** (`ci.yml`). The package tests, an app build and the composer editor tests (mention tokens, marked text, hardware Return and Escape) run on Xcode 27.0 and 27.1, and a check fails if a tracked file contains a home directory path. `plugin.yml` and `relay.yml` run the push packages' tests when `server/` changes.
-11. **On a device.** Long streaming sessions, network switches, Low Data Mode, OpenTunnel and Tailscale need a real device and are not automated. Automated tests cover a server stopped for 60 seconds, blocked and lossy connections through the fault proxy, and terminal output across backgrounding.
+6. **Demo, App Attest and direct mode.** `DemoModeTests` play the recorded demo through `ScenarioTransport` with a transport that fails the test on any network call, and `DemoSmokeTests` enters the demo from a fresh install, approves its permission, reviews its diff and leaves. The relay suites verify attestations and assertions with an injected test root, including replayed counters and challenges, with `APP_ATTEST` off and on, in both runtimes; `AppAttestClientTests` covers the app's side. The plugin's direct mode runs against an HTTP/2 APNs mock in its own suite and in `Tools/push-e2e`.
+7. **Snapshot tests** (swift-snapshot-testing 1.18.7). Eight iOS test targets hold the reference images: transcript rows and every tool state, Home, sheets, diffs and review, approvals, the composer, push and Live Activity views, widgets, settings and terminals, in light and dark mode, at the largest accessibility size, at compact and regular widths.
+8. **UI smoke.** `node Tools/ui-smoke/index.mjs` builds the app once, runs the unit and snapshot tests on an iPhone simulator, and runs the XCUITest flows against the real npm server in `Tools/opencode-sandbox`, with the scripted model (`Tools/mock-llm`), on an iPhone and an iPad simulator. The flows cover pairing, reading, approvals and questions, the composer, review and files, server settings, the switcher, terminals, Shortcuts, Spotlight, widgets and the iPad workspace. A loopback fault proxy blocks requests, drops prompt responses and pauses the event stream. A failed UI test runs again, up to twice. The harness runs locally; no workflow runs it.
+9. **Live contract** (`contract.yml`, nightly and on demand, on a macOS runner). It starts two servers from npm inside a macOS sandbox: the newest stable 2.x release, or the exact version given to a manual run, and `opencode-ai@1.19.3` for V1 detection. It runs Node checks and the Swift live suites (`OCNetworkingLiveTests`) against them: pairing and 401, the first frame and heartbeats, recovery after the server is stopped for 60 seconds, prompt, steer and queue, interrupt, permission, question, revert and redo, fork, compaction, projection parity after a mid-turn disconnect, review and files, server settings, terminals, V1 detection and the push plugin. It also records a fresh fixture set and uploads it as an artifact; checked-in fixtures change only when someone runs the recorder and commits the result. No job tests older V2 releases. The same workflow's spec watch runs daily: when a new `@opencode/cli` release appears, it compares its `/openapi.json` with `research/opencode-openapi.json` (with `oasdiff`) and its event union with what `ServerEvent` decodes, and opens one issue per release with the changes.
+10. **Plugin and relay.** Vitest suites for the contracts and the plugin. The digest, envelope, padding, payload, risk and RFC 9180 vectors in `server/contracts/vectors` also run in `OCPushCoreTests`. The relay's suite runs in workerd and against its Node entry point, both against a mock APNs. `node Tools/push-e2e/index.mjs` sends a real permission request and question through the plugin, the relay in the local Workers runtime and a mock APNs, and opens the envelopes in TypeScript and in Swift; with `--simulator` it then delivers them to the app with `simctl push`. Real APNs delivery and the Notification Service Extension need a signed build on a device.
+11. **CI on every push** (`ci.yml`). The package tests, an app build and the composer editor tests (mention tokens, marked text, hardware Return and Escape) run on Xcode 27.0 and 27.1, and a check fails if a tracked file contains a home directory path. `plugin.yml` and `relay.yml` run the push packages' tests when `server/` changes. `release.yml`, run by hand, archives the app: unsigned as a dry run, or signed, exported and uploaded once the team and App Store Connect secrets are set. `Config/Version.xcconfig` is the one place the version and build number are set.
+12. **On a device.** Long streaming sessions, network switches, Low Data Mode, OpenTunnel and Tailscale need a real device and are not automated. Automated tests cover a server stopped for 60 seconds, blocked and lossy connections through the fault proxy, and terminal output across backgrounding.
 
 ## 7. Risks
 
 | Risk | Mitigation |
 |---|---|
-| V2 changes often (about six releases a week in October 2026) and has no API version | Tolerant models with `.unknown` and `.undecodable` cases; capability and version gates; a nightly contract job against the newest release |
+| V2 changes often (about six releases a week in October 2026) and has no API version | Tolerant models with `.unknown` and `.undecodable` cases; capability and version gates; a nightly contract job against the newest release; a daily spec watch that opens an issue when a release changes the API or the event union |
 | The protocol's owner has its own iOS app in beta | The app pairs with `opencode pair` links and QR codes, connects through OpenTunnel addresses, and badges prompts that arrive as voice delegations |
 | Push needs a plugin the user must install | The app detects the plugin through its `status` call and, when it is missing, shows the install command in Settings → Notifications. Everything except push works without it. |
-| Running the relay (APNs key custody, abuse, cost, Workers HTTP/2) | The relay is open source. It runs on Cloudflare Workers, or as a Node server with `node:http2` if a Worker cannot reach APNs over HTTP/2, which is unverified. It limits registrations per IP address and pushes per device, and its logs hold no tokens, IDs or addresses. The app shows each server's plugin, registration and last delivery. |
+| Running the relay (APNs key custody, abuse, cost, Workers HTTP/2) | The relay is open source. It runs on Cloudflare Workers, or as a Node server with `node:http2` if a Worker cannot reach APNs over HTTP/2, which is unverified. It limits registrations per IP address and pushes per device, and its logs hold no tokens, IDs or addresses. App Attest can require the genuine app for registration. Direct mode needs no relay at all. The app shows each server's plugin, registration and last delivery. |
 | OpenTunnel outages and DNS blocking | Endpoint racing across several addresses; LAN and Tailscale fallbacks; specific diagnostics |
 | iOS stops the app in the background | Push and Live Activities; fast resync; persisted outbox; background tasks around sends |
 | Plain HTTP on the LAN | Plain HTTP is refused except for local and Tailscale addresses. HTTP endpoints carry an Unencrypted badge and a warning when added, and endpoint racing prefers HTTPS. |
@@ -836,7 +845,7 @@ There is no "Allow always" outside the app. Every approval made from a notificat
 | Pre-1.0 or single-maintainer libraries: Textual 0.5.0 (with swiftui-math 0.1.0), swift-markdown 0.7.3, swift-tree-sitter 0.10.0, SwiftTerm and the tree-sitter grammars | Each library is imported by one module, and Textual and SwiftTerm sit behind protocols (`MarkdownBlockRenderer`, `TerminalEngine`). Every package is pinned to an exact version. The 13 grammars are vendored C sources pinned by revision in `Tools/grammars/manifest.json`. |
 | Client-minted IDs on a phone with a wrong clock | Server-corrected, always-increasing IDs; revert hiding by position |
 | Pending permissions vanish when the server restarts or runs `location.reload` | Treat notifications as hints; re-check before acting; resync on reconnect |
-| App Review (demo access, Local Network permission, guideline 4.2) | Each permission string says what the access is for (`project.yml`). |
+| App Review (demo access, Local Network permission, guideline 4.2) | "Try a demo" on the first screen plays recorded sessions with no server and no network. Each permission string says what the access is for (`project.yml`). |
 
 ## 8. Upstream reference files
 

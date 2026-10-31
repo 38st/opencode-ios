@@ -10,7 +10,7 @@ Follow every session live, answer approvals with the full diff in front of you, 
 [![CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
 [![Push plugin](../../actions/workflows/plugin.yml/badge.svg)](../../actions/workflows/plugin.yml)
 [![Push relay](../../actions/workflows/relay.yml/badge.svg)](../../actions/workflows/relay.yml)
-[![Server contract](../../actions/workflows/contract.yml/badge.svg)](../../actions/workflows/contract.yml)<br>
+[![opencode contract](../../actions/workflows/contract.yml/badge.svg)](../../actions/workflows/contract.yml)<br>
 ![iOS and iPadOS 26.4+](https://img.shields.io/badge/iOS%20%7C%20iPadOS-26.4%2B-black)
 ![opencode 2.0.25+](https://img.shields.io/badge/opencode-2.0.25%2B-555)
 ![Swift 6](https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white)
@@ -31,7 +31,7 @@ Follow every session live, answer approvals with the full diff in front of you, 
 - **One Home for every server.** Sessions from all your servers and projects, grouped by day, with *Needs you* and *Running* on top, search, unread markers and pins.
 - **A live transcript.** Streaming Markdown with highlighted code, tables, Mermaid diagrams and TeX, reasoning, grouped tool calls, diff cards, images, live shell output and subagent drill-in. Long sessions load in pages.
 - **Approvals with the full picture.** The whole command, path or diff is on screen before you answer. Allow once, Allow always (behind device authentication), or Reject with a note. Question forms cover every field type.
-- **Push notifications.** Sealed end to end, so only your device can read them. Approve or reject from the lock screen with risk tiers: Allow once needs an unlocked device, and high-risk requests offer only Open and Reject. A Live Activity follows a running session. Mute a session, set quiet hours, and choose which kinds you get; approvals are never silenced.
+- **Push notifications.** Sealed end to end, so only your device can read them, and sent through the relay or straight to Apple with your own key. Approve or reject from the lock screen with risk tiers: Allow once needs an unlocked device, and high-risk requests offer only Open and Reject. A Live Activity follows a running session. Mute a session, set quiet hours, and choose which kinds you get; approvals are never silenced.
 - **A real prompt dock.** `@` mentions for files, agents, skills and references, `/` commands, `!` shell mode, image and PDF attachments, prompt history and on-device dictation. Pick the model, variant and agent. While a run is going, steer it, queue the next prompt or stop it. `/btw` asks a side question without adding it to the session.
 - **Review and files.** Uncommitted, branch and per-turn changes as unified or split diffs with word-level highlights. Mark files reviewed, comment on lines for your next prompt, ask the agent to commit and push or open a pull request, and browse the project's files with highlighting, find and previews.
 - **A real terminal.** Terminals on your server with a key bar for Esc, sticky Ctrl and Alt, Tab and the arrows, hardware keyboards on iPad, and full-screen programs such as vim and less. A terminal picks up where it left off after the app was in the background or closed. Run a one-off command outside any session and watch or stop it.

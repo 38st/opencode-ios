@@ -31,7 +31,7 @@ Examples of what matters most:
 - getting at server passwords, pairing tokens or provider secrets;
 - abusing the relay to reach devices or servers other than your own.
 
-Problems in opencode itself belong to the [opencode project](https://github.com/anomalyco/opencode). If you run your own relay, the security of that deployment (its APNs key, its Cloudflare account) is yours to manage.
+Problems in opencode itself belong to the [opencode project](https://github.com/anomalyco/opencode). If you run your own relay, or send notifications straight to Apple with your own APNs key, the security of that key and deployment is yours to manage.
 
 The design behind these guarantees is in [ARCHITECTURE.md](ARCHITECTURE.md): section 4 covers push and section 5 the security model.
 
