@@ -190,6 +190,8 @@ final class ReadOnlyTerminalView: OCTerminalView {
     private var order: [ObjectIdentifier] = []
     private var attaching: [ObjectIdentifier: Task<Void, Never>] = [:]
 
+    init() { TerminalSession.ended = { [weak self] session in self?.drop(session) } }
+
     func engine(for session: TerminalSession, fontSize: Double, optionAsMeta: Bool) -> SwiftTermEngine {
         let key = ObjectIdentifier(session)
         order.removeAll { $0 == key }; order.append(key)
@@ -246,6 +248,8 @@ final class TerminalContainer: UIView {
         guard self.engine !== engine || engine.view.superview !== self else { return }
         self.engine = engine; tookFocus = false
         engine.view.removeFromSuperview()
+        // Terminal output is laid out left to right in every language.
+        semanticContentAttribute = .forceLeftToRight; engine.view.semanticContentAttribute = .forceLeftToRight
         engine.view.translatesAutoresizingMaskIntoConstraints = false
         addSubview(engine.view)
         NSLayoutConstraint.activate([

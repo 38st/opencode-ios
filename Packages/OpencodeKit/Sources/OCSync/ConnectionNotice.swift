@@ -13,10 +13,10 @@ public struct ConnectionNotice: Equatable, Sendable {
     public let identifier: String
     public var actionTitle: String? {
         switch action {
-        case .reconnect: "Reconnect now"
-        case .refresh: "Retry"
-        case .repair: "Pair again"
-        case .details: "View details"
+        case .reconnect: localized("Reconnect now")
+        case .refresh: localized("Retry", comment: "Button: try refreshing again")
+        case .repair: localized("Pair again")
+        case .details: localized("View details")
         case nil: nil
         }
     }
@@ -26,19 +26,19 @@ public struct ConnectionNotice: Equatable, Sendable {
         switch state {
         case .connected:
             guard lastResyncFailed else { return nil }
-            title = "Could not refresh · showing saved messages"; action = .refresh
+            title = localized("Could not refresh · showing saved messages"); action = .refresh
         case .idle, .resolving, .connecting: return nil
         case .waiting:
-            title = "Offline · showing saved messages"
+            title = localized("Offline · showing saved messages")
             detail = status.title + (status.detail.map { " · " + $0 } ?? ""); action = .reconnect
         case .unauthorized:
-            title = "Needs re-pairing · showing saved messages"; action = .repair
+            title = localized("Needs re-pairing · showing saved messages"); action = .repair
         case .incompatible:
-            title = status.title + " · showing saved messages"; action = .details
+            title = localized("\(status.title) · showing saved messages", comment: "Connection banner; %@ is the server status"); action = .details
         case .serviceStarting:
-            title = "Server starting · showing saved messages"
+            title = localized("Server starting · showing saved messages")
         case .suspended:
-            title = "Paused · showing saved messages"; action = .reconnect
+            title = localized("Paused · showing saved messages"); action = .reconnect
         }
     }
     /// Whether running and working indicators should be shown as last known rather than live.

@@ -87,7 +87,7 @@ public struct OCToggleRow: View {
         Toggle(isOn: $isOn) {
             VStack(alignment: .leading, spacing: OCSpacing.xs) {
                 Text(title).font(OCType.body)
-                if let detail { Text(detail).font(OCType.small).foregroundStyle(OCColor.textMuted) }
+                if let detail { Text(detail).font(OCType.small).foregroundStyle(OCColor.textMuted).fixedSize(horizontal: false, vertical: true) }
             }
         }.toggleStyle(OCToggleStyle()).frame(minHeight: OCLayout.touchTarget)
     }

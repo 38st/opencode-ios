@@ -1,0 +1,430 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%lld points, in terminals only." : {
+      "comment" : "%lld is the terminal font size",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld point, in terminals only."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld points, in terminals only."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld recorded" : {
+      "comment" : "%lld is the number of recorded resyncs"
+    },
+    "About" : {
+      "comment" : "Section heading in Server Settings View"
+    },
+    "Acknowledgements" : {
+      "comment" : "Label in Server Settings View"
+    },
+    "Add endpoint" : {
+      "comment" : "Button title in Server Detail View"
+    },
+    "Add server" : {
+      "comment" : "Shown in Add Server View"
+    },
+    "Add your first server" : {
+      "comment" : "Label in Server Root View"
+    },
+    "Allow Local Network access in Settings" : {
+      "comment" : "Link title in Server Detail View"
+    },
+    "Allow access to connect over Wi-Fi. You can change this later in Settings → Privacy & Security → Local Network." : {
+      "comment" : "Text in Server Root View"
+    },
+    "App" : {
+      "comment" : "Settings section for app-wide preferences"
+    },
+    "Available" : {
+      "comment" : "Shown in Server Detail View"
+    },
+    "Back to parent" : {
+      "comment" : "Button title in Server Root View"
+    },
+    "Camera unavailable" : {
+      "comment" : "Empty state title in Add Server View"
+    },
+    "Cancel" : {
+      "comment" : "Button title in Add Server View"
+    },
+    "Capabilities" : {
+      "comment" : "Section heading in Server Detail View"
+    },
+    "Changed files" : {
+      "comment" : "Switch label in Server Settings View"
+    },
+    "Check again" : {
+      "comment" : "Label in Server Detail View"
+    },
+    "Checking…" : {
+      "comment" : "Shown in Server Detail View"
+    },
+    "Choose a conversation from Home to follow its progress." : {
+      "comment" : "Text in Workspace Placeholder"
+    },
+    "Connect" : {
+      "comment" : "Shown in Add Server View"
+    },
+    "Connect on your local network" : {
+      "comment" : "Text in Server Root View"
+    },
+    "Connect to a server" : {
+      "comment" : "Shown in Add Server View"
+    },
+    "Connect to opencode on your computer to keep your work close." : {
+      "comment" : "Shown in Server Root View"
+    },
+    "Connected" : {
+      "comment" : "Shown in Server Root View"
+    },
+    "Connecting to server…" : {
+      "comment" : "Shown in Add Server View"
+    },
+    "Connection diagnostics" : {
+      "comment" : "Link title in Server Detail View"
+    },
+    "Continue" : {
+      "comment" : "Button title in Server Root View"
+    },
+    "Copied" : {
+      "comment" : "Confirmation that the command was copied"
+    },
+    "Copied %@" : {
+      "comment" : "%@ is a shell command"
+    },
+    "Copy %@" : {
+      "comment" : "%@ is a shell command"
+    },
+    "Copy address" : {
+      "comment" : "Shown in Server Detail View"
+    },
+    "Copy command" : {
+      "comment" : "Label in Server Detail View"
+    },
+    "Copy opencode pair" : {
+      "comment" : "opencode pair is a shell command"
+    },
+    "Could not complete action" : {
+      "comment" : "Alert title in Server Detail View"
+    },
+    "Could not open link" : {
+      "comment" : "Alert title in Server Root View"
+    },
+    "Diagnostics" : {
+      "comment" : "Screen title in Server Detail View"
+    },
+    "Done" : {
+      "comment" : "Button title in Server Settings View"
+    },
+    "Endpoints" : {
+      "comment" : "Section heading in Server Detail View"
+    },
+    "Enter your server address and password to get started." : {
+      "comment" : "Shown in Add Server View"
+    },
+    "Export diagnostics" : {
+      "comment" : "Link title in Server Detail View"
+    },
+    "Follow-up behavior" : {
+      "comment" : "Menu title in Server Settings View"
+    },
+    "Font size" : {
+      "comment" : "Text in Server Settings View"
+    },
+    "Have a pairing link?" : {
+      "comment" : "Shown in Add Server View"
+    },
+    "Last %lld transitions" : {
+      "comment" : "%lld is the number of connection state changes",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Last %lld transition"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Last %lld transitions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Last healthy: %@" : {
+      "comment" : "%@ is a date and time"
+    },
+    "List the files each turn changed when it finishes." : {
+      "comment" : "Shown in Server Settings View"
+    },
+    "Local Network" : {
+      "comment" : "Screen title in Server Root View"
+    },
+    "Manage server connections" : {
+      "comment" : "Text in Server Settings View"
+    },
+    "Name" : {
+      "comment" : "Text field placeholder in Server Detail View"
+    },
+    "Name (optional)" : {
+      "comment" : "Text in Add Server View"
+    },
+    "Needs %@" : {
+      "comment" : "%@ is the minimum opencode version"
+    },
+    "Needs opencode %@ or later." : {
+      "comment" : "%@ is the oldest supported opencode version"
+    },
+    "Needs re-pairing" : {
+      "comment" : "Shown in Add Server View"
+    },
+    "New endpoint URL" : {
+      "comment" : "Text field placeholder in Server Detail View"
+    },
+    "No pairing link?" : {
+      "comment" : "Shown in Add Server View"
+    },
+    "No results found" : {
+      "comment" : "Text in Command Palette"
+    },
+    "Not an opencode server" : {
+      "comment" : "Shown in Server Detail View"
+    },
+    "Notifications" : {
+      "comment" : "Label in Server Settings View"
+    },
+    "OK" : {
+      "comment" : "Button title in Server Detail View"
+    },
+    "Open" : {
+      "comment" : "Verb: open the session"
+    },
+    "Open in New Window" : {
+      "comment" : "Button title in Command Palette"
+    },
+    "Open server details and connection diagnostics" : {
+      "comment" : "VoiceOver hint in Server Settings View"
+    },
+    "Opencode" : {
+      "comment" : "App name"
+    },
+    "Opencode connects directly to the server you choose on your computer. iOS may ask you to allow Local Network access next." : {
+      "comment" : "Text in Server Root View"
+    },
+    "Option as Meta" : {
+      "comment" : "Terminal setting: the Option key acts as the Meta key"
+    },
+    "Pair again" : {
+      "comment" : "Shown in Add Server View"
+    },
+    "Pairing" : {
+      "comment" : "Row label in Server Detail View"
+    },
+    "Pairing expires soon" : {
+      "comment" : "Label in Server Row"
+    },
+    "Pairing link" : {
+      "comment" : "Text in Add Server View"
+    },
+    "Pairing with server…" : {
+      "comment" : "Shown in Add Server View"
+    },
+    "Password" : {
+      "comment" : "Text in Add Server View"
+    },
+    "Paste the pairing link from the server, or scan its QR code." : {
+      "comment" : "Shown in Add Server View"
+    },
+    "Persistent terminal" : {
+      "comment" : "Row label in Server Detail View"
+    },
+    "Queue" : {
+      "comment" : "Follow-up option: send the message after the run"
+    },
+    "Re-pair server" : {
+      "comment" : "Shown in Add Server View"
+    },
+    "Reconnect" : {
+      "comment" : "Label in Server Detail View"
+    },
+    "Remove endpoint" : {
+      "comment" : "Button title in Server Detail View"
+    },
+    "Remove endpoint %@" : {
+      "comment" : "%@ is a host name"
+    },
+    "Remove server" : {
+      "comment" : "Icon button label in Server Detail View"
+    },
+    "Remove this server and its saved credential?" : {
+      "comment" : "Confirmation title in Server Detail View"
+    },
+    "Resyncs" : {
+      "comment" : "Section heading in Server Detail View"
+    },
+    "Run this command on the server’s computer to get a pairing link and QR code." : {
+      "comment" : "Text in Add Server View"
+    },
+    "Save name" : {
+      "comment" : "Button title in Server Detail View"
+    },
+    "Scan QR code" : {
+      "comment" : "Text in Add Server View"
+    },
+    "Scan pairing code" : {
+      "comment" : "Screen title in Add Server View"
+    },
+    "Search commands and sessions" : {
+      "comment" : "Shown in Command Palette"
+    },
+    "Server" : {
+      "comment" : "Section heading in Server Detail View"
+    },
+    "Server URL" : {
+      "comment" : "Text in Add Server View"
+    },
+    "Server details" : {
+      "comment" : "Shown in Server Detail View"
+    },
+    "Servers" : {
+      "comment" : "Text in Server Settings View"
+    },
+    "Settings" : {
+      "comment" : "Screen title in Server Settings View"
+    },
+    "Shortcut %@" : {
+      "comment" : "%@ is a keyboard shortcut"
+    },
+    "Show agent" : {
+      "comment" : "Switch label in Server Settings View"
+    },
+    "Steer" : {
+      "comment" : "Follow-up option: add the message to the current run"
+    },
+    "Studio Mac" : {
+      "comment" : "Placeholder: an example server name"
+    },
+    "Switch between agents in the composer. When hidden, defaults to Build agent." : {
+      "comment" : "Shown in Server Settings View"
+    },
+    "Terminal" : {
+      "comment" : "Label above a shell command"
+    },
+    "The --major option needs opencode 1.19.0 or later. Run the first command to update V1 before using it." : {
+      "comment" : "Text in Server Detail View"
+    },
+    "The camera is unavailable. Allow Camera access in Settings, or paste your pairing link." : {
+      "comment" : "Shown in Add Server View"
+    },
+    "The export excludes credentials, server names, addresses, paths and event contents." : {
+      "comment" : "Text in Server Detail View"
+    },
+    "Then upgrade to opencode 2:" : {
+      "comment" : "Text in Server Detail View"
+    },
+    "This address did not respond as an opencode server. Check the URL and that opencode serve is running." : {
+      "comment" : "Shown in Server Detail View"
+    },
+    "This app needs opencode 2. Run these commands on the computer hosting your server." : {
+      "comment" : "Shown in Server Detail View"
+    },
+    "This server is no longer saved." : {
+      "comment" : "Text in Server Root View"
+    },
+    "This server is not saved. Add it in Settings first." : {
+      "comment" : "Shown in Server Root View"
+    },
+    "This server runs opencode %@. The app needs opencode %@ or later, which added pairing. Run this command on the computer hosting your server." : {
+      "comment" : "The first %@ is the server's version, the second the oldest supported version"
+    },
+    "Try again" : {
+      "comment" : "Button title in Server Root View"
+    },
+    "Unavailable" : {
+      "comment" : "Shown in Server Detail View"
+    },
+    "Unencrypted" : {
+      "comment" : "Label in Server Detail View"
+    },
+    "Unencrypted HTTP connection" : {
+      "comment" : "VoiceOver label in Server Row"
+    },
+    "Unencrypted: anyone on this network may be able to read your credential. Prefer HTTPS on networks you don’t trust." : {
+      "comment" : "Label in Add Server View"
+    },
+    "Untitled session" : {
+      "comment" : "Shown in Server Root View"
+    },
+    "Update instructions" : {
+      "comment" : "Shown in Server Detail View"
+    },
+    "Update opencode" : {
+      "comment" : "Shown in Server Detail View"
+    },
+    "Use pairing link" : {
+      "comment" : "Shown in Add Server View"
+    },
+    "Use password" : {
+      "comment" : "Shown in Add Server View"
+    },
+    "Version" : {
+      "comment" : "Row label in Server Detail View"
+    },
+    "While the agent is working, Steer adds your message to the current run; Queue sends it after the run finishes." : {
+      "comment" : "VoiceOver hint in Server Settings View"
+    },
+    "With a hardware keyboard, Option sends Escape before the key, as shell and editor shortcuts expect. Turn it off to type the characters your keyboard puts on Option." : {
+      "comment" : "Shown in Server Settings View"
+    },
+    "Works with" : {
+      "comment" : "Row label; the value is the oldest supported opencode version"
+    },
+    "Wrap lines" : {
+      "comment" : "Switch label in Server Settings View"
+    },
+    "Wrap long lines in diffs and files." : {
+      "comment" : "Shown in Server Settings View"
+    },
+    "Your conversation appears here" : {
+      "comment" : "Text in Workspace Placeholder"
+    },
+    "Your credentials stay in this device’s Keychain." : {
+      "comment" : "Text in Server Settings View"
+    },
+    "Your pairing token expires within 5 days." : {
+      "comment" : "Label in Server Detail View"
+    },
+    "Your pairing token expires within 5 days. Pair again to stay connected." : {
+      "comment" : "Text in Add Server View"
+    },
+    "Your servers, anywhere" : {
+      "comment" : "Shown in Server Root View"
+    },
+    "opencode %@ or later" : {
+      "comment" : "Shown in Server Settings View"
+    }
+  },
+  "version" : "1.0"
+}

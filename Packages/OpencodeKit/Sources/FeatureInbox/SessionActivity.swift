@@ -9,7 +9,7 @@ public enum SessionActivity {
     public static var type: String { (Bundle.main.bundleIdentifier ?? "app.opencode.client") + ".session" }
     public static func activity(_ ref: SessionRef) -> NSUserActivity {
         let activity = NSUserActivity(activityType: type)
-        activity.title = "Session"
+        activity.title = localized("Session", comment: "Title of a session opened in a new window")
         if let url = DeepLink.url(serverID: ref.serverID.rawValue, sessionID: ref.sessionID) {
             activity.userInfo = ["url": url.absoluteString]; activity.targetContentIdentifier = url.absoluteString
         }

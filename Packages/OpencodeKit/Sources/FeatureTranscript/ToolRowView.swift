@@ -24,13 +24,14 @@ public struct ToolRowView: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: OCSpacing.xs) {
             OCToolChrome(presentation.title, subtitle: presentation.subtitle, icon: presentation.icon, status: presentation.status,
-                         badge: badge, failed: presentation.failed, expanded: expanded, inline: presentation.style == .explore, onOpen: openFile) { details }
+                         badge: badge, failed: presentation.failed, expanded: expanded, inline: presentation.style == .explore, onOpen: openFile,
+                         actions: accessibilityActions) { details }
             ForEach(presentation.images) { OCTranscriptImage($0) }
             if let error = presentation.errorMessage {
                 Text(error).font(OCType.small).foregroundStyle(OCColor.danger).ocSelectableText(error)
             }
             if let child = presentation.childID {
-                Button { openChild(child) } label: { OCLabel("Open agent", icon: "subagent") }
+                Button { openChild(child) } label: { OCLabel(localized("Open agent", comment: "Button that opens a subagent session"), icon: "subagent") }
                     .buttonStyle(OCButtonStyle(.ghost)).accessibilityIdentifier("openSubagent")
             }
         }
@@ -44,6 +45,14 @@ public struct ToolRowView: View {
         .onChange(of: presentation.status) { _, _ in updatePolling() }
         .onChange(of: presentation.shellID) { _, _ in updatePolling() }
         .onDisappear { shell.stop() }
+    }
+    /// VoiceOver reaches the output and the subagent from the row's header, expanded or not.
+    private var accessibilityActions: [OCAccessibilityAction] {
+        var actions: [OCAccessibilityAction] = []
+        let output = presentation.style == .shell && !shell.output.isEmpty ? shell.output : presentation.output
+        if !output.isEmpty { actions.append(.init(localized("Copy output", comment: "VoiceOver action that copies a tool's output")) { OCCopy.text(output) }) }
+        if let child = presentation.childID { actions.append(.init(localized("Open agent", comment: "Button that opens a subagent session")) { openChild(child) }) }
+        return actions
     }
     @ViewBuilder private var details: some View {
         switch presentation.style {

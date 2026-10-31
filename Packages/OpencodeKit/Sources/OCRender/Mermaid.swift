@@ -42,12 +42,12 @@ public enum MermaidParser {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             return trimmed.hasPrefix("%%") ? "" : trimmed
         }.filter { !$0.isEmpty }
-        guard let header = lines.first else { throw MermaidError(message: "Empty diagram") }
+        guard let header = lines.first else { throw MermaidError(message: localized("Empty diagram")) }
         let keyword = header.split(separator: " ").first.map(String.init) ?? ""
         switch keyword {
         case "graph", "flowchart": return .flowchart(try flowchart(header: header, lines: Array(lines.dropFirst())))
         case "sequenceDiagram": return .sequence(try sequence(Array(lines.dropFirst())))
-        default: throw MermaidError(message: "“\(keyword)” diagrams are shown as source")
+        default: throw MermaidError(message: localized("“\(keyword)” diagrams are shown as source", comment: "%@ is a Mermaid diagram type"))
         }
     }
 
@@ -72,12 +72,12 @@ public enum MermaidParser {
             if let first = statement.split(separator: " ").first, ignored.contains(String(first)) { continue }
             var scanner = Scanner(Array(statement))
             var previous = try scanner.nodes()
-            guard !previous.isEmpty else { throw MermaidError(message: "Cannot read “\(statement)”") }
+            guard !previous.isEmpty else { throw MermaidError(message: localized("Cannot read “\(statement)”", comment: "%@ is a line of diagram source")) }
             for item in previous { node(item.id, label: item.label, shape: item.shape) }
             while !scanner.atEnd {
-                guard let link = scanner.link() else { throw MermaidError(message: "Cannot read “\(statement)”") }
+                guard let link = scanner.link() else { throw MermaidError(message: localized("Cannot read “\(statement)”", comment: "%@ is a line of diagram source")) }
                 let next = try scanner.nodes()
-                guard !next.isEmpty else { throw MermaidError(message: "A link needs a target in “\(statement)”") }
+                guard !next.isEmpty else { throw MermaidError(message: localized("A link needs a target in “\(statement)”", comment: "%@ is a line of diagram source")) }
                 for item in next { node(item.id, label: item.label, shape: item.shape) }
                 for a in previous { for b in next {
                     chart.edges.append(.init(from: a.id, to: b.id, label: link.label, arrow: link.arrow, dotted: link.dotted, thick: link.thick))
@@ -85,7 +85,7 @@ public enum MermaidParser {
                 previous = next
             }
         }
-        guard !chart.nodes.isEmpty else { throw MermaidError(message: "The flowchart has no nodes") }
+        guard !chart.nodes.isEmpty else { throw MermaidError(message: localized("The flowchart has no nodes")) }
         return chart
     }
 
@@ -126,7 +126,7 @@ public enum MermaidParser {
             ]
             for (open, close, shape) in shapes where rest.hasPrefix(open) {
                 let body = String(chars[(index + open.count)...])
-                guard let end = body.range(of: close) else { throw MermaidError(message: "Missing “\(close)”") }
+                guard let end = body.range(of: close) else { throw MermaidError(message: localized("Missing “\(close)”", comment: "%@ is a closing bracket")) }
                 var label = String(body[..<end.lowerBound]).trimmingCharacters(in: .whitespaces)
                 if label.hasPrefix("\""), label.hasSuffix("\""), label.count >= 2 { label = String(label.dropFirst().dropLast()) }
                 index += open.count + body.distance(from: body.startIndex, to: end.upperBound)
@@ -197,9 +197,9 @@ public enum MermaidParser {
                     text: MermaidParser.Scanner.clean(String(match.output.4)), dashed: arrow.hasPrefix("--"), arrow: arrow.contains(">") || arrow.contains("x") || arrow.contains(")")))
                 continue
             }
-            throw MermaidError(message: "Cannot read “\(line)”")
+            throw MermaidError(message: localized("Cannot read “\(line)”", comment: "%@ is a line of diagram source"))
         }
-        guard !diagram.participants.isEmpty else { throw MermaidError(message: "The diagram has no participants") }
+        guard !diagram.participants.isEmpty else { throw MermaidError(message: localized("The diagram has no participants")) }
         return diagram
     }
 }

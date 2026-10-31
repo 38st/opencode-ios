@@ -47,6 +47,10 @@ extension PersistenceWriter {
                 try db.execute(sql: "ALTER TABLE pty_cursor ADD COLUMN " + column)
             }
         }
+        // Set when the app saw the process exit with every byte received, so a relaunch shows no gap.
+        migrator.registerMigration("v7-terminal-exited-live") { db in
+            try db.execute(sql: "ALTER TABLE pty_cursor ADD COLUMN exited_live INTEGER")
+        }
         return migrator
     }
 }

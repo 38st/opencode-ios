@@ -35,25 +35,25 @@ public struct FilesScreen: View {
             VStack(spacing: 0) {
                 ScrollView(.horizontal) {
                     HStack(spacing: OCSpacing.xs) {
-                        Button("All files") { model.allFiles() }.buttonStyle(OCTabStyle(selected: model.selectedPath == nil))
+                        Button(localized("All files")) { model.allFiles() }.buttonStyle(OCTabStyle(selected: model.selectedPath == nil))
                         ForEach(model.openFiles, id: \.absolute) { path in
                             HStack(spacing: 0) {
                                 Button((path.path as NSString).lastPathComponent) { model.open(path) }.buttonStyle(OCTabStyle(selected: model.selectedPath == path))
-                                OCIconButton("Close tab", icon: "close") { model.close(path) }
+                                OCIconButton(localized("Close tab"), icon: "close") { model.close(path) }
                             }
                         }
                     }
-                }.accessibilityLabel("Open files").scrollIndicators(.hidden)
+                }.accessibilityLabel(localized("Open files", comment: "Label for the row of open file tabs")).scrollIndicators(.hidden)
                 HStack(spacing: 0) {
                     if regular || model.selectedPath == nil {
                         browser.frame(width: regular ? min(sidebarWidth, geometry.size.width - 200) : nil)
                         if regular {
-                            OCResizeHandle("Resize file tree", value: $sidebarWidth, range: WorkspaceWidths.reviewTreeMinimum...WorkspaceWidths.reviewTreeMaximum,
+                            OCResizeHandle(localized("Resize file tree"), value: $sidebarWidth, range: WorkspaceWidths.reviewTreeMinimum...WorkspaceWidths.reviewTreeMaximum,
                                            reset: WorkspaceWidths.reviewTreeDefault)
                         }
                     }
                     if model.selectedPath != nil { viewer }
-                    else if regular { OCEmptyState("Open a file", detail: "Choose a file from the tree", icon: "file-tree") { EmptyView() } }
+                    else if regular { OCEmptyState(localized("Open a file"), detail: localized("Choose a file from the tree"), icon: "file-tree") { EmptyView() } }
                 }
             }.onChange(of: regular, initial: true) { _, value in regularWidth = value }
         }
@@ -70,14 +70,14 @@ public struct FilesScreen: View {
             } cancel: { editing = nil }.ocSheet()
         }
         .sheet(isPresented: $quickLook) { if let url = model.localURL { QuickLookView(url: url).ocSheet() } }
-        .confirmationDialog("Download file?", isPresented: $model.needsDownloadConfirmation) {
-            Button("Download") { model.loadMore(all: true) }; Button("Cancel", role: .cancel) { model.cancel() }
-        } message: { Text("This file is larger than 100 MiB.") }
+        .confirmationDialog(localized("Download file?"), isPresented: $model.needsDownloadConfirmation) {
+            Button(localized("Download", comment: "Button that downloads the file")) { model.loadMore(all: true) }; Button(localized("Cancel"), role: .cancel) { model.cancel() }
+        } message: { Text(localized("This file is larger than 100 MiB.")) }
     }
     private var browser: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text((model.directory as NSString).lastPathComponent).font(OCType.button).padding(OCSpacing.md)
-            TextField("Filter files", text: $model.query).font(OCType.small).padding(OCSpacing.md).frame(minHeight: 44)
+            TextField(localized("Filter files"), text: $model.query).font(OCType.small).padding(OCSpacing.md).frame(minHeight: 44)
                 .focused($filterFocused)
                 .onChange(of: model.query) { _, _ in resultIndex = 0 }
                 .onSubmit { openResult() }
@@ -90,15 +90,15 @@ public struct FilesScreen: View {
                         ForEach(Array(tree.enumerated()), id: \.offset) { _, item in
                             row(item.entry, depth: item.depth)
                             if model.expanded.contains(item.entry.path), model.listingErrors.contains(item.entry.path) {
-                                Button("Failed to list files") { model.loadDirectory(item.entry.path, force: true) }
+                                Button(localized("Failed to list files")) { model.loadDirectory(item.entry.path, force: true) }
                                     .buttonStyle(OCButtonStyle(.ghost)).padding(.leading, CGFloat(item.depth + 1) * 16)
-                                    .accessibilityHint("Retry")
+                                    .accessibilityHint(localized("Retry"))
                             }
                         }
-                        if model.listingErrors.contains("") { Text("Failed to list files").font(OCType.small).padding() }
+                        if model.listingErrors.contains("") { Text(localized("Failed to list files")).font(OCType.small).padding() }
                     } else {
                         ForEach(model.results, id: \.path) { row($0, depth: 0) }
-                        if model.results.isEmpty { Text("No results found").font(OCType.small).padding() }
+                        if model.results.isEmpty { Text(localized("No results found")).font(OCType.small).padding() }
                     }
                 }
             }.refreshable { model.invalidate() }
@@ -128,10 +128,10 @@ public struct FilesScreen: View {
             }.padding(.leading, CGFloat(depth) * 16 + OCSpacing.sm).padding(.trailing, OCSpacing.sm).frame(minHeight: 44).contentShape(Rectangle()).ocHover()
         }.buttonStyle(.plain).accessibilityIdentifier("fileEntry-" + entry.path).background(!model.query.isEmpty && model.results.indices.contains(resultIndex) && model.results[resultIndex].path == entry.path ? OCColor.layer2 : OCColor.background).contextMenu {
             if entry.type != .directory, let path = ReviewPath(entry.path, root: .location, location: model.directory, project: model.projectDirectory) {
-                Button("Open") { filterFocused = false; model.open(path) }
+                Button(localized("Open", comment: "Opens the file")) { filterFocused = false; model.open(path) }
             }
-            Button("Mention in composer") { composer.mentionFile(ComposerInput.absolute(entry.path, directory: model.directory), focus: regularWidth) }
-            Button("Copy path") { OCCopy.text(ComposerInput.absolute(entry.path, directory: model.directory)) }
+            Button(localized("Mention in composer")) { composer.mentionFile(ComposerInput.absolute(entry.path, directory: model.directory), focus: regularWidth) }
+            Button(localized("Copy path")) { OCCopy.text(ComposerInput.absolute(entry.path, directory: model.directory)) }
         }.onDrag { Self.mentionProvider(ComposerInput.absolute(entry.path, directory: model.directory)) }
     }
     /// A file dropped on the composer becomes an @file mention; other apps receive the path as text.
@@ -156,7 +156,7 @@ public struct FilesScreen: View {
     private func status(_ entry: FileEntry) -> String? {
         let values = changes.filter { $0.file == entry.path || entry.type == .directory && $0.file.hasPrefix(entry.path) }
         guard !values.isEmpty else { return nil }
-        return values.allSatisfy { $0.status == "added" } ? "A" : values.allSatisfy { $0.status == "deleted" } ? "D" : "M"
+        return values.allSatisfy { $0.status == "added" } ? localized("A", comment: "Abbreviation for an added file") : values.allSatisfy { $0.status == "deleted" } ? localized("D", comment: "Abbreviation for a deleted file") : localized("M", comment: "Abbreviation for a modified file")
     }
     private var inlinePlacement: LineComment? {
         if let value = comment { return .init(id: "editor", file: value.file, selection: value.selection, comment: "", time: .distantPast) }
@@ -184,20 +184,20 @@ public struct FilesScreen: View {
             ScrollView(.horizontal) {
                 HStack {
                     // The button owns ⌘F: on iPadOS a menu item's ⌘F does not run, as the system's Edit ▸ Find has it.
-                    OCIconButton("Find", icon: "magnifying-glass") { openFind() }.keyboardShortcut(WorkspaceKeys.FilesViewer.find.keyboardShortcut)
-                    Button("Mention in composer") { if let path = model.selectedPath { composer.mentionFile(path.absolute, focus: regularWidth) } }.buttonStyle(OCButtonStyle(.ghost))
-                    if model.selectedPath?.path.lowercased().hasSuffix(".md") == true { Button(preview ? "Source" : "Preview") { preview.toggle() }.buttonStyle(OCButtonStyle(.ghost)) }
-                    if model.loading { Button("Cancel") { model.cancel() }.buttonStyle(OCButtonStyle(.ghost)) }
+                    OCIconButton(localized("Find", comment: "Button that searches in the open file"), icon: "magnifying-glass") { openFind() }.keyboardShortcut(WorkspaceKeys.FilesViewer.find.keyboardShortcut)
+                    Button(localized("Mention in composer")) { if let path = model.selectedPath { composer.mentionFile(path.absolute, focus: regularWidth) } }.buttonStyle(OCButtonStyle(.ghost))
+                    if model.selectedPath?.path.lowercased().hasSuffix(".md") == true { Button(preview ? localized("Source", comment: "Shows the Markdown source") : localized("Preview", comment: "Shows the rendered Markdown")) { preview.toggle() }.buttonStyle(OCButtonStyle(.ghost)) }
+                    if model.loading { Button(localized("Cancel")) { model.cancel() }.buttonStyle(OCButtonStyle(.ghost)) }
                 }
             }.scrollIndicators(.hidden)
             if finding {
                 HStack {
-                    TextField("Find", text: $find).font(OCType.small).frame(minHeight: OCLayout.touchTarget).onSubmit { nextMatch(1) }
+                    TextField(localized("Find", comment: "Placeholder for the find-in-file field"), text: $find).font(OCType.small).frame(minHeight: OCLayout.touchTarget).onSubmit { nextMatch(1) }
                         .focused($findFocused).onAppear { findFocused = true }
-                    Text(search.matches.isEmpty ? "0/0" : "\(matchIndex + 1)/\(search.matches.count)").font(OCType.micro).accessibilityLabel("Search matches").accessibilityValue(search.matches.isEmpty ? "0 of 0" : "\(matchIndex + 1) of \(search.matches.count)")
-                    OCIconButton("Previous match", icon: "chevron-up") { nextMatch(-1) }.disabled(search.matches.isEmpty)
-                    OCIconButton("Next match", icon: "chevron-down") { nextMatch(1) }.disabled(search.matches.isEmpty)
-                    OCIconButton("Close search", icon: "close") { finding = false }
+                    Text(verbatim: search.matches.isEmpty ? "0/0" : "\(matchIndex + 1)/\(search.matches.count)").font(OCType.micro).accessibilityLabel(localized("Search matches")).accessibilityValue(localized("\(search.matches.isEmpty ? 0 : matchIndex + 1) of \(search.matches.count)", comment: "Find position; current match of total matches"))
+                    OCIconButton(localized("Previous match"), icon: "chevron-up") { nextMatch(-1) }.disabled(search.matches.isEmpty)
+                    OCIconButton(localized("Next match"), icon: "chevron-down") { nextMatch(1) }.disabled(search.matches.isEmpty)
+                    OCIconButton(localized("Close search"), icon: "close") { finding = false }
                 }.padding(.horizontal, OCSpacing.sm)
             }
             if let error = model.error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding().ocAnnounce(error, initial: true) }
@@ -206,31 +206,31 @@ public struct FilesScreen: View {
                     if FileContent.image(path.path) || FileContent.quickLook(path.path) {
                         VStack(alignment: .leading, spacing: OCSpacing.xs) {
                             ProgressView(value: Double(content.data.count), total: Double(content.total)) {
-                                Text("\(content.data.count.formatted(.byteCount(style: .file))) of \(content.total.formatted(.byteCount(style: .file)))").font(OCType.micro)
+                                Text(localized("\(content.data.count.formatted(.byteCount(style: .file))) of \(content.total.formatted(.byteCount(style: .file)))", comment: "Download progress; bytes loaded of total size")).font(OCType.micro)
                             }.tint(OCColor.accent)
                             if !model.loading {
-                                Button("Download") {
+                                Button(localized("Download", comment: "Button that downloads the file")) {
                                     if content.total > 100 * 1_048_576 { model.needsDownloadConfirmation = true }
                                     else { model.loadMore(all: true) }
                                 }.buttonStyle(OCButtonStyle(.ghost))
                             }
                         }.padding(OCSpacing.sm)
                     } else {
-                        HStack { Text("Showing the first \(content.binary ? content.data.count : content.text.utf8.count) of \(content.total)").font(OCType.micro); Button("Load more") { model.loadMore() }.buttonStyle(OCButtonStyle(.ghost)).disabled(model.loading) }.padding(OCSpacing.sm)
+                        HStack { Text(localized("Showing the first \((content.binary ? content.data.count : content.text.utf8.count).formatted(.byteCount(style: .file))) of \(content.total.formatted(.byteCount(style: .file)))", comment: "Partial file; size shown of total size")).font(OCType.micro); Button(localized("Load more")) { model.loadMore() }.buttonStyle(OCButtonStyle(.ghost)).disabled(model.loading) }.padding(OCSpacing.sm)
                     }
                 }
                 if FileContent.image(path.path) {
                     if let image = UIImage(data: content.data), content.complete { ZoomImage(image: image) }
-                    else { Text(model.loading ? "Loading…" : "Unable to load image.").font(OCType.small) }
+                    else { Text(model.loading ? localized("Loading…") : localized("Unable to load image.")).font(OCType.small) }
                 } else if FileContent.quickLook(path.path) {
-                    Button("Preview \((path.path as NSString).lastPathComponent)") { quickLook = true }.buttonStyle(OCButtonStyle()).disabled(model.localURL == nil)
-                } else if content.binary { Text("Binary file · \(content.total.formatted(.byteCount(style: .file)))").font(OCType.small) }
+                    Button(localized("Preview \((path.path as NSString).lastPathComponent)", comment: "%@ is a file name")) { quickLook = true }.buttonStyle(OCButtonStyle()).disabled(model.localURL == nil)
+                } else if content.binary { Text(localized("Binary file · \(content.total.formatted(.byteCount(style: .file)))", comment: "%@ is the file size")).font(OCType.small) }
                 else if path.path.lowercased().hasSuffix(".md") && preview { ScrollView { StreamingMarkdownView(content.text).padding(OCSpacing.md) } }
                 else {
                     OCDiffView([.init(path: path.absolute, text: content.text, source: true)], wrap: wrap, comments: composer.comments, selected: model.selection, search: search, currentMatch: currentMatch,
                                scrollOffset: Binding(get: { model.scrollOffsets[path.absolute] ?? 0 }, set: { model.scrollOffsets[path.absolute] = $0 }), onComment: { comment = $0; model.selection = $0.selection }, onEdit: { editing = $0 }, onDelete: { composer.removeComment($0.id) }, inlineComment: regularWidth ? inlinePlacement : nil, inlineEditor: regularWidth && inlinePlacement != nil ? AnyView(inlineEditor) : nil, refresh: { model.invalidate() })
                 }
-            } else if model.loading { ProgressView("Loading…").font(OCType.small) }
+            } else if model.loading { ProgressView(localized("Loading…")).font(OCType.small) }
             Spacer(minLength: 0)
         }.focusedSceneValue(\.ocFindCommand, findable ? OCFindCommand(owner: findOwner, id: model.selectedPath?.absolute ?? "", perform: openFind) : nil)
         .task(id: SearchRequest(query: finding ? find : "", text: model.content?.text ?? "")) {
@@ -258,7 +258,7 @@ private struct ZoomImage: View {
     @GestureState private var pinch: CGFloat = 1
     var body: some View {
         VStack {
-            Button("Fit") { scale = 1 }.buttonStyle(OCButtonStyle(.ghost))
+            Button(localized("Fit", comment: "Fits the image to the screen")) { scale = 1 }.buttonStyle(OCButtonStyle(.ghost))
             GeometryReader { geometry in
                 let fit = min(1, geometry.size.width / max(1, image.size.width), geometry.size.height / max(1, image.size.height))
                 let zoom = min(8, max(0.25, scale * pinch))

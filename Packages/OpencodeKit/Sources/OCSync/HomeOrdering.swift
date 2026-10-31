@@ -17,7 +17,7 @@ public enum HomeOrdering {
             for session in server.sessions.values where session.info.parentID == nil {
                 let item = SessionSummary(server: server, session: session)
                 guard hidden == item.meta.hidden else { continue }
-                let title = session.info.title ?? "Untitled session"
+                let title = session.info.title ?? localized("Untitled session")
                 guard search.isEmpty || title.localizedCaseInsensitiveContains(search) else { continue }
                 values.append(item)
             }
@@ -37,8 +37,8 @@ public enum HomeOrdering {
         }
         let date = { (item: SessionSummary) in Date(timeIntervalSince1970: item.activity / 1_000) }
         let days = Set(recent.map { Calendar.current.startOfDay(for: date($0)) }).sorted(by: >)
-        return [HomeSection(title: "Needs you", items: all.filter(\.needsYou)),
-                HomeSection(title: "Running", items: all.filter { !$0.needsYou && $0.runningCount > 0 })]
+        return [HomeSection(title: localized("Needs you", comment: "Home section: sessions waiting for the user"), items: all.filter(\.needsYou)),
+                HomeSection(title: localized("Running", comment: "Home section: sessions that are running"), items: all.filter { !$0.needsYou && $0.runningCount > 0 })]
             + days.map { day in HomeSection(title: dayTitle(day), items: recent.filter { Calendar.current.isDate(date($0), inSameDayAs: day) }) }
     }
     public static func ordered(_ servers: [ServerStore], server: ServerID?, project: String?, hidden: Bool = false, search: String = "") -> [SessionSummary] {
@@ -54,8 +54,8 @@ public enum HomeOrdering {
         }
     }
     public static func dayTitle(_ day: Date) -> String {
-        if Calendar.current.isDateInToday(day) { return "Today" }
-        if Calendar.current.isDateInYesterday(day) { return "Yesterday" }
+        if Calendar.current.isDateInToday(day) { return localized("Today") }
+        if Calendar.current.isDateInYesterday(day) { return localized("Yesterday") }
         return day.formatted(date: .abbreviated, time: .omitted)
     }
 }

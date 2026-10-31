@@ -27,8 +27,10 @@ public struct CodeBlockView: View {
                     .fixedSize(horizontal: true, vertical: true).padding(OCSpacing.md)
                     .ocSelectableText(code)
             }.fixedSize(horizontal: false, vertical: true)
+                // Code reads left to right in every language.
+                .environment(\.layoutDirection, .leftToRight)
             if folded {
-                Button("Show full output (\(code.split(separator: "\n", omittingEmptySubsequences: false).count) lines)") { selecting = true }
+                Button(localized("Show full output (\(code.split(separator: "\n", omittingEmptySubsequences: false).count) lines)", comment: "%lld is the number of lines in a folded code block")) { selecting = true }
                     .buttonStyle(OCButtonStyle()).padding(OCSpacing.sm)
             }
         }.background(OCColor.backgroundDeep, in: RoundedRectangle(cornerRadius: OCRadius.md))
@@ -52,19 +54,19 @@ public struct CodeBlockView: View {
         if !closed && typeSize.isAccessibilitySize {
             VStack(alignment: .leading, spacing: OCSpacing.xs) {
                 HStack(spacing: OCSpacing.sm) { languageLabel; Spacer(minLength: 0); copyButton }
-                OCBadge("Streaming").padding(.bottom, OCSpacing.sm)
+                OCBadge(localized("Streaming", comment: "Badge on a code block that is still being written")).padding(.bottom, OCSpacing.sm)
             }
         } else {
             HStack(spacing: OCSpacing.sm) {
                 languageLabel
-                if !closed { OCBadge("Streaming") }
+                if !closed { OCBadge(localized("Streaming", comment: "Badge on a code block that is still being written")) }
                 Spacer(minLength: 0)
                 copyButton
             }
         }
     }
-    private var languageLabel: some View { Text(language ?? "Text").font(OCType.small).foregroundStyle(OCColor.textMuted) }
-    private var copyButton: some View { OCIconButton("Copy code", icon: "copy") { OCCopy.text(code) } }
+    private var languageLabel: some View { Text(language ?? localized("Text", comment: "Code block language label for plain text")).font(OCType.small).foregroundStyle(OCColor.textMuted) }
+    private var copyButton: some View { OCIconButton(localized("Copy code"), icon: "copy") { OCCopy.text(code) } }
     private struct HighlightInput: Equatable { let code: String; let language: String?; let closed: Bool }
 }
 private extension HighlightSpan.Kind {
@@ -83,7 +85,7 @@ private extension HighlightSpan.Kind {
 public enum OCCopy {
     /// Copies silently on screen, so VoiceOver hears the confirmation instead.
     public static func text(_ text: String) {
-        OCAnnouncer.post("Copied")
+        OCAnnouncer.post(localized("Copied", comment: "VoiceOver announcement after copying to the clipboard"))
         #if os(iOS)
         UIPasteboard.general.string = text
         #elseif os(macOS)

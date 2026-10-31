@@ -72,19 +72,19 @@ public enum SwitcherIndex {
         guard !search.isEmpty else {
             let picked = preferred.filter(commands.contains)
             let shown = picked.isEmpty ? Array(commands.prefix(recentLimit)) : picked
-            return [SwitcherGroup(title: "Commands", entries: shown.map(entry)),
-                    SwitcherGroup(title: "Recent sessions", entries: recent.prefix(recentLimit).map(entry))].filter { !$0.entries.isEmpty }
+            return [SwitcherGroup(title: localized("Commands", comment: "Command palette group"), entries: shown.map(entry)),
+                    SwitcherGroup(title: localized("Recent sessions"), entries: recent.prefix(recentLimit).map(entry))].filter { !$0.entries.isEmpty }
         }
         let value = search.lowercased()
         let exact = looksLikeSessionID(search) ? recent.filter { $0.ref.sessionID == search } : []
         let matchedSessions = rank(recent.filter { !exact.contains($0) }, value) { $0.title + " " + $0.project }
-        let matchedCommands = rank(commands, value) { $0.title + " " + $0.menu.rawValue }
+        let matchedCommands = rank(commands, value) { $0.title + " " + $0.menu.title }
         let matchedProjects = rank(projects, value) { $0.name + " " + $0.path }
         let matchedSettings = rank(settings, value) { $0.section.title + " settings " + $0.section.keywords + " " + $0.serverName }
-        return [SwitcherGroup(title: "Commands", entries: matchedCommands.map(entry)),
-                SwitcherGroup(title: "Sessions", entries: (exact + matchedSessions).map(entry)),
-                SwitcherGroup(title: "Projects", entries: matchedProjects.map(entry)),
-                SwitcherGroup(title: "Settings", entries: matchedSettings.map(entry))].filter { !$0.entries.isEmpty }
+        return [SwitcherGroup(title: localized("Commands", comment: "Command palette group"), entries: matchedCommands.map(entry)),
+                SwitcherGroup(title: localized("Sessions", comment: "Command palette group"), entries: (exact + matchedSessions).map(entry)),
+                SwitcherGroup(title: localized("Projects", comment: "Command palette group"), entries: matchedProjects.map(entry)),
+                SwitcherGroup(title: localized("Settings", comment: "Command palette group"), entries: matchedSettings.map(entry))].filter { !$0.entries.isEmpty }
     }
     /// Substring matches first, in the given order, then subsequence matches by score.
     static func rank<Item>(_ items: [Item], _ value: String, text: (Item) -> String) -> [Item] {
@@ -113,7 +113,7 @@ public enum SwitcherIndex {
     /// Updated first, then ID: the order Home and the desktop's session list use.
     static func newer(_ a: Session, _ b: Session) -> Bool { a.updated != b.updated ? a.updated > b.updated : a.ref.id < b.ref.id }
     static func entry(_ command: WorkspaceCommand) -> SwitcherEntry {
-        .init(id: "command:" + command.id, kind: .command(command), title: command.title, detail: command.menu.rawValue, shortcut: command.chord.description)
+        .init(id: "command:" + command.id, kind: .command(command), title: command.title, detail: command.menu.title, shortcut: command.chord.description)
     }
     static func entry(_ session: Session) -> SwitcherEntry {
         .init(id: "session:" + session.ref.id, kind: .session(session.ref), title: session.title, detail: session.project)

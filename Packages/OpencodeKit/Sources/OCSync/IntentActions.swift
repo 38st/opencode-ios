@@ -52,7 +52,7 @@ import OCShared
         await store.drainNow(deadline: sendDeadline)
         let delivered = admitted.allSatisfy { store.outboxEntries[$0] == nil }
         let snapshot = store.sessions[sessionID].map { SystemSnapshotBuilder.session(SessionSummary(server: server, session: $0)) }
-            ?? .init(server: serverRef, session: sessionID, title: "New session", project: "", projectID: "", status: .idle, activity: clock.date())
+            ?? .init(server: serverRef, session: sessionID, title: localized("New session"), project: "", projectID: "", status: .idle, activity: clock.date())
         return PromptReceipt(session: snapshot, serverName: server.record.name, delivered: delivered)
     }
     /// The composer's Follow-up behavior for a running session.
@@ -122,7 +122,7 @@ import OCShared
         }
         let state: SessionStatusReport.State = permission ? .needsPermission : question ? .needsAnswer : running ? .running : ended
         let updated = max(info.time.updated, info.time.created)
-        return .init(state: state, title: info.title ?? "Untitled session", unread: unread,
+        return .init(state: state, title: info.title ?? localized("Untitled session"), unread: unread,
                      lastActivity: updated > 0 ? Date(timeIntervalSince1970: updated / 1_000) : nil)
     }
 

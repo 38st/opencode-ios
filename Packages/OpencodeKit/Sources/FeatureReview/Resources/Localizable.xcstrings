@@ -1,0 +1,362 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ of %@ tokens" : {
+      "comment" : "Context usage; %1$@ is tokens used, %2$@ the limit"
+    },
+    "%@ tokens, limit unknown" : {
+      "comment" : "%@ is a token count"
+    },
+    "%lld files" : {
+      "comment" : "%lld is the number of changed files",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld file"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld files"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld of %lld reviewed" : {
+      "comment" : "First %lld is reviewed files, second is all changed files"
+    },
+    "%lld percent used" : {
+      "comment" : "%lld is the percentage of the context window used"
+    },
+    "A" : {
+      "comment" : "Abbreviation for an added file"
+    },
+    "Added +%lld −%lld" : {
+      "comment" : "Diff summary; added and deleted line counts"
+    },
+    "Agent" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Assistant Messages" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Branch" : {
+      "comment" : "Git branch"
+    },
+    "Cache Tokens (read/write)" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Cancelled" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Changes" : {
+      "comment" : "Label for the session changed files"
+    },
+    "Collapse all" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "Completed" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Connected" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Connecting" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Context" : {
+      "comment" : "Title of the context window usage meter"
+    },
+    "Context Limit" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Context window" : {
+      "comment" : "VoiceOver label in Context Panel"
+    },
+    "Copy session ID" : {
+      "comment" : "Icon button label in Context Panel"
+    },
+    "Could not send the prompt" : {
+      "comment" : "Alert title in Review Screen"
+    },
+    "Create Git repository" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "Creating Git repository…" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "D" : {
+      "comment" : "Abbreviation for a deleted file"
+    },
+    "Default" : {
+      "comment" : "The default model variant"
+    },
+    "Diff too large to render" : {
+      "comment" : "Text in Review Screen"
+    },
+    "Diff view" : {
+      "comment" : "VoiceOver label in Review Screen"
+    },
+    "Directory" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Disabled" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Done" : {
+      "comment" : "Button title in Context Panel"
+    },
+    "Expand all" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "Export session" : {
+      "comment" : "VoiceOver label in Context Panel"
+    },
+    "Failed" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Files Changed %lld" : {
+      "comment" : "Review panel title; %lld is the number of changed files"
+    },
+    "Filter files" : {
+      "comment" : "Text field placeholder in Review Screen"
+    },
+    "Git actions" : {
+      "comment" : "VoiceOver label in Review Screen"
+    },
+    "Hide non-diff lines" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "ID" : {
+      "comment" : "Label for the session identifier"
+    },
+    "In progress" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Input Tokens" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Last Activity" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Loading changes…" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "Loading…" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "M" : {
+      "comment" : "Abbreviation for a modified file"
+    },
+    "MCP" : {
+      "comment" : "Abbreviation: Model Context Protocol servers section"
+    },
+    "Mark as not reviewed" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "Mark as reviewed" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "Mention in composer" : {
+      "comment" : "Button title in Review Screen"
+    },
+    "Messages" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Model" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Modified +%lld −%lld" : {
+      "comment" : "Diff summary; added and deleted line counts"
+    },
+    "Needs sign-in" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Next file" : {
+      "comment" : "Icon button label in Review Screen"
+    },
+    "No branch changes yet" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "No changes" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "No file changes yet" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "No results found" : {
+      "comment" : "Text in Review Screen"
+    },
+    "No tracked changes" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "No uncommitted changes yet" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "No usage yet" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "OK" : {
+      "comment" : "Button title in Review Screen"
+    },
+    "Open file" : {
+      "comment" : "Button title in Review Screen"
+    },
+    "Open the session to see its context." : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Output Tokens" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Parent" : {
+      "comment" : "Label for the parent session"
+    },
+    "Pending" : {
+      "comment" : "To-do status: not started"
+    },
+    "Previous file" : {
+      "comment" : "Icon button label in Review Screen"
+    },
+    "Project" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Project changes will appear here" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "Provider" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Raw messages" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Reasoning Tokens" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Removed +%lld −%lld" : {
+      "comment" : "Diff summary; added and deleted line counts"
+    },
+    "Removed image file." : {
+      "comment" : "Shown in Review Screen"
+    },
+    "Render anyway" : {
+      "comment" : "Button title in Review Screen"
+    },
+    "Request failed" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "Resize file tree" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "Review" : {
+      "comment" : "Title of the review panel"
+    },
+    "Review options" : {
+      "comment" : "Text in Review Screen"
+    },
+    "Review source" : {
+      "comment" : "VoiceOver label in Review Screen"
+    },
+    "Reviewed" : {
+      "comment" : "Toggle: the file has been reviewed"
+    },
+    "Reviewed %@" : {
+      "comment" : "Menu item marking a file reviewed; %@ is a file path"
+    },
+    "Selected" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "Session" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Session Created" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Session unavailable" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Show all lines" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "Split" : {
+      "comment" : "Side-by-side diff layout option"
+    },
+    "Subagents" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "System Prompt" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Todo" : {
+      "comment" : "Section title for the session to-do list"
+    },
+    "Toggle file tree" : {
+      "comment" : "Icon button label in Review Screen"
+    },
+    "Total Cost" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Total Tokens" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Track, review, and undo changes in this project" : {
+      "comment" : "Shown in Review Screen"
+    },
+    "Try again" : {
+      "comment" : "Button title in Review Screen"
+    },
+    "Unable to load image." : {
+      "comment" : "Shown in Review Screen"
+    },
+    "Unified" : {
+      "comment" : "Diff layout option"
+    },
+    "Unknown" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Unmark %@" : {
+      "comment" : "Menu item; %@ is a file path"
+    },
+    "Updated" : {
+      "comment" : "Label for when the session was last updated"
+    },
+    "Usage" : {
+      "comment" : "Share of the context window used"
+    },
+    "User Messages" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Variant" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Worktree" : {
+      "comment" : "Shown in Context Panel"
+    },
+    "Wrap lines" : {
+      "comment" : "Switch label in Review Screen"
+    },
+    "added" : {
+      "comment" : "File change kind"
+    },
+    "deleted" : {
+      "comment" : "File change kind"
+    },
+    "in %@" : {
+      "comment" : "%@ is the folder that holds a changed file"
+    },
+    "modified" : {
+      "comment" : "File change kind"
+    },
+    "reviewed" : {
+      "comment" : "The changed file has been marked reviewed"
+    }
+  },
+  "version" : "1.0"
+}

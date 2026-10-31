@@ -210,7 +210,7 @@ nonisolated enum TimelineItemID: Hashable, Sendable {
     private var task: Task<Void, Never>?
     func followLatest() {
         if accessibilityFocused && !announcedActivity && UIAccessibility.isVoiceOverRunning {
-            UIAccessibility.post(notification: .announcement, argument: "New activity. Use Jump to latest to follow.")
+            UIAccessibility.post(notification: .announcement, argument: localized("New activity. Use Jump to latest to follow."))
             announcedActivity = true
         }
         guard following, task == nil else { return }
@@ -266,7 +266,7 @@ private struct TimelineHostedRow: View {
                 Button(action: parent.reachedTop) {
                     HStack {
                         if parent.loadingHistory { ProgressView() }
-                        Text(parent.loadingHistory ? "Loading earlier messages…" : "Load earlier messages")
+                        Text(parent.loadingHistory ? localized("Loading earlier messages…") : localized("Load earlier messages"))
                     }
                 }.buttonStyle(OCButtonStyle(.ghost)).disabled(parent.loadingHistory)
             } else if let row {
@@ -275,7 +275,7 @@ private struct TimelineHostedRow: View {
             } else {
                 // While offline the session's last known state may be stale, so don't claim it is working.
                 if parent.store.offline {
-                    OCLabel("Waiting for server…", icon: "status-active").font(OCType.small).foregroundStyle(OCColor.textMuted)
+                    OCLabel(localized("Waiting for server…"), icon: "status-active").font(OCType.small).foregroundStyle(OCColor.textMuted)
                         .accessibilityIdentifier("sessionWorking")
                 } else { WorkingStatus(session: parent.session) }
             }
@@ -301,7 +301,7 @@ private struct WorkingStatus: View {
     let session: SessionModel
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
-            let text = ["Working", elapsed(context.date), activity].compactMap { $0 }.joined(separator: " · ")
+            let text = [localized("Working", comment: "Status while the agent is running"), elapsed(context.date), activity].compactMap { $0 }.joined(separator: " · ")
             OCLabel(text, icon: "status-active").font(OCType.small).foregroundStyle(OCColor.textMuted).lineLimit(1)
                 .accessibilityIdentifier("sessionWorking")
         }
@@ -317,14 +317,14 @@ private struct WorkingStatus: View {
     private var activity: String? {
         guard let transcript = session.transcript, let last = transcript.order.last(where: { transcript.messages[$0]?.fields.type == "assistant" }),
               let message = transcript.messages[last], message.fields.time.completed == nil else { return nil }
-        if case .retrying = session.status { return "Retrying" }
+        if case .retrying = session.status { return localized("Retrying") }
         guard let item = message.items.last else { return nil }
         switch item.fields.type {
         case "tool":
             let presentation = ToolPresenterRegistry().presentation(item.fields)
             return [presentation.title, presentation.subtitle].filter { !$0.isEmpty }.joined(separator: " ")
-        case "reasoning": return "Thinking"
-        default: return "Writing"
+        case "reasoning": return localized("Thinking", comment: "Status: the model is reasoning")
+        default: return localized("Writing", comment: "Status: the model is writing a reply")
         }
     }
 }

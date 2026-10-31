@@ -26,10 +26,10 @@ public struct TimelineRowView: View {
     @State private var actionError: String?
     public var body: some View {
         content.frame(maxWidth: .infinity, alignment: .leading)
-            .accessibilityElement(children: .contain)
+            .ocAccessibilityRow(accessibilityLabel, actions: accessibilityActions, grouped: groupedForVoiceOver)
             .accessibilityIdentifier("timeline-" + row.kind.rawValue + "-" + row.id)
-            .alert("Could not complete action", isPresented: Binding(get: { actionError != nil }, set: { if !$0 { actionError = nil } })) {
-                Button("OK") { actionError = nil }
+            .alert(localized("Could not complete action"), isPresented: Binding(get: { actionError != nil }, set: { if !$0 { actionError = nil } })) {
+                Button(localized("OK")) { actionError = nil }
             } message: { Text(actionError ?? "") }
             .disabled(acting)
     }
@@ -42,7 +42,7 @@ public struct TimelineRowView: View {
                 VStack(alignment: .leading, spacing: OCSpacing.sm) {
                     if let badge = row.badge { OCBadge(badge) }
                     if let saved = store?.savedPrompts.first(where: { $0.id == row.id }) {
-                        OCBadge(saved.state == "pending" ? (store?.offline == true ? "Waiting for connection" : "Sending") : saved.state == "failed" ? "Edit and resend" : "Waiting for confirmation", tone: saved.state == "failed" ? .danger : .neutral)
+                        OCBadge(saved.state == "pending" ? (store?.offline == true ? localized("Waiting for connection") : localized("Sending", comment: "Status badge: the prompt is being sent")) : saved.state == "failed" ? localized("Edit and resend") : localized("Waiting for confirmation"), tone: saved.state == "failed" ? .danger : .neutral)
                     }
                     if let fields = transcript.messages[row.id]?.fields {
                         SentPrompt(fields, references: store?.sessions[sessionID].flatMap { store?.catalogs[$0.info.location.key]?.references.value },
@@ -51,19 +51,19 @@ public struct TimelineRowView: View {
                     else { Text(row.text).font(OCType.body).foregroundStyle(OCColor.accent).ocSelectableText(row.text) }
                     if let store, let status = store.sessions[sessionID]?.pendingStatus(row.id), status == .steering || status == .stranded {
                         HStack {
-                            OCBadge("Pending")
-                            Button("Move to queue") { run { try await store.changeDelivery(sessionID, itemID: row.id, delivery: .queue) } }.buttonStyle(OCButtonStyle(.ghost))
-                            Button("Delete") { run { try await store.cancelPending(sessionID, itemID: row.id, restore: false) } }.buttonStyle(OCButtonStyle(.ghost))
+                            OCBadge(localized("Pending", comment: "Badge on a prompt waiting to be delivered"))
+                            Button(localized("Move to queue")) { run { try await store.changeDelivery(sessionID, itemID: row.id, delivery: .queue) } }.buttonStyle(OCButtonStyle(.ghost))
+                            Button(localized("Delete", comment: "Deletes a pending prompt")) { run { try await store.cancelPending(sessionID, itemID: row.id, restore: false) } }.buttonStyle(OCButtonStyle(.ghost))
                         }
                     }
                 }.padding(commented ? 0 : OCSpacing.md)
                     .background(commented ? .clear : OCColor.infoBackground, in: RoundedRectangle(cornerRadius: OCRadius.lg))
             }.padding(.vertical, OCSpacing.sm)
                 .contextMenu {
-                    Button("Copy") { OCCopy.text(row.text) }
+                    Button(localized("Copy", comment: "Copies the prompt text")) { OCCopy.text(row.text) }
                     if let store {
-                        Button("Revert message") { run { try await store.undo(sessionID, messageID: row.id) } }
-                        Button("Fork from here") { run { let next = try await store.forkFromMessage(sessionID, messageID: row.id); openRoot(next.id) } }
+                        Button(localized("Revert message")) { run { try await store.undo(sessionID, messageID: row.id) } }
+                        Button(localized("Fork from here")) { run { let next = try await store.forkFromMessage(sessionID, messageID: row.id); openRoot(next.id) } }
                     }
                 }
         case .toolGroup:
@@ -99,7 +99,7 @@ public struct TimelineRowView: View {
                         outcome
                     }.foregroundStyle(OCColor.textMuted)
                     if changedFiles && !row.files.isEmpty {
-                        OCToolChrome("View changed files", icon: "code") {
+                        OCToolChrome(localized("View changed files"), icon: "code") {
                             ForEach(row.files, id: \.self) { Text($0).font(OCType.code).ocSelectableText($0) }
                         }
                     }
@@ -119,7 +119,7 @@ public struct TimelineRowView: View {
         case .notice:
             VStack(alignment: .leading, spacing: OCSpacing.xs) {
                 Text(row.text).font(OCType.small).foregroundStyle(OCColor.textMuted).ocSelectableText(row.text)
-                if let child = row.childID { Button("Open agent") { openChild(child) }.buttonStyle(OCButtonStyle(.ghost)) }
+                if let child = row.childID { Button(localized("Open agent", comment: "Button that opens a subagent session")) { openChild(child) }.buttonStyle(OCButtonStyle(.ghost)) }
             }.padding(.vertical, OCSpacing.xs)
         }
     }
@@ -134,11 +134,40 @@ public struct TimelineRowView: View {
     @ViewBuilder private var outcome: some View {
         if let badge = row.badge, badge != "succeeded" { OCBadge(badge.capitalized, tone: badge == "failed" ? .danger : .neutral) }
     }
+    /// Prompts, replies and markers read as one VoiceOver element each; a tool or thinking row's header already is one.
+    private var groupedForVoiceOver: Bool {
+        switch row.kind {
+        case .userPrompt, .assistantText, .turnEnd, .error, .retry, .pendingInput, .compaction, .notice: true
+        default: false
+        }
+    }
+    private var accessibilityLabel: String? {
+        guard row.kind == .userPrompt else { return nil }
+        let status = store?.savedPrompts.first { $0.id == row.id }.map { saved in
+            saved.state == "pending" ? localized("Sending", comment: "Status badge: the prompt is being sent") : saved.state == "failed" ? localized("Edit and resend") : localized("Waiting for confirmation")
+        }
+        return [localized("You said", comment: "VoiceOver prefix for the user's own prompt"), row.text, status].compactMap { $0 }.joined(separator: ", ")
+    }
+    private var accessibilityActions: [OCAccessibilityAction] {
+        switch row.kind {
+        case .userPrompt:
+            var actions = [OCAccessibilityAction(localized("Copy", comment: "Copies the prompt text")) { OCCopy.text(row.text) }]
+            if let store {
+                actions.append(.init(localized("Revert message")) { run { try await store.undo(sessionID, messageID: row.id) } })
+                actions.append(.init(localized("Fork from here")) { run { let next = try await store.forkFromMessage(sessionID, messageID: row.id); openRoot(next.id) } })
+            }
+            return actions
+        case .assistantText:
+            guard let text = item?.text, !text.isEmpty else { return [] }
+            return [.init(localized("Copy", comment: "Copies the reply text")) { OCCopy.text(text) }]
+        default: return []
+        }
+    }
     private var hasComments: Bool {
         transcript.messages[row.id].map { !LineComment.restore($0.fields.raw).isEmpty } ?? false
     }
     private var label: String {
-        switch row.kind { case .error: "Run failed"; case .retry: "Retrying"; case .pendingInput: "Needs you"; default: "Compaction" }
+        switch row.kind { case .error: localized("Run failed"); case .retry: localized("Retrying"); case .pendingInput: localized("Needs you"); default: localized("Compaction", comment: "Timeline marker: the conversation history was compacted") }
     }
     private var item: ContentItemModel? {
         guard let ref = row.reference, let message = transcript.messages[ref.messageID], message.items.indices.contains(ref.index) else { return nil }
@@ -160,7 +189,7 @@ private struct ContentRow: View {
     let openChild: (String) -> Void
     var body: some View {
         VStack(alignment: .leading, spacing: OCSpacing.xs) {
-            if item.joinedMidStream { OCBadge("Catching up", tone: .info) }
+            if item.joinedMidStream { OCBadge(localized("Catching up"), tone: .info) }
             if item.fields.type == "tool" {
                 ToolRowView(presentation: ToolPresenterRegistry().presentation(item.fields), store: store, directory: directory,
                             expanded: detail.expanded, openChild: openChild)
@@ -168,7 +197,7 @@ private struct ContentRow: View {
                     PermissionCard(store: store, request: request, directory: directory)
                 }
             } else if reasoning {
-                OCToolChrome("Thinking", icon: "brain", expanded: detail == .everything) {
+                OCToolChrome(localized("Thinking", comment: "Title of the model reasoning section"), icon: "brain", expanded: detail == .everything) {
                     StreamingMarkdownView(item.text, complete: messageCompleted || item.fields.time.completed != nil).foregroundStyle(OCColor.textMuted).ocSelectableText(item.text)
                 }
             } else {
@@ -185,10 +214,10 @@ private struct StandaloneShell: View {
     let expanded: Bool
     private var presentation: ToolPresentation {
         let f = message.fields
-        var value = ToolPresentation(title: "Shell", status: f.status ?? "running")
+        var value = ToolPresentation(title: localized("Shell", comment: "Title of a shell command row"), status: f.status ?? "running")
         value.style = .shell; value.icon = "terminal"; value.subtitle = f.command ?? ""
         value.input = f.command ?? ""; value.output = f.output?.output ?? ""; value.shellID = f.shellID
-        if let exit = f.exit, exit >= Double(Int.min), exit < Double(Int.max) { value.badge = "Exit \(Int(exit))"; value.failed = exit != 0 }
+        if let exit = f.exit, exit >= Double(Int.min), exit < Double(Int.max) { value.badge = localized("Exit \(Int(exit))", comment: "Badge; %lld is the shell exit code"); value.failed = exit != 0 }
         return value
     }
     var body: some View { ToolRowView(presentation: presentation, store: store, directory: directory, expanded: expanded) }

@@ -145,7 +145,7 @@ import OCNetworking
                     } catch APIError.server(_, 404, _) {
                         next = self.pager.notFound()
                     } catch APIError.cancelled { return } catch {
-                        self.error = "Could not load the output."
+                        self.error = localized("Could not load the output.")
                         try? await self.store?.clock.sleep(.seconds(1))
                         next = .fetch(cursor: self.pager.cursor)
                     }
@@ -158,7 +158,7 @@ import OCNetworking
         let id = UUID()
         tasks[id] = Task { [weak self] in
             guard let self else { return }
-            do { try await work(self) } catch is CancellationError {} catch APIError.cancelled {} catch { self.error = "Could not reach the server." }
+            do { try await work(self) } catch is CancellationError {} catch APIError.cancelled {} catch { self.error = localized("Could not reach the server.") }
             self.tasks.removeValue(forKey: id)
         }
     }

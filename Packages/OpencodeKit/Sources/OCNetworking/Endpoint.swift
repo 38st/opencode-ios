@@ -27,6 +27,14 @@ public struct Endpoint<Response: Sendable>: Sendable {
     }
 }
 
+/// Paths are written unencoded, except that `%` and a `/` inside one segment arrive already escaped: a name the
+/// server or a person chose goes through `pathSegment(_:)`, so a name containing `/` cannot reach another route.
+public func pathSegment(_ value: String) -> String {
+    // A dot segment would be resolved away by URL handling, so it is escaped too.
+    if value == "." || value == ".." { return value.replacingOccurrences(of: ".", with: "%2E") }
+    return value.replacingOccurrences(of: "%", with: "%25").replacingOccurrences(of: "/", with: "%2F")
+}
+
 public extension Endpoint where Response: Decodable {
     static func json(method: HTTPMethod = .get, path: String, query: [URLQueryItem] = [], scope: Scope = .global,
                      body: Data? = nil) -> Self {
@@ -114,9 +122,9 @@ public actor APIClient {
         guard !path.hasPrefix("/"), !path.contains("\0"), !path.split(separator: "/").contains("..") else {
             throw APIError.refused(.invalidURL)
         }
-        var request = try Self.request(baseURL: baseURL, path: "/api/fs/read/" + path,
+        let segments = path.split(separator: "/", omittingEmptySubsequences: false).map { pathSegment(String($0)) }
+        var request = try Self.request(baseURL: baseURL, path: "/api/fs/read/" + segments.joined(separator: "/"),
             scope: .location(directory: directory), credential: credential, headers: headers)
-        // URLComponents.path escapes delimiters once, retaining slash separators.
         request.setValue("*/*", forHTTPHeaderField: "Accept")
         if let range, !range.isEmpty { request.setValue("bytes=\(range.lowerBound)-\(range.upperBound - 1)", forHTTPHeaderField: "Range") }
         if let etag { request.setValue(etag, forHTTPHeaderField: "If-None-Match") }
@@ -135,8 +143,11 @@ public actor APIClient {
                                            timeout: TimeInterval = 30) throws -> URLRequest {
         try EndpointPolicy.validate(baseURL)
         guard var parts = URLComponents(url: baseURL, resolvingAgainstBaseURL: false) else { throw APIError.refused(.invalidURL) }
-        parts.path = parts.path.trimmingCharacters(in: CharacterSet(charactersIn: "/")).isEmpty
-            ? path : parts.path.trimmingSuffix("/") + path
+        let joined = parts.percentEncodedPath.trimmingCharacters(in: CharacterSet(charactersIn: "/")).isEmpty
+            ? path : parts.percentEncodedPath.trimmingSuffix("/") + path
+        // Every character a path may not hold is escaped once; the escapes `pathSegment` wrote are kept.
+        guard let encoded = joined.addingPercentEncoding(withAllowedCharacters: pathCharacters) else { throw APIError.refused(.invalidURL) }
+        parts.percentEncodedPath = encoded
         var items = query
         if case .location(let directory) = scope { items.append(URLQueryItem(name: "location[directory]", value: directory)) }
         parts.queryItems = items.isEmpty ? nil : items
@@ -181,3 +192,5 @@ public actor APIClient {
 private extension String {
     func trimmingSuffix(_ suffix: String) -> String { hasSuffix(suffix) ? String(dropLast(suffix.count)) : self }
 }
+
+private let pathCharacters = CharacterSet.urlPathAllowed.union(CharacterSet(charactersIn: "%"))

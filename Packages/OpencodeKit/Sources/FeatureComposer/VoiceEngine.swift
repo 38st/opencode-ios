@@ -8,8 +8,8 @@ enum VoiceError: LocalizedError {
     case unsupportedLocale, noAudioFormat
     var errorDescription: String? {
         switch self {
-        case .unsupportedLocale: "On-device speech recognition does not support this device’s language."
-        case .noAudioFormat: "The microphone’s audio format is not supported."
+        case .unsupportedLocale: localized("On-device speech recognition does not support this device’s language.")
+        case .noAudioFormat: localized("The microphone’s audio format is not supported.")
         }
     }
 }
@@ -23,13 +23,13 @@ enum VoiceError: LocalizedError {
 
     func authorize() async -> VoiceAuthorization {
         guard await AVAudioApplication.requestRecordPermission() else {
-            return .denied("Microphone access is off. Turn it on in Settings › Privacy & Security › Microphone.")
+            return .denied(localized("Microphone access is off. Turn it on in Settings › Privacy & Security › Microphone."))
         }
         let speech = await withCheckedContinuation { continuation in
             SFSpeechRecognizer.requestAuthorization { continuation.resume(returning: $0) }
         }
         guard speech == .authorized else {
-            return .denied("Speech recognition is off. Turn it on in Settings › Privacy & Security › Speech Recognition.")
+            return .denied(localized("Speech recognition is off. Turn it on in Settings › Privacy & Security › Speech Recognition."))
         }
         return .granted
     }

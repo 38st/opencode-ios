@@ -40,7 +40,7 @@ import OCSync
             } tabs: {
                 OCProjectTabs(projects: [.init(id: "project", title: "Design system")], selection: .constant("project"))
             } main: { WorkspacePlaceholder(title: "Design system") } panel: { OCWorkspacePanel() })),
-            ("server-management", AnyView(ServerSettingsView(registry: registry))),
+            ("server-management", AnyView(ServerSettingsView(appVersion: "0.1.0 (1)", registry: registry))),
             ("add-server", AnyView(AddServerView(registry: registry) { _ in })),
             ("add-server-password", AnyView(AddServerView(registry: registry, initialMethod: 1) { _ in })),
             ("re-pair", AnyView(AddServerView(registry: registry, repairing: server) { _ in })),

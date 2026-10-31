@@ -13,18 +13,18 @@ struct ProvidersSection: View {
     var body: some View {
         OCForm {
             VStack(alignment: .leading, spacing: OCSpacing.sm) {
-                Text("Manage provider connections and the accounts used for each provider.").foregroundStyle(OCColor.textMuted)
+                Text(localized("Manage provider connections and the accounts used for each provider.")).foregroundStyle(OCColor.textMuted)
                 AdminProjectPicker(admin: admin)
             }
-            AdminLoadState(cell: admin.integrations, empty: "No providers found") { (integrations: [IntegrationInfo]) in
+            AdminLoadState(cell: admin.integrations, empty: localized("No providers found")) { (integrations: [IntegrationInfo]) in
                 let connected = integrations.filter(\.isConnected), available = integrations.filter { !$0.isConnected }
-                OCSection("Connected providers") {
-                    if connected.isEmpty { Text("No providers connected").foregroundStyle(OCColor.textMuted) }
+                OCSection(localized("Connected providers")) {
+                    if connected.isEmpty { Text(localized("No providers connected")).foregroundStyle(OCColor.textMuted) }
                     ForEach(connected) { row($0) }
                 }
-                if !available.isEmpty { OCSection("Available") { ForEach(available) { row($0) } } }
+                if !available.isEmpty { OCSection(localized("Available", comment: "Section of providers not yet connected")) { ForEach(available) { row($0) } } }
             }
-            Text("Credentials are stored on the server, never on this device. Models from a connected provider become available on this server.")
+            Text(localized("Credentials are stored on the server, never on this device. Models from a connected provider become available on this server."))
                 .font(OCType.small).foregroundStyle(OCColor.textMuted)
         }
         .task(id: admin.directory) { await admin.loadIntegrations() }
@@ -33,8 +33,8 @@ struct ProvidersSection: View {
     private func row(_ integration: IntegrationInfo) -> some View {
         NavigationLink { ProviderDetailView(admin: admin, integrationID: integration.id) } label: {
             AdminRow(title: integration.name, detail: summary(integration)) {
-                if integration.needsAuth { OCBadge("Needs sign-in", tone: .warning) }
-                else if integration.isConnected { OCBadge("Connected", tone: .success) }
+                if integration.needsAuth { OCBadge(localized("Needs sign-in"), tone: .warning) }
+                else if integration.isConnected { OCBadge(localized("Connected"), tone: .success) }
                 OCIcon("chevron-right", size: 12).foregroundStyle(OCColor.iconMuted)
             }.contentShape(Rectangle())
         }.buttonStyle(.plain).accessibilityIdentifier("provider-" + integration.id)
@@ -42,8 +42,8 @@ struct ProvidersSection: View {
     private func summary(_ integration: IntegrationInfo) -> String {
         var parts: [String] = []
         if let active = integration.accounts.first { parts.append(active.label) }
-        if integration.accounts.count > 1 { parts.append("\(integration.accounts.count) accounts") }
-        if !integration.environment.isEmpty { parts.append("Environment") }
+        if integration.accounts.count > 1 { parts.append(localized("\(integration.accounts.count) accounts", comment: "%lld is the number of provider accounts")) }
+        if !integration.environment.isEmpty { parts.append(localized("Environment", comment: "Credential comes from environment variables")) }
         if parts.isEmpty { parts.append(integration.methods.map(\.label).joined(separator: ", ")) }
         return parts.joined(separator: " · ")
     }
@@ -62,43 +62,43 @@ struct ProviderDetailView: View {
         OCForm {
             if let integration {
                 if !integration.accounts.isEmpty {
-                    OCSection("Connected accounts") {
+                    OCSection(localized("Connected accounts")) {
                         ForEach(Array(integration.accounts.enumerated()), id: \.element.id) { index, account in accountRow(account, active: index == 0, integration: integration) }
                     }
                 }
                 if !integration.environment.isEmpty {
-                    OCSection("Environment") {
+                    OCSection(localized("Environment", comment: "Credential comes from environment variables")) {
                         ForEach(integration.environment) { connection in
-                            AdminRow(connection.name, detail: "Set in the server's environment. Change it on the computer running opencode.", mono: true)
+                            AdminRow(connection.name, detail: localized("Set in the server's environment. Change it on the computer running opencode."), mono: true)
                         }
                     }
                 }
-                OCSection(integration.accounts.isEmpty ? "Connect" : "Add account") {
+                OCSection(integration.accounts.isEmpty ? localized("Connect") : localized("Add account")) {
                     ForEach(integration.methods) { method in methodRow(method, integration: integration) }
                 }
             } else {
-                Text("This provider is no longer available on the server.").foregroundStyle(OCColor.textMuted)
+                Text(localized("This provider is no longer available on the server.")).foregroundStyle(OCColor.textMuted)
             }
         }
-        .ocNavigationTitle(integration?.name ?? "Provider")
+        .ocNavigationTitle(integration?.name ?? localized("Provider"))
         .sheet(item: $keyMethod) { method in
             if let integration { KeyConnectSheet(admin: admin, integration: integration, method: method).ocSheet() }
         }
         .sheet(isPresented: Binding(get: { admin.connect?.integrationID == integrationID }, set: { if !$0 { admin.endConnect() } })) {
             if let flow = admin.connect { ConnectFlowView(flow: flow) { admin.endConnect() }.ocSheet() }
         }
-        .alert("Rename account", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
-            TextField("Account name", text: $newLabel)
-            Button("Cancel", role: .cancel) { renaming = nil }
-            Button("Rename") {
+        .alert(localized("Rename account"), isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
+            TextField(localized("Account name"), text: $newLabel)
+            Button(localized("Cancel"), role: .cancel) { renaming = nil }
+            Button(localized("Rename")) {
                 guard let account = renaming else { return }
                 renaming = nil
                 task = Task { _ = await admin.rename(account, label: newLabel) }
             }
         }
-        .confirmationDialog("Remove \(removing?.label ?? "account")?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
+        .confirmationDialog(removing.map { localized("Remove \($0.label)?", comment: "%@ is an account name") } ?? localized("Remove account?"), isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
                             titleVisibility: .visible) {
-            Button("Remove", role: .destructive) {
+            Button(localized("Remove"), role: .destructive) {
                 guard let account = removing else { return }
                 removing = nil
                 task = Task { _ = await admin.remove(account) }
@@ -111,24 +111,24 @@ struct ProviderDetailView: View {
     private var removalMessage: String {
         guard let integration, let removing else { return "" }
         return integration.accounts.count == 1
-            ? "This deletes the credential from the server. \(integration.name) models will no longer be available."
-            : "This deletes the credential \(removing.label) from the server."
+            ? localized("This deletes the credential from the server. \(integration.name) models will no longer be available.", comment: "%@ is a provider name")
+            : localized("This deletes the credential \(removing.label) from the server.", comment: "%@ is an account name")
     }
     private func accountRow(_ account: IntegrationConnection, active: Bool, integration: IntegrationInfo) -> some View {
-        AdminRow(title: account.label, detail: [account.method == "oauth" ? "Signed in" : account.method == "key" ? "API key" : "External",
+        AdminRow(title: account.label, detail: [account.method == "oauth" ? localized("Signed in") : account.method == "key" ? localized("API key") : localized("External", comment: "Account managed outside opencode"),
                                               account.needsAuth?.message].compactMap { $0 }.joined(separator: " · ")) {
-            if active { OCBadge("Active", tone: .success) }
-            if account.needsAuth != nil { OCBadge("Needs sign-in", tone: .warning) }
+            if active { OCBadge(localized("Active", comment: "Badge: the account in use"), tone: .success) }
+            if account.needsAuth != nil { OCBadge(localized("Needs sign-in"), tone: .warning) }
             Menu {
                 if !active {
-                    Button("Use this account") { task = Task { _ = await admin.activate(account) } }
+                    Button(localized("Use this account")) { task = Task { _ = await admin.activate(account) } }
                 }
-                Button("Rename") { newLabel = account.label; renaming = account }
-                Button("Remove", role: .destructive) { removing = account }
+                Button(localized("Rename")) { newLabel = account.label; renaming = account }
+                Button(localized("Remove"), role: .destructive) { removing = account }
             } label: {
                 OCIcon("outline-dots").foregroundStyle(OCColor.iconMuted)
                     .frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget).contentShape(Rectangle())
-            }.accessibilityLabel("\(account.label) options").accessibilityIdentifier("accountMenu-" + account.label)
+            }.accessibilityLabel(localized("\(account.label) options", comment: "%@ is an account name")).accessibilityIdentifier("accountMenu-" + account.label)
         }
     }
     @ViewBuilder private func methodRow(_ method: IntegrationMethod, integration: IntegrationInfo) -> some View {
@@ -137,13 +137,13 @@ struct ProviderDetailView: View {
             Button {
                 if method.type == "key" { keyMethod = method } else { admin.beginConnect(integration, method: method) }
             } label: {
-                OCLabel(method.type == "key" ? "Connect with an API key" : method.label, icon: method.type == "key" ? "lock" : "link")
+                OCLabel(method.type == "key" ? localized("Connect with an API key") : method.label, icon: method.type == "key" ? "lock" : "link")
             }.buttonStyle(OCButtonStyle()).disabled(admin.isBusy("connect:" + integration.id))
                 .accessibilityIdentifier("connectMethod-" + method.type)
         case "env":
-            AdminRow("Environment variable", detail: "Set " + method.names.joined(separator: " or ") + " on the computer running opencode.")
+            AdminRow(localized("Environment variable"), detail: localized("Set \(method.names.formatted(.list(type: .or))) on the computer running opencode.", comment: "%@ is a list of environment variable names"))
         default:
-            AdminRow(method.label, detail: "Set up on the computer running opencode.")
+            AdminRow(method.label, detail: localized("Set up on the computer running opencode."))
         }
     }
 }
@@ -162,27 +162,27 @@ struct KeyConnectSheet: View {
     var body: some View {
         NavigationStack {
             OCForm {
-                Text("Enter your \(integration.name) API key to connect your account and use \(integration.name) models on this server.")
+                Text(localized("Enter your \(integration.name) API key to connect your account and use \(integration.name) models on this server.", comment: "Both %@ are the provider name"))
                     .foregroundStyle(OCColor.textMuted)
                 VStack(alignment: .leading, spacing: OCSpacing.sm) {
-                    Text("\(integration.name) API key").font(OCType.heading)
-                    SecureField("API key", text: $key).textContentType(.password).textInputAutocapitalization(.never)
+                    Text(localized("\(integration.name) API key", comment: "%@ is a provider name")).font(OCType.heading)
+                    SecureField(localized("API key"), text: $key).textContentType(.password).textInputAutocapitalization(.never)
                         .autocorrectionDisabled().accessibilityIdentifier("providerAPIKey")
                     if showErrors && key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        Text("API key is required").font(OCType.small).foregroundStyle(OCColor.danger)
+                        Text(localized("API key is required")).font(OCType.small).foregroundStyle(OCColor.danger)
                     }
                 }
                 if let form = method.form { FormRenderer(form: form, answers: $answers, showErrors: showErrors) }
                 VStack(alignment: .leading, spacing: OCSpacing.sm) {
-                    Text("Account name (optional)").font(OCType.heading)
-                    TextField("Account name", text: $label).accessibilityIdentifier("providerAccountLabel")
+                    Text(localized("Account name (optional)")).font(OCType.heading)
+                    TextField(localized("Account name"), text: $label).accessibilityIdentifier("providerAccountLabel")
                 }
-                Button("Connect") { submit() }.buttonStyle(OCButtonStyle(.contrast))
+                Button(localized("Connect")) { submit() }.buttonStyle(OCButtonStyle(.contrast))
                     .disabled(admin.isBusy("connect:" + integration.id)).accessibilityIdentifier("submitProviderKey")
-                Text("The key is sent to the server once and is not kept on this device.").font(OCType.small).foregroundStyle(OCColor.textMuted)
+                Text(localized("The key is sent to the server once and is not kept on this device.")).font(OCType.small).foregroundStyle(OCColor.textMuted)
             }
-            .ocNavigationTitle("Connect \(integration.name)")
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { key = ""; dismiss() } } }
+            .ocNavigationTitle(localized("Connect \(integration.name)", comment: "%@ is a provider name"))
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(localized("Cancel")) { key = ""; dismiss() } } }
         }
         .onDisappear { key = ""; task?.cancel() }
     }
@@ -211,41 +211,41 @@ struct ConnectFlowView: View {
             OCForm {
                 switch flow.phase {
                 case .starting:
-                    progress("Opening sign-in…")
+                    progress(localized("Opening sign-in…"))
                 case .code(let attempt):
-                    Text("Your browser opens so you can sign in to \(flow.integrationName). Paste the authorization code it gives you below.")
+                    Text(localized("Your browser opens so you can sign in to \(flow.integrationName). Paste the authorization code it gives you below.", comment: "%@ is a provider name"))
                     link(attempt)
-                    TextField("Authorization code", text: $code).textInputAutocapitalization(.never).autocorrectionDisabled()
+                    TextField(localized("Authorization code"), text: $code).textInputAutocapitalization(.never).autocorrectionDisabled()
                         .accessibilityIdentifier("oauthCode")
-                    Button("Continue") { flow.submit(code: code); code = "" }.buttonStyle(OCButtonStyle(.contrast))
+                    Button(localized("Continue")) { flow.submit(code: code); code = "" }.buttonStyle(OCButtonStyle(.contrast))
                         .disabled(code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 case .waiting(let attempt):
-                    Text("Finish signing in to \(flow.integrationName) in a browser. If the page sends you to localhost, open the link on the computer running opencode: that is where the server listens for the answer.")
+                    Text(localized("Finish signing in to \(flow.integrationName) in a browser. If the page sends you to localhost, open the link on the computer running opencode: that is where the server listens for the answer.", comment: "%@ is a provider name"))
                     link(attempt)
-                    progress("Waiting for authorization…")
+                    progress(localized("Waiting for authorization…"))
                 case .command(let message):
-                    Text("opencode is running \(flow.method.label) on the server. Follow its instructions there or below.")
+                    Text(localized("opencode is running \(flow.method.label) on the server. Follow its instructions there or below.", comment: "%@ is a login method name"))
                     if let message, !message.isEmpty {
                         Text(message).font(OCType.code).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
                             .accessibilityIdentifier("commandMessage")
                     }
-                    progress("Waiting for command to finish…")
+                    progress(localized("Waiting for command to finish…"))
                 case .completing:
-                    progress("Authorization in progress…")
+                    progress(localized("Authorization in progress…"))
                 case .complete:
-                    OCLabel("\(flow.integrationName) connected", icon: "circle-check").font(OCType.heading)
+                    OCLabel(localized("\(flow.integrationName) connected", comment: "%@ is a provider name"), icon: "circle-check").font(OCType.heading)
                 case .failed(let message):
-                    Text("Authorization failed: \(message)").foregroundStyle(OCColor.danger).accessibilityIdentifier("connectFailed")
+                    Text(localized("Authorization failed: \(message)", comment: "%@ is the error message")).foregroundStyle(OCColor.danger).accessibilityIdentifier("connectFailed")
                 case .expired:
-                    Text("Authorization expired. Start again for a new link.").foregroundStyle(OCColor.danger)
+                    Text(localized("Authorization expired. Start again for a new link.")).foregroundStyle(OCColor.danger)
                 case .cancelled:
-                    Text("Sign-in cancelled.").foregroundStyle(OCColor.textMuted)
+                    Text(localized("Sign-in cancelled.")).foregroundStyle(OCColor.textMuted)
                 }
             }
-            .ocNavigationTitle("Connect \(flow.integrationName)")
+            .ocNavigationTitle(localized("Connect \(flow.integrationName)", comment: "%@ is a provider name"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(flow.phase.isFinished ? "Done" : "Cancel") { flow.cancel(); done() }.accessibilityIdentifier("closeConnect")
+                    Button(flow.phase.isFinished ? localized("Done") : localized("Cancel")) { flow.cancel(); done() }.accessibilityIdentifier("closeConnect")
                 }
             }
         }
@@ -263,15 +263,15 @@ struct ConnectFlowView: View {
             }
             if showQR, let image = QRCode.image(attempt.url) {
                 Image(uiImage: image).interpolation(.none).resizable().scaledToFit().frame(maxWidth: 240)
-                    .accessibilityLabel("QR code of the sign-in link")
+                    .accessibilityLabel(localized("QR code of the sign-in link"))
             }
         }
     }
     @ViewBuilder private func linkActions(_ url: URL) -> some View {
-        Link(destination: url) { OCLabel("Open link", icon: "square-arrow-top-right") }.buttonStyle(OCButtonStyle())
-        Button { OCCopy.text(url.absoluteString) } label: { OCLabel("Copy", icon: "copy") }.buttonStyle(OCButtonStyle(.ghost))
-        ShareLink(item: url) { OCLabel("Share", icon: "share") }.buttonStyle(OCButtonStyle(.ghost))
-        Button { showQR.toggle() } label: { OCLabel(showQR ? "Hide QR code" : "Show QR code", icon: "grid-plus") }.buttonStyle(OCButtonStyle(.ghost))
+        Link(destination: url) { OCLabel(localized("Open link"), icon: "square-arrow-top-right") }.buttonStyle(OCButtonStyle())
+        Button { OCCopy.text(url.absoluteString) } label: { OCLabel(localized("Copy", comment: "Verb: copy the link"), icon: "copy") }.buttonStyle(OCButtonStyle(.ghost))
+        ShareLink(item: url) { OCLabel(localized("Share", comment: "Verb: share the link"), icon: "share") }.buttonStyle(OCButtonStyle(.ghost))
+        Button { showQR.toggle() } label: { OCLabel(showQR ? localized("Hide QR code") : localized("Show QR code"), icon: "grid-plus") }.buttonStyle(OCButtonStyle(.ghost))
     }
 }
 

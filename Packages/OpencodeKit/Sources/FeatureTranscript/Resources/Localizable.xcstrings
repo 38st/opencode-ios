@@ -1,0 +1,266 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%lld Changed files" : {
+      "comment" : "Header of the files changed in a turn; %lld is the file count",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Changed file"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Changed files"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Agent" : {
+      "comment" : "Fallback when the session agent is unknown"
+    },
+    "Agent or model choice pending" : {
+      "comment" : "Shown in Session Screen"
+    },
+    "Agent: %@" : {
+      "comment" : "%@ is the agent name"
+    },
+    "Binary file" : {
+      "comment" : "Text in Turn Changes Card"
+    },
+    "Catching up" : {
+      "comment" : "Badge in Timeline Row View"
+    },
+    "Close review" : {
+      "comment" : "Icon button label in Session Screen"
+    },
+    "Compaction" : {
+      "comment" : "Timeline marker: the conversation history was compacted"
+    },
+    "Compaction queued" : {
+      "comment" : "Shown in Timeline Projection"
+    },
+    "Context details" : {
+      "comment" : "Shown in Session Screen"
+    },
+    "Copy" : {
+      "comment" : "Copies the prompt text"
+    },
+    "Copy output" : {
+      "comment" : "VoiceOver action that copies a tool's output"
+    },
+    "Copy session link" : {
+      "comment" : "Button title in Session Screen"
+    },
+    "Could not complete action" : {
+      "comment" : "Alert title in Timeline Row View"
+    },
+    "Could not load earlier messages." : {
+      "comment" : "Shown in Session Timeline"
+    },
+    "Could not mark this session read." : {
+      "comment" : "Shown in Session Screen"
+    },
+    "Could not refresh this session. Cached messages are shown when available." : {
+      "comment" : "Shown in Session Screen"
+    },
+    "Could not update the saved prompt. Try again." : {
+      "comment" : "Shown in Saved Prompt Review"
+    },
+    "Create saved session" : {
+      "comment" : "Shown in Saved Prompt Review"
+    },
+    "Create this saved session?" : {
+      "comment" : "Shown in Saved Prompt Review"
+    },
+    "Created" : {
+      "comment" : "File status: the file was created"
+    },
+    "Delete" : {
+      "comment" : "Deletes a pending prompt"
+    },
+    "Deleted" : {
+      "comment" : "File status: the file was deleted"
+    },
+    "Discard" : {
+      "comment" : "Button that discards an unsent saved prompt"
+    },
+    "Discard session and saved prompts" : {
+      "comment" : "Shown in Saved Prompt Review"
+    },
+    "Edit and resend" : {
+      "comment" : "Button title in Saved Prompt Review"
+    },
+    "Exit %lld" : {
+      "comment" : "Badge; %lld is the shell exit code"
+    },
+    "Family cost" : {
+      "comment" : "VoiceOver label in Session Screen"
+    },
+    "Family cost: %@" : {
+      "comment" : "%@ is the total cost of the session and its subagents"
+    },
+    "Fork from here" : {
+      "comment" : "Button title in Timeline Row View"
+    },
+    "Load earlier messages" : {
+      "comment" : "Shown in Timeline Collection"
+    },
+    "Loading conversation…" : {
+      "comment" : "Shown in Session Screen"
+    },
+    "Loading earlier messages…" : {
+      "comment" : "Shown in Timeline Collection"
+    },
+    "Loading the conversation from your server." : {
+      "comment" : "Shown in Session Screen"
+    },
+    "Model —" : {
+      "comment" : "Shown when the session model is unknown"
+    },
+    "Model: %@" : {
+      "comment" : "%@ is the model name"
+    },
+    "Move to queue" : {
+      "comment" : "Button title in Timeline Row View"
+    },
+    "Needs you" : {
+      "comment" : "Shown in Timeline Row View"
+    },
+    "New activity. Use Jump to latest to follow." : {
+      "comment" : "Shown in Timeline Collection"
+    },
+    "OK" : {
+      "comment" : "Button title in Timeline Row View"
+    },
+    "Open agent" : {
+      "comment" : "Button that opens a subagent session"
+    },
+    "Opening session…" : {
+      "comment" : "Shown in Session Screen"
+    },
+    "Pending" : {
+      "comment" : "Badge on a prompt waiting to be delivered"
+    },
+    "Permission" : {
+      "comment" : "Badge on a pending permission request in the timeline"
+    },
+    "Prompt" : {
+      "comment" : "Placeholder for the prompt text field"
+    },
+    "Question" : {
+      "comment" : "Badge on a pending question in the timeline"
+    },
+    "Queued" : {
+      "comment" : "Shown in Timeline Projection"
+    },
+    "Resend" : {
+      "comment" : "Button title in Saved Prompt Review"
+    },
+    "Retrying" : {
+      "comment" : "Shown in Timeline Collection"
+    },
+    "Revert message" : {
+      "comment" : "Button title in Timeline Row View"
+    },
+    "Review panel" : {
+      "comment" : "Icon button label in Session Screen"
+    },
+    "Run failed" : {
+      "comment" : "Shown in Timeline Row View"
+    },
+    "Saved more than 10 minutes ago. It will only be sent if you choose Send." : {
+      "comment" : "Text in Saved Prompt Review"
+    },
+    "Select text" : {
+      "comment" : "Button title in Session Screen"
+    },
+    "Send saved prompt" : {
+      "comment" : "Shown in Saved Prompt Review"
+    },
+    "Send this saved prompt?" : {
+      "comment" : "Shown in Saved Prompt Review"
+    },
+    "Sending" : {
+      "comment" : "Status badge: the prompt is being sent"
+    },
+    "Session" : {
+      "comment" : "Fallback title for a session without a title"
+    },
+    "Session information" : {
+      "comment" : "Menu title in Session Screen"
+    },
+    "Session unavailable" : {
+      "comment" : "Shown in Session Screen"
+    },
+    "Shell" : {
+      "comment" : "Title of a shell command row"
+    },
+    "Show all" : {
+      "comment" : "Shown in Turn Changes Card"
+    },
+    "Show less" : {
+      "comment" : "Shown in Turn Changes Card"
+    },
+    "Shows context and token usage" : {
+      "comment" : "VoiceOver hint in Session Screen"
+    },
+    "Subagent · read only" : {
+      "comment" : "Badge in Session Screen"
+    },
+    "Terminals" : {
+      "comment" : "Button title in Session Screen"
+    },
+    "The staged undo changed. Review and confirm it before resending." : {
+      "comment" : "Shown in Saved Prompt Review"
+    },
+    "Thinking" : {
+      "comment" : "Status: the model is reasoning"
+    },
+    "This prompt was not sent." : {
+      "comment" : "Shown in Saved Prompt Review"
+    },
+    "Timeline detail" : {
+      "comment" : "VoiceOver label in Session Screen"
+    },
+    "Try again" : {
+      "comment" : "Button title in Turn Changes Card"
+    },
+    "Untitled session" : {
+      "comment" : "Shown in Session Screen"
+    },
+    "Variant: %@" : {
+      "comment" : "%@ is the model variant name"
+    },
+    "View changed files" : {
+      "comment" : "Shown in Timeline Row View"
+    },
+    "Waiting for confirmation" : {
+      "comment" : "Shown in Timeline Row View"
+    },
+    "Waiting for connection" : {
+      "comment" : "Shown in Timeline Row View"
+    },
+    "Waiting for server…" : {
+      "comment" : "Label in Timeline Collection"
+    },
+    "Working" : {
+      "comment" : "Status while the agent is running"
+    },
+    "Writing" : {
+      "comment" : "Status: the model is writing a reply"
+    },
+    "You said" : {
+      "comment" : "VoiceOver prefix for the user's own prompt"
+    }
+  },
+  "version" : "1.0"
+}

@@ -1,0 +1,303 @@
+{
+  "sections": [
+    {
+      "id": "libraries",
+      "title": "Libraries",
+      "items": [
+        {
+          "name": "GRDB.swift",
+          "version": "7.8.0",
+          "license": "MIT",
+          "copyright": "Copyright (C) 2015-2025 Gwendal Roué",
+          "url": "https://github.com/groue/GRDB.swift",
+          "licenseFile": "GRDB-MIT.txt",
+          "package": "grdb.swift"
+        },
+        {
+          "name": "SwiftTerm",
+          "version": "1.99.1",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2019-2026 Miguel de Icaza; the xterm.js authors; SourceLair Private Company; Christopher Jeffrey",
+          "url": "https://github.com/migueldeicaza/SwiftTerm",
+          "licenseFile": "SwiftTerm-MIT.txt",
+          "package": "swiftterm"
+        },
+        {
+          "name": "Textual",
+          "version": "0.5.0",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2024 Guille Gonzalez",
+          "url": "https://github.com/gonzalezreal/textual",
+          "licenseFile": "Textual-MIT.txt",
+          "package": "textual"
+        },
+        {
+          "name": "SwiftUIMath",
+          "version": "0.1.0",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2026 Guille Gonzalez; (c) 2023 Computer Inspirations (SwiftMath); (c) 2013 MathChat (iosMath)",
+          "url": "https://github.com/gonzalezreal/swiftui-math",
+          "licenseFile": "SwiftUIMath-MIT.txt",
+          "package": "swiftui-math"
+        },
+        {
+          "name": "swift-concurrency-extras",
+          "version": "1.4.3",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2023 Point-Free",
+          "url": "https://github.com/pointfreeco/swift-concurrency-extras",
+          "licenseFile": "swift-concurrency-extras-MIT.txt",
+          "package": "swift-concurrency-extras"
+        },
+        {
+          "name": "swift-markdown",
+          "version": "0.7.3",
+          "license": "Apache-2.0",
+          "copyright": "Copyright (c) 2021 Apple Inc. and the Swift project authors",
+          "url": "https://github.com/swiftlang/swift-markdown",
+          "licenseFile": "swift-markdown-Apache-2.0.txt",
+          "package": "swift-markdown"
+        },
+        {
+          "name": "swift-cmark",
+          "version": "0.9.0",
+          "license": "BSD-2-Clause",
+          "copyright": "Copyright (c) 2014, John MacFarlane",
+          "url": "https://github.com/swiftlang/swift-cmark",
+          "licenseFile": "swift-cmark-BSD-2-Clause.txt",
+          "package": "swift-cmark"
+        },
+        {
+          "name": "SwiftTreeSitter",
+          "version": "0.10.0",
+          "license": "BSD-3-Clause",
+          "copyright": "Copyright (c) 2021, Chime",
+          "url": "https://github.com/tree-sitter/swift-tree-sitter",
+          "licenseFile": "SwiftTreeSitter-BSD-3-Clause.txt",
+          "package": "swift-tree-sitter"
+        },
+        {
+          "name": "tree-sitter",
+          "version": "0.25.10",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2018-2024 Max Brunsfeld",
+          "url": "https://github.com/tree-sitter/tree-sitter",
+          "licenseFile": "tree-sitter-MIT.txt",
+          "package": "tree-sitter"
+        }
+      ]
+    },
+    {
+      "id": "grammars",
+      "title": "Syntax highlighting grammars",
+      "items": [
+        {
+          "name": "tree-sitter-swift",
+          "version": "eda05af",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2021 alex-pinkus",
+          "url": "https://github.com/alex-pinkus/tree-sitter-swift",
+          "licenseFile": "tree-sitter-swift-MIT.txt",
+          "grammar": "swift"
+        },
+        {
+          "name": "tree-sitter-typescript",
+          "version": "0.23.2",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2017 Max Brunsfeld",
+          "url": "https://github.com/tree-sitter/tree-sitter-typescript",
+          "licenseFile": "tree-sitter-typescript-MIT.txt",
+          "grammar": "typescript"
+        },
+        {
+          "name": "tree-sitter-tsx",
+          "version": "0.23.2",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2017 Max Brunsfeld",
+          "url": "https://github.com/tree-sitter/tree-sitter-typescript",
+          "licenseFile": "tree-sitter-tsx-MIT.txt",
+          "grammar": "tsx"
+        },
+        {
+          "name": "tree-sitter-javascript",
+          "version": "0.23.1",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2014 Max Brunsfeld",
+          "url": "https://github.com/tree-sitter/tree-sitter-javascript",
+          "licenseFile": "tree-sitter-javascript-MIT.txt",
+          "grammar": "javascript"
+        },
+        {
+          "name": "tree-sitter-python",
+          "version": "0.23.6",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2016 Max Brunsfeld",
+          "url": "https://github.com/tree-sitter/tree-sitter-python",
+          "licenseFile": "tree-sitter-python-MIT.txt",
+          "grammar": "python"
+        },
+        {
+          "name": "tree-sitter-json",
+          "version": "0.24.8",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2014 Max Brunsfeld",
+          "url": "https://github.com/tree-sitter/tree-sitter-json",
+          "licenseFile": "tree-sitter-json-MIT.txt",
+          "grammar": "json"
+        },
+        {
+          "name": "tree-sitter-bash",
+          "version": "0.23.3",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2017 Max Brunsfeld",
+          "url": "https://github.com/tree-sitter/tree-sitter-bash",
+          "licenseFile": "tree-sitter-bash-MIT.txt",
+          "grammar": "bash"
+        },
+        {
+          "name": "tree-sitter-go",
+          "version": "0.23.4",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2014 Max Brunsfeld",
+          "url": "https://github.com/tree-sitter/tree-sitter-go",
+          "licenseFile": "tree-sitter-go-MIT.txt",
+          "grammar": "go"
+        },
+        {
+          "name": "tree-sitter-rust",
+          "version": "0.23.2",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2017 Maxim Sokolov",
+          "url": "https://github.com/tree-sitter/tree-sitter-rust",
+          "licenseFile": "tree-sitter-rust-MIT.txt",
+          "grammar": "rust"
+        },
+        {
+          "name": "tree-sitter-markdown",
+          "version": "0.5.1",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2021 Matthias Deiml",
+          "url": "https://github.com/tree-sitter-grammars/tree-sitter-markdown",
+          "licenseFile": "tree-sitter-markdown-MIT.txt",
+          "grammar": "markdown"
+        },
+        {
+          "name": "tree-sitter-yaml",
+          "version": "0.7.1",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2024 tree-sitter-grammars contributors; Copyright (c) 2019-2021 Ika",
+          "url": "https://github.com/tree-sitter-grammars/tree-sitter-yaml",
+          "licenseFile": "tree-sitter-yaml-MIT.txt",
+          "grammar": "yaml"
+        },
+        {
+          "name": "tree-sitter-html",
+          "version": "0.23.2",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2014 Max Brunsfeld",
+          "url": "https://github.com/tree-sitter/tree-sitter-html",
+          "licenseFile": "tree-sitter-html-MIT.txt",
+          "grammar": "html"
+        },
+        {
+          "name": "tree-sitter-css",
+          "version": "0.23.2",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2018 Max Brunsfeld",
+          "url": "https://github.com/tree-sitter/tree-sitter-css",
+          "licenseFile": "tree-sitter-css-MIT.txt",
+          "grammar": "css"
+        }
+      ]
+    },
+    {
+      "id": "assets",
+      "title": "Fonts, icons and design",
+      "items": [
+        {
+          "name": "OpenCode design tokens and icons",
+          "version": "d0732ea",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2025 opencode",
+          "url": "https://github.com/anomalyco/opencode",
+          "licenseFile": "opencode-MIT.txt"
+        },
+        {
+          "name": "Material Icon Theme file-type artwork",
+          "version": "5.39.0",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2025 Material Extensions; (c) 2021 Philipp Kief",
+          "url": "https://github.com/material-extensions/vscode-material-icon-theme",
+          "licenseFile": "material-icon-theme-MIT.txt"
+        },
+        {
+          "name": "Inter",
+          "version": "d0732ea",
+          "license": "OFL-1.1",
+          "copyright": "Copyright 2016 The Inter Project Authors",
+          "url": "https://github.com/rsms/inter",
+          "licenseFile": "Inter-OFL.txt"
+        },
+        {
+          "name": "JetBrains Mono Nerd Font Mono",
+          "version": "d0732ea",
+          "license": "OFL-1.1",
+          "copyright": "Copyright 2020 The JetBrains Mono Project Authors",
+          "url": "https://github.com/JetBrains/JetBrainsMono",
+          "licenseFile": "JetBrainsMono-OFL.txt"
+        }
+      ]
+    },
+    {
+      "id": "server",
+      "title": "Push plugin and relay",
+      "items": [
+        {
+          "name": "@hpke/core",
+          "version": "1.9.0",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2023 Ajitomi Daisuke",
+          "url": "https://github.com/dajiaji/hpke-js",
+          "licenseFile": "hpke-core-MIT.txt",
+          "npm": "server/plugin"
+        },
+        {
+          "name": "@hpke/common",
+          "version": "1.10.1",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2024 Ajitomi Daisuke",
+          "url": "https://github.com/dajiaji/hpke-js",
+          "licenseFile": "hpke-common-MIT.txt",
+          "npm": "server/plugin"
+        },
+        {
+          "name": "@hpke/dhkem-x25519",
+          "version": "1.8.0",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2023 Ajitomi Daisuke",
+          "url": "https://github.com/dajiaji/hpke-js",
+          "licenseFile": "hpke-dhkem-x25519-MIT.txt",
+          "npm": "server/plugin"
+        },
+        {
+          "name": "@hpke/chacha20poly1305",
+          "version": "1.8.0",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2023 Ajitomi Daisuke",
+          "url": "https://github.com/dajiaji/hpke-js",
+          "licenseFile": "hpke-chacha20poly1305-MIT.txt",
+          "npm": "server/plugin"
+        },
+        {
+          "name": "hono",
+          "version": "4.13.13",
+          "license": "MIT",
+          "copyright": "Copyright (c) 2021 - present, Yusuke Wada and Hono contributors",
+          "url": "https://github.com/honojs/hono",
+          "licenseFile": "hono-MIT.txt",
+          "npm": "server/relay"
+        }
+      ]
+    }
+  ]
+}

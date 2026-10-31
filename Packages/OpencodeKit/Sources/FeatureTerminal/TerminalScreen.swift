@@ -34,7 +34,7 @@ public struct TerminalScreen: View {
             if let gap = session.gap {
                 HStack(alignment: .top) {
                     OCBanner(TerminalStatusText.gap(gap), tone: .warning)
-                    OCIconButton("Dismiss", icon: "close") { session.gap = nil }
+                    OCIconButton(localized("Dismiss"), icon: "close") { session.gap = nil }
                 }.padding(.horizontal, OCSpacing.sm).accessibilityIdentifier("terminalGap")
             }
             // A passing connection state floats over the terminal, so its size, and the program's, stay put.
@@ -44,7 +44,7 @@ public struct TerminalScreen: View {
             }
         }
         .background(OCColor.background)
-        .navigationTitle(session.info?.title ?? "Terminal")
+        .navigationTitle(session.info?.title ?? localized("Terminal", comment: "Fallback title of a terminal"))
         .toolbar { if !showsHeader { ToolbarItem(placement: .topBarTrailing) { menu } } }
         .task(id: ObjectIdentifier(session)) { engine = TerminalEngines.shared.engine(for: session, fontSize: fontSize, optionAsMeta: optionAsMeta) }
         .onChange(of: fontSize) { engine?.update(fontSize: fontSize, optionAsMeta: optionAsMeta) }
@@ -52,13 +52,13 @@ public struct TerminalScreen: View {
         .onChange(of: session.removedFromServer) { _, removed in if removed { TerminalEngines.shared.drop(session); back?() } }
         .focusedSceneValue(\.ocTerminalCommand, OCTerminalCommand(owner: owner, id: session.id) { requestClose() })
         .sheet(isPresented: $closing) {
-            OCConfirmationSheet("Close \(session.info?.title ?? "terminal")?", message: "Its process is still running and will be stopped.",
-                                confirmTitle: "Close terminal", cancel: { closing = false }) { closing = false; list.close(session.id) }.ocSheet()
+            OCConfirmationSheet(session.info.map { localized("Close \($0.title)?", comment: "%@ is the terminal title") } ?? localized("Close terminal?"), message: localized("Its process is still running and will be stopped."),
+                                confirmTitle: localized("Close terminal"), cancel: { closing = false }) { closing = false; list.close(session.id) }.ocSheet()
         }
-        .alert("Rename terminal", isPresented: $renaming) {
-            TextField("Title", text: $title).accessibilityIdentifier("terminalTitleField")
-            Button("Rename") { list.rename(session.id, title: title) }
-            Button("Cancel", role: .cancel) {}
+        .alert(localized("Rename terminal"), isPresented: $renaming) {
+            TextField(localized("Title", comment: "Placeholder for the terminal title field"), text: $title).accessibilityIdentifier("terminalTitleField")
+            Button(localized("Rename")) { list.rename(session.id, title: title) }
+            Button(localized("Cancel"), role: .cancel) {}
         }
     }
     private func banner(_ status: String) -> some View {
@@ -66,20 +66,20 @@ public struct TerminalScreen: View {
     }
     private var header: some View {
         HStack(spacing: OCSpacing.sm) {
-            if let back { OCIconButton("All terminals", icon: "chevron-left", action: back).accessibilityIdentifier("terminalBack") }
-            Text(session.info?.title ?? "Terminal").font(OCType.button).lineLimit(1)
+            if let back { OCIconButton(localized("All terminals"), icon: "chevron-left", action: back).accessibilityIdentifier("terminalBack") }
+            Text(session.info?.title ?? localized("Terminal", comment: "Fallback title of a terminal")).font(OCType.button).lineLimit(1)
             Spacer(minLength: 0)
             menu
         }.padding(.horizontal, OCSpacing.sm).frame(minHeight: OCLayout.touchTarget)
     }
     private var menu: some View {
         Menu {
-            Button("Rename") { title = session.info?.title ?? ""; renaming = true }
-            Button("Run a command", action: runCommand)
+            Button(localized("Rename")) { title = session.info?.title ?? ""; renaming = true }
+            Button(localized("Run a command"), action: runCommand)
             Divider()
-            Button("Close terminal", role: .destructive) { requestClose() }
+            Button(localized("Close terminal"), role: .destructive) { requestClose() }
         } label: { OCIcon("dot-grid").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
-            .buttonStyle(.plain).accessibilityLabel("Terminal actions").accessibilityIdentifier("terminalActions")
+            .buttonStyle(.plain).accessibilityLabel(localized("Terminal actions")).accessibilityIdentifier("terminalActions")
     }
     /// Closing ends the process, so a running one asks first; an exited terminal closes at once.
     private func requestClose() {
@@ -97,23 +97,23 @@ enum TerminalStatusText {
     }
     static func status(_ phase: TerminalLink.Phase) -> String? {
         switch phase {
-        case .idle, .connecting: "Connecting…"
-        case .replaying: "Catching up…"
+        case .idle, .connecting: localized("Connecting…")
+        case .replaying: localized("Catching up…")
         case .live, .suspended: nil
-        case .waiting, .checking: "Connection lost. Reconnecting…"
-        case .exited(let code?): code == 0 ? "The process exited." : "The process exited with code \(code)."
-        case .exited(nil): "The process exited."
-        case .gone: "This terminal was closed."
+        case .waiting, .checking: localized("Connection lost. Reconnecting…")
+        case .exited(let code?): code == 0 ? localized("The process exited.") : localized("The process exited with code \(code).", comment: "%lld is the exit code")
+        case .exited(nil): localized("The process exited.")
+        case .gone: localized("This terminal was closed.")
         }
     }
     static func gap(_ gap: TerminalGap) -> String {
         switch gap {
         case .lost(let units):
-            "About \(units.formatted()) characters of output were lost while this terminal was disconnected: the server keeps only its latest 2 MiB."
-        case .trimmed(let units): "The first \(units.formatted()) characters of output are no longer on the server."
-        case .positionReset: "The server's output no longer matches this screen, so it was redrawn from what the server kept."
-        case .skipped: "Output printed while this screen was saved is not shown."
-        case .exitedWhileAway: "The process exited while this terminal was disconnected; output after the saved screen is not available."
+            localized("About \(units.formatted()) characters of output were lost while this terminal was disconnected: the server keeps only its latest 2 MiB.", comment: "%@ is a formatted character count")
+        case .trimmed(let units): localized("The first \(units.formatted()) characters of output are no longer on the server.", comment: "%@ is a formatted character count")
+        case .positionReset: localized("The server's output no longer matches this screen, so it was redrawn from what the server kept.")
+        case .skipped: localized("Output printed while this screen was saved is not shown.")
+        case .exitedWhileAway: localized("The process exited while this terminal was disconnected; output after the saved screen is not available.")
         }
     }
 }

@@ -80,7 +80,7 @@ public struct ReadPresenter: ToolPresenter {
     public init() {}
     public func matches(_ name: String) -> Bool { name == "read" }
     public func detail(_ tool: ContentFields) -> ToolPresentation {
-        var value = base(tool, title: "Read", style: .explore, icon: "glasses", subtitle: ReadInput(raw: tool.toolState.fields.input).filePath)
+        var value = base(tool, title: localized("Read", comment: "Title of a tool call that read a file"), style: .explore, icon: "glasses", subtitle: ReadInput(raw: tool.toolState.fields.input).filePath)
         // A read of a directory lists its entries; there is no file to open.
         if !value.output.hasPrefix("Read directory") { value.path = ReadInput(raw: tool.toolState.fields.input).filePath }
         return value
@@ -105,7 +105,7 @@ public struct EditPresenter: ToolPresenter {
     public func matches(_ name: String) -> Bool { name == "edit" }
     public func detail(_ tool: ContentFields) -> ToolPresentation {
         let path = EditInput(raw: tool.toolState.fields.input).filePath
-        var value = base(tool, title: "Edit", style: .diff, icon: "edit", subtitle: path)
+        var value = base(tool, title: localized("Edit", comment: "Title of a tool call that edited a file"), style: .diff, icon: "edit", subtitle: path)
         value.path = path
         value.files = tool.toolState.fields.metadata?["files"]?.lossy(FileDiff.self).values ?? []
         return value
@@ -115,7 +115,7 @@ public struct PatchPresenter: ToolPresenter {
     public init() {}
     public func matches(_ name: String) -> Bool { ["patch", "apply_patch"].contains(name) }
     public func detail(_ tool: ContentFields) -> ToolPresentation {
-        var value = EditPresenter().detail(tool); value.title = "Patch"; return value
+        var value = EditPresenter().detail(tool); value.title = localized("Patch", comment: "Title of a tool call that applied a patch"); return value
     }
 }
 public struct WritePresenter: ToolPresenter {
@@ -123,8 +123,8 @@ public struct WritePresenter: ToolPresenter {
     public func matches(_ name: String) -> Bool { name == "write" }
     public func detail(_ tool: ContentFields) -> ToolPresentation {
         let input = WriteInput(raw: tool.toolState.fields.input)
-        var value = base(tool, title: "Write", style: .addedFile, icon: "edit", subtitle: input.filePath)
-        value.output = input.content ?? ""; value.badge = "Added file"; value.path = input.filePath; return value
+        var value = base(tool, title: localized("Write", comment: "Title of a tool call that wrote a file"), style: .addedFile, icon: "edit", subtitle: input.filePath)
+        value.output = input.content ?? ""; value.badge = localized("Added file"); value.path = input.filePath; return value
     }
 }
 public struct ShellPresenter: ToolPresenter {
@@ -132,11 +132,11 @@ public struct ShellPresenter: ToolPresenter {
     public func matches(_ name: String) -> Bool { ["shell", "bash"].contains(name) }
     public func detail(_ tool: ContentFields) -> ToolPresentation {
         let state = tool.toolState.fields, input = ShellInput(raw: state.input), meta = state.metadata
-        var value = base(tool, title: "Shell", style: .shell, icon: "terminal", subtitle: input.description ?? input.command)
+        var value = base(tool, title: localized("Shell", comment: "Title of a shell command row"), style: .shell, icon: "terminal", subtitle: input.description ?? input.command)
         value.input = input.command ?? ""; value.shellID = meta?["shellID"]?.stringValue
         value.failed = value.failed || ToolPresentation.shellFailed(meta)
-        if meta?["timeout"]?.boolValue == true || meta?["status"]?.stringValue == "timeout" { value.badge = "Timed out" }
-        else if let exit = meta?["exit"]?.wireNumber { value.badge = "Exit \(Int(clamping: exit))" }
+        if meta?["timeout"]?.boolValue == true || meta?["status"]?.stringValue == "timeout" { value.badge = localized("Timed out") }
+        else if let exit = meta?["exit"]?.wireNumber { value.badge = localized("Exit \(Int(clamping: exit))", comment: "Badge; %lld is the shell exit code") }
         return value
     }
 }
@@ -145,7 +145,7 @@ public struct SubagentPresenter: ToolPresenter {
     public func matches(_ name: String) -> Bool { ["subagent", "task"].contains(name) }
     public func detail(_ tool: ContentFields) -> ToolPresentation {
         let input = SubagentInput(raw: tool.toolState.fields.input)
-        var value = base(tool, title: input.agent?.capitalized ?? "Agent", style: .subagent, icon: "subagent", subtitle: input.description)
+        var value = base(tool, title: input.agent?.capitalized ?? localized("Agent", comment: "Title of a subagent tool call"), style: .subagent, icon: "subagent", subtitle: input.description)
         value.childID = tool.toolState.fields.metadata?["sessionID"]?.stringValue ?? input.sessionID
         value.input = input.prompt ?? ""; return value
     }
@@ -155,7 +155,7 @@ public struct QuestionPresenter: ToolPresenter {
     public func matches(_ name: String) -> Bool { name == "question" }
     public func detail(_ tool: ContentFields) -> ToolPresentation {
         let state = tool.toolState.fields, questions = QuestionInput(raw: state.input).questions
-        var value = base(tool, title: "Questions", style: .question, icon: "bubble-5")
+        var value = base(tool, title: localized("Questions"), style: .question, icon: "bubble-5")
         value.input = questions.map { $0.string("question") }.joined(separator: "\n\n")
         if let answers = state.metadata?["answers"]?.arrayValue {
             value.output = answers.map { $0.arrayValue?.compactMap(\.stringValue).joined(separator: ", ") ?? $0.stringValue ?? "" }.joined(separator: "\n")
@@ -167,7 +167,7 @@ public struct SkillPresenter: ToolPresenter {
     public init() {}
     public func matches(_ name: String) -> Bool { name == "skill" }
     public func detail(_ tool: ContentFields) -> ToolPresentation {
-        base(tool, title: "Loaded skill", style: .compact, icon: "post-skill", subtitle: SkillInput(raw: tool.toolState.fields.input).name)
+        base(tool, title: localized("Loaded skill"), style: .compact, icon: "post-skill", subtitle: SkillInput(raw: tool.toolState.fields.input).name)
     }
 }
 public struct WebfetchPresenter: ToolPresenter {
@@ -221,7 +221,7 @@ public struct TodoPresenter: ToolPresenter {
     public init() {}
     public func matches(_ name: String) -> Bool { ["todowrite", "todoread"].contains(name) }
     public func detail(_ tool: ContentFields) -> ToolPresentation {
-        var value = base(tool, title: "Tasks", style: .compact, icon: "task")
+        var value = base(tool, title: localized("Tasks", comment: "Title of a to-do list tool call"), style: .compact, icon: "task")
         value.output = TodoInput(raw: tool.toolState.fields.input).todos.map { "\($0.string("status")): \($0.string("content"))" }.joined(separator: "\n")
         return value
     }
@@ -234,7 +234,7 @@ private func explore(_ tool: ContentFields, title: String, countKey: String) -> 
     if let pattern = input["pattern"]?.stringValue { detail += " pattern=" + pattern }
     if let include = input["include"]?.stringValue { detail += " include=" + include }
     if let count = state.metadata?[countKey]?.wireNumber, count > 0, count < Double(Int.max) {
-        detail += " · (\(Int(count)) \(count == 1 ? "match" : "matches"))"
+        detail += " · " + localized("(\(Int(count)) matches)", comment: "%lld is the number of search matches")
     }
     return base(tool, title: title, style: .explore, icon: "magnifying-glass", subtitle: detail)
 }
@@ -252,6 +252,6 @@ public struct TranscriptImage: Equatable, Sendable, Identifiable {
         }
         let type = mime.isEmpty ? uri.map { String($0.dropFirst(5).prefix { $0 != ";" && $0 != "," }) } ?? "" : mime
         guard let encoded, !encoded.isEmpty, type.hasPrefix("image/") else { return nil }
-        self.name = name ?? "Image"; self.mime = type; self.base64 = encoded
+        self.name = name ?? localized("Image", comment: "Name of an image with no file name"); self.mime = type; self.base64 = encoded
     }
 }

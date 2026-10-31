@@ -25,13 +25,13 @@ public struct SessionActivityAttributes: Codable, Sendable, Hashable {
         public var isFinal: Bool { ["succeeded", "failed", "interrupted"].contains(phase) }
         public var label: String {
             switch phase {
-            case "running": "Running"
-            case "needsInput": "Needs you"
-            case "retrying": "Retrying"
-            case "succeeded": "Finished"
-            case "failed": "Failed"
-            case "interrupted": "Stopped"
-            default: "Open for status"
+            case "running": localized("Running", comment: "Live Activity session status")
+            case "needsInput": localized("Needs you", comment: "Live Activity session status")
+            case "retrying": localized("Retrying", comment: "Live Activity session status")
+            case "succeeded": localized("Finished", comment: "Live Activity session status")
+            case "failed": localized("Failed", comment: "Live Activity session status")
+            case "interrupted": localized("Stopped", comment: "Live Activity session status")
+            default: localized("Open for status")
             }
         }
         public var symbol: String {

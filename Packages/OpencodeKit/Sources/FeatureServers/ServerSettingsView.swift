@@ -7,6 +7,13 @@ import FeatureSettings
 import FeatureTerminal
 
 struct ServerSettingsView: View {
+    /// The app's version and build; snapshots pass a fixed one, since a test host reports its own.
+    var appVersion = ServerSettingsView.bundleVersion
+    static var bundleVersion: String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "0"
+        return (info?["CFBundleVersion"] as? String).map { localized("\(version) (\($0))", comment: "App version, then build number") } ?? version
+    }
     let registry: ServerRegistry
     var addOnOpen = false
     /// Opens straight into one server's settings section.
@@ -29,11 +36,11 @@ struct ServerSettingsView: View {
         NavigationStack {
             OCForm {
                 VStack(alignment: .leading, spacing: OCSpacing.sm) {
-                    Text("Servers").font(OCType.title).accessibilityAddTraits(.isHeader)
-                    Text("Manage server connections").foregroundStyle(OCColor.textMuted)
+                    Text(localized("Servers")).font(OCType.title).accessibilityAddTraits(.isHeader)
+                    Text(localized("Manage server connections")).foregroundStyle(OCColor.textMuted)
                 }
                 if let controller = registry.notifications {
-                    NavigationLink { NotificationSettings(controller: controller) } label: { OCLabel("Notifications", icon: "notifications") }
+                    NavigationLink { NotificationSettings(controller: controller) } label: { OCLabel(localized("Notifications"), icon: "notifications").frame(minHeight: OCLayout.touchTarget, alignment: .leading).contentShape(Rectangle()) }
                         .font(OCType.body).accessibilityIdentifier("notificationSettings")
                 }
                 ForEach(registry.servers) { server in
@@ -45,27 +52,35 @@ struct ServerSettingsView: View {
                             }
                         }
                     }.buttonStyle(.plain).accessibilityIdentifier("serverRow")
-                        .accessibilityHint("Open server details and connection diagnostics")
+                        .accessibilityHint(localized("Open server details and connection diagnostics"))
                 }
-                Button { adding = true } label: { OCLabel("Add server", icon: "plus") }
+                Button { adding = true } label: { OCLabel(localized("Add server"), icon: "plus") }
                     .buttonStyle(OCButtonStyle()).accessibilityIdentifier("addServer")
-                Text("Your credentials stay in this device’s Keychain.").font(OCType.small).foregroundStyle(OCColor.textMuted)
-                OCSection("App") {
+                Text(localized("Your credentials stay in this device’s Keychain.")).font(OCType.small).foregroundStyle(OCColor.textMuted)
+                OCSection(localized("App", comment: "Settings section for app-wide preferences")) {
                     followUpRow
-                    OCToggleRow("Wrap lines", detail: "Wrap long lines in diffs and files.", isOn: $wrapLines)
-                    OCToggleRow("Changed files", detail: "List the files each turn changed when it finishes.", isOn: $changedFiles)
-                    OCToggleRow("Show agent", detail: "Switch between agents in the composer. When hidden, defaults to Build agent.", isOn: $showAgent)
+                    OCToggleRow(localized("Wrap lines"), detail: localized("Wrap long lines in diffs and files."), isOn: $wrapLines)
+                    OCToggleRow(localized("Changed files"), detail: localized("List the files each turn changed when it finishes."), isOn: $changedFiles)
+                    OCToggleRow(localized("Show agent"), detail: localized("Switch between agents in the composer. When hidden, defaults to Build agent."), isOn: $showAgent)
                         .accessibilityIdentifier("showAgent")
                 }
-                OCSection("Terminal") {
+                OCSection(localized("Terminal")) {
                     terminalFontRow
-                    OCToggleRow("Option as Meta", detail: "With a hardware keyboard, Option sends Escape before the key, as shell and editor shortcuts expect. Turn it off to type the characters your keyboard puts on Option.",
+                    OCToggleRow(localized("Option as Meta", comment: "Terminal setting: the Option key acts as the Meta key"), detail: localized("With a hardware keyboard, Option sends Escape before the key, as shell and editor shortcuts expect. Turn it off to type the characters your keyboard puts on Option."),
                                 isOn: $optionAsMeta).accessibilityIdentifier("terminalOptionAsMeta")
                 }
                 if let system = registry.system { SystemIntegrationSection(system: system) }
+                OCSection(localized("About")) {
+                    LabeledContent(localized("Version"), value: appVersion)
+                    LabeledContent(localized("Works with", comment: "Row label; the value is the oldest supported opencode version"),
+                                   value: localized("opencode \(ServerInfo.minimumVersion) or later"))
+                        .accessibilityIdentifier("minimumServerVersion")
+                    NavigationLink { AcknowledgementsView() } label: { OCLabel(localized("Acknowledgements"), icon: "info") }
+                        .font(OCType.body).accessibilityIdentifier("acknowledgements")
+                }
             }
-            .ocNavigationTitle("Settings")
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() }.accessibilityIdentifier("closeSettings") } }
+            .ocNavigationTitle(localized("Settings"))
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(localized("Done")) { dismiss() }.accessibilityIdentifier("closeSettings") } }
             .navigationDestination(item: $selection) { id in
                 if let server = registry.servers.first(where: { $0.id == id }) {
                     ServerDetailView(registry: registry, server: server) { repairing = server }
@@ -100,16 +115,16 @@ struct ServerSettingsView: View {
             : AnyLayout(HStackLayout(spacing: OCSpacing.sm))
         return layout {
             VStack(alignment: .leading, spacing: OCSpacing.xs) {
-                Text("Follow-up behavior").font(OCType.body)
-                Text("While the agent is working, Steer adds your message to the current run; Queue sends it after the run finishes.")
+                Text(localized("Follow-up behavior")).font(OCType.body)
+                Text(localized("While the agent is working, Steer adds your message to the current run; Queue sends it after the run finishes."))
                     .font(OCType.small).foregroundStyle(OCColor.textMuted)
             }.frame(maxWidth: .infinity, alignment: .leading).accessibilityHidden(true)
-            Picker("Follow-up behavior", selection: $followUp) {
-                Text("Steer").tag("steer")
-                Text("Queue").tag("queue")
+            Picker(localized("Follow-up behavior"), selection: $followUp) {
+                Text(localized("Steer", comment: "Follow-up option: add the message to the current run")).tag("steer")
+                Text(localized("Queue", comment: "Follow-up option: send the message after the run")).tag("queue")
             }.pickerStyle(.menu).labelsHidden().font(OCType.body).frame(minHeight: OCLayout.touchTarget)
-                .accessibilityLabel("Follow-up behavior")
-                .accessibilityHint("While the agent is working, Steer adds your message to the current run; Queue sends it after the run finishes.")
+                .accessibilityLabel(localized("Follow-up behavior"))
+                .accessibilityHint(localized("While the agent is working, Steer adds your message to the current run; Queue sends it after the run finishes."))
                 .accessibilityIdentifier("followUpBehavior")
         }
     }
@@ -117,8 +132,8 @@ struct ServerSettingsView: View {
     private var terminalFontRow: some View {
         Stepper(value: $terminalFontSize, in: TerminalSettings.fontSizes, step: 1) {
             VStack(alignment: .leading, spacing: OCSpacing.xs) {
-                Text("Font size").font(OCType.body)
-                Text("\(Int(terminalFontSize)) points, in terminals only.").font(OCType.small).foregroundStyle(OCColor.textMuted)
+                Text(localized("Font size")).font(OCType.body)
+                Text(localized("\(Int(terminalFontSize)) points, in terminals only.", comment: "%lld is the terminal font size")).font(OCType.small).foregroundStyle(OCColor.textMuted)
             }
         }.frame(minHeight: OCLayout.touchTarget).accessibilityIdentifier("terminalFontSize")
     }

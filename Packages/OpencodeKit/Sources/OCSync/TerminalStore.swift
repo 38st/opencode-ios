@@ -51,12 +51,17 @@ import OCPersistence
     public func disappear() { viewers = max(0, viewers - 1) }
     public func refresh() {
         owned { list in
+            // Terminals created while the list loads are not in its answer; only those known before it can be gone.
+            let known = Set(list.terminals.map(\.id))
             guard let api = try await list.store?.client?() else { return }
             let found = try await api.send(TerminalEndpoints.list(list.directory)).data.values
-            list.terminals = found.sorted { $0.id < $1.id }; list.loaded = true; list.error = nil
+            let ids = Set(found.map(\.id))
+            let added = list.terminals.filter { !known.contains($0.id) && !ids.contains($0.id) }
+            list.terminals = (found + added).sorted { $0.id < $1.id }; list.loaded = true; list.error = nil
+            for (id, session) in list.sessions where known.contains(id) && !ids.contains(id) { list.sessions[id] = nil; session.removed() }
             // A restarted server has forgotten its PTYs; so do their saved screens.
-            if let store = list.store { try? await store.cache?.writer.forgetTerminals(serverID: store.serverID, directory: list.directory, keeping: Set(found.map(\.id))) }
-        } failure: { $0.error = "Could not load terminals." }
+            if let store = list.store { try? await store.cache?.writer.forgetTerminals(serverID: store.serverID, directory: list.directory, keeping: ids.union(added.map(\.id))) }
+        } failure: { $0.error = localized("Could not load terminals.") }
         if shells.isEmpty {
             owned { list in
                 guard let api = try await list.store?.client?() else { return }
@@ -74,7 +79,7 @@ import OCPersistence
             let title = TerminalTitles.next(after: list.terminals.map(\.title))
             let info = try await api.send(TerminalEndpoints.create(list.directory, command: shell?.path, title: title)).data
             list.upsert(info); list.selected = info.id
-        } failure: { $0.error = "Could not start a terminal." }
+        } failure: { $0.error = localized("Could not start a terminal.") }
     }
     public func rename(_ id: String, title: String) {
         let title = title.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -82,7 +87,7 @@ import OCPersistence
         owned { list in
             guard let api = try await list.store?.client?() else { return }
             list.upsert(try await api.send(TerminalEndpoints.update(id, directory: list.directory, title: title)).data)
-        } failure: { $0.error = "Could not rename the terminal." }
+        } failure: { $0.error = localized("Could not rename the terminal.") }
     }
     /// Ends the process if it runs and removes the terminal; its saved screen goes too.
     public func close(_ id: String) {
@@ -91,7 +96,7 @@ import OCPersistence
             do { try await api.send(TerminalEndpoints.delete(id, directory: list.directory)) }
             catch APIError.server(_, 404, _) {}
             list.removed(id)
-        } failure: { $0.error = "Could not close the terminal." }
+        } failure: { $0.error = localized("Could not close the terminal.") }
     }
     public func clearExited() { for terminal in terminals where terminal.status == .exited { close(terminal.id) } }
 
@@ -113,6 +118,11 @@ import OCPersistence
     func connected() {
         if viewers > 0 { refresh() }
         for session in sessions.values { session.serverConnected() }
+    }
+    /// The server was removed: every terminal's renderer and socket go, whether or not a screen shows it.
+    func endAll() {
+        for session in sessions.values { session.removed() }
+        sessions = [:]
     }
     /// Saves each shown terminal and closes its socket, and waits until the saves are written.
     func suspend() async {
@@ -175,6 +185,7 @@ import OCPersistence
     @ObservationIgnored private var generation = 0
     /// While the screen restored from the saved point is the latest one stored, an update without new output is skipped.
     @ObservationIgnored private var unsaved = false
+    @ObservationIgnored private var savedExitedLive = false
 
     init(store: ReadStore?, list: TerminalListModel, id: String) { self.store = store; self.list = list; self.id = id }
 
@@ -189,8 +200,9 @@ import OCPersistence
         var saved: TerminalResume?
         if let store, let writer = store.cache?.writer { saved = try? await writer.terminal(serverID: store.serverID, ptyID: id, now: store.clock.date()) }
         guard self.engine === engine, !removedFromServer else { return }
+        savedExitedLive = saved?.exitedLive ?? false
         if let saved, !saved.screen.isEmpty { engine.restore(saved.screen, cols: saved.cols, rows: saved.rows) }
-        if let info, info.status == .exited { run(link.exited(code: info.exitCode, cursor: saved?.cursor)); return }
+        if let info, info.status == .exited { run(link.exited(code: info.exitCode, cursor: saved?.cursor, seenLive: saved?.exitedLive ?? false)); return }
         run(link.start(cursor: saved?.cursor, restoredScreen: !(saved?.screen.isEmpty ?? true)))
     }
     /// The renderer goes away: save and disconnect. A later `attach` starts from what was saved.
@@ -199,7 +211,10 @@ import OCPersistence
     func saved() async { await persistTask?.value }
     public func resume() { if engine != nil { run(link.resume()) } }
     func serverConnected() { guard engine != nil else { return }; run(link.resume()); run(link.retryNow()) }
-    func removed() { removedFromServer = true; run(link.removed()); stop() }
+    func removed() { removedFromServer = true; run(link.removed()); stop(); Self.ended?(self) }
+    /// Called whenever a terminal ends for good (closed, deleted on the server or its server removed), so the UI can
+    /// release its renderer even when no screen shows it.
+    public static var ended: ((TerminalSession) -> Void)?
     func stop() {
         reader?.cancel(); writer?.cancel(); timer?.cancel(); statusTask?.cancel(); sizeTimer?.cancel()
         sizeSender?.cancel()
@@ -372,13 +387,14 @@ import OCPersistence
 
     /// Saves the cursor with the screen it matches; the screen is read after every counted byte has been fed.
     private func persist() {
-        guard let store, let writer = store.cache?.writer, let engine, let cursor = link.cursor, unsaved || lastPersist == nil else { return }
+        guard let store, let writer = store.cache?.writer, let engine, let cursor = link.cursor,
+              unsaved || lastPersist == nil || link.exitedLive != savedExitedLive else { return }
         let size = engine.size
         var screen = engine.snapshot(scrollback: 2_000) ?? ""
         for rows in [500, 0] where screen.utf8.count > TerminalResume.screenLimit { screen = engine.snapshot(scrollback: rows) ?? "" }
         let value = TerminalResume(serverID: store.serverID, ptyID: id, directory: directory, cursor: cursor, cols: size.cols, rows: size.rows,
-                                   screen: screen, updated: store.clock.date())
-        lastPersist = store.clock.now(); unsaved = false
+                                   screen: screen, updated: store.clock.date(), exitedLive: link.exitedLive)
+        lastPersist = store.clock.now(); unsaved = false; savedExitedLive = link.exitedLive
         let previous = persistTask
         persistTask = Task { await previous?.value; try? await writer.saveTerminal(value) }
     }

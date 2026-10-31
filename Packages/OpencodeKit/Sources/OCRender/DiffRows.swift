@@ -54,7 +54,7 @@ public enum DiffRows {
                 rows.append(.init(id: -h - 1, label: document.hunks[h].heading))
             }
             if let range = folded[index] {
-                rows.append(.init(id: index, hidden: range, expandable: true, label: "\(range.count) hidden lines")); index = range.upperBound; continue
+                rows.append(.init(id: index, hidden: range, expandable: true, label: localized("\(range.count) hidden lines", comment: "%lld is the number of folded unchanged lines"))); index = range.upperBound; continue
             }
             if !visible.contains(index) { index += 1; continue }
             let line = document.lines[index]

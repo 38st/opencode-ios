@@ -15,31 +15,31 @@ struct UsageStatisticsSection: View {
     var body: some View {
         OCForm {
             VStack(alignment: .leading, spacing: OCSpacing.md) {
-                OCSegmentedControl("Range", options: StatsRange.Preset.allCases.map { ($0, $0.title) }, selection: $preset)
+                OCSegmentedControl(localized("Range", comment: "Date range for usage statistics"), options: StatsRange.Preset.allCases.map { ($0, $0.title) }, selection: $preset)
                     .accessibilityIdentifier("statsRange")
                 if server.projects.count > 1 {
                     Menu {
-                        Picker("Project", selection: $projectID) {
-                            Text("All projects").tag(String?.none)
+                        Picker(localized("Project"), selection: $projectID) {
+                            Text(localized("All projects")).tag(String?.none)
                             ForEach(server.projects) { project in Text(name(project)).tag(Optional(project.id)) }
                         }
                     } label: {
                         HStack(spacing: OCSpacing.sm) {
                             OCIcon("folder").foregroundStyle(OCColor.iconMuted)
-                            Text(projectID.flatMap { id in server.projects.first { $0.id == id }.map(name) } ?? "All projects").font(OCType.body).foregroundStyle(OCColor.text)
+                            Text(projectID.flatMap { id in server.projects.first { $0.id == id }.map(name) } ?? localized("All projects")).font(OCType.body).foregroundStyle(OCColor.text)
                             OCIcon("chevron-down", size: 12).foregroundStyle(OCColor.iconMuted)
                         }.frame(minHeight: OCLayout.touchTarget)
                     }.accessibilityIdentifier("statsProject")
                 }
-                Text("Days in " + TimeZone.current.identifier).font(OCType.small).foregroundStyle(OCColor.textMuted)
+                Text(localized("Days in \(TimeZone.current.identifier)", comment: "%@ is a time zone identifier")).font(OCType.small).foregroundStyle(OCColor.textMuted)
             }
             if let error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).ocAnnounce(error, initial: true) }
             if let stats {
                 if stats.isEmpty {
-                    OCEmptyState("No activity", detail: "No sessions ran in this range.", icon: "window-analytics", presentation: .panel) { EmptyView() }
+                    OCEmptyState(localized("No activity"), detail: localized("No sessions ran in this range."), icon: "window-analytics", presentation: .panel) { EmptyView() }
                         .accessibilityIdentifier("statsEmpty")
                 } else { content(stats) }
-            } else if loading { ProgressView("Loading statistics…").font(OCType.small) }
+            } else if loading { ProgressView(localized("Loading statistics…")).font(OCType.small) }
         }
         .task(id: Query(preset: preset, projectID: projectID)) { await load() }
         .refreshable { await load() }
@@ -51,36 +51,36 @@ struct UsageStatisticsSection: View {
             let next = try await server.readPath.stats(StatsRange(preset, now: .now), projectID: projectID)
             try Task.checkCancellation(); stats = next; error = nil
         } catch is CancellationError {} catch {
-            if !WriteErrorMessage.isCancellation(error) { self.error = "Could not load statistics. " + WriteErrorMessage.message(error) }
+            if !WriteErrorMessage.isCancellation(error) { self.error = localized("Could not load statistics. \(WriteErrorMessage.message(error))", comment: "%@ is the error message") }
         }
     }
     @ViewBuilder private func content(_ stats: SessionStats) -> some View {
-        OCSection("Activity") {
-            metric("Sessions", "\(stats.sessions)" + (stats.subagents > 0 ? " · \(stats.subagents) subagents" : ""))
-            metric("Prompts", "\(stats.prompts)")
-            metric("Steps", "\(stats.steps)")
-            metric("Active days", "\(stats.activeDays)")
-            metric("Best streak", "\(stats.streak) " + (stats.streak == 1 ? "day" : "days"))
-            if let busiest = stats.activity.max(by: { $0.steps < $1.steps }) { metric("Busiest day", busiest.date + " · \(busiest.steps) steps") }
+        OCSection(localized("Activity")) {
+            metric(localized("Sessions"), "\(stats.sessions)" + (stats.subagents > 0 ? " · " + localized("\(stats.subagents) subagents", comment: "%lld is the number of subagent sessions") : ""))
+            metric(localized("Prompts"), "\(stats.prompts)")
+            metric(localized("Steps"), "\(stats.steps)")
+            metric(localized("Active days"), "\(stats.activeDays)")
+            metric(localized("Best streak"), localized("\(stats.streak) days", comment: "%lld is the number of consecutive days"))
+            if let busiest = stats.activity.max(by: { $0.steps < $1.steps }) { metric(localized("Busiest day"), busiest.date + " · " + localized("\(busiest.steps) steps", comment: "%lld is the number of agent steps")) }
         }.accessibilityIdentifier("statsActivity")
-        OCSection("Tokens and cost") {
-            metric("Cost", stats.cost.formatted(.currency(code: "USD")))
-            metric("Input", count(stats.tokens.input))
-            metric("Output", count(stats.tokens.output))
-            if stats.tokens.reasoning > 0 { metric("Reasoning", count(stats.tokens.reasoning)) }
-            metric("Cache read · write", count(stats.tokens.cacheRead) + " · " + count(stats.tokens.cacheWrite))
+        OCSection(localized("Tokens and cost")) {
+            metric(localized("Cost"), stats.cost.formatted(.currency(code: "USD")))
+            metric(localized("Input", comment: "Input tokens"), count(stats.tokens.input))
+            metric(localized("Output", comment: "Output tokens"), count(stats.tokens.output))
+            if stats.tokens.reasoning > 0 { metric(localized("Reasoning", comment: "Reasoning tokens"), count(stats.tokens.reasoning)) }
+            metric(localized("Cache read · write", comment: "Tokens read from and written to the cache"), count(stats.tokens.cacheRead) + " · " + count(stats.tokens.cacheWrite))
         }
-        OCSection("Tools") {
-            metric("Calls", "\(stats.tools.calls)")
-            metric("Succeeded · failed", "\(stats.tools.succeeded) · \(stats.tools.failed)" + (stats.tools.unfinished > 0 ? " · \(stats.tools.unfinished) unfinished" : ""))
+        OCSection(localized("Tools")) {
+            metric(localized("Calls", comment: "Number of tool calls"), "\(stats.tools.calls)")
+            metric(localized("Succeeded · failed", comment: "Tool call outcomes"), "\(stats.tools.succeeded) · \(stats.tools.failed)" + (stats.tools.unfinished > 0 ? " · " + localized("\(stats.tools.unfinished) unfinished", comment: "%lld is the number of unfinished tool calls") : ""))
             ForEach(Array(stats.tools.byTool.prefix(8).enumerated()), id: \.offset) { _, tool in
-                metric(tool.name, "\(tool.calls)" + (tool.failed > 0 ? " · \(tool.failed) failed" : ""))
+                metric(tool.name, "\(tool.calls)" + (tool.failed > 0 ? " · " + localized("\(tool.failed) failed", comment: "%lld is the number of failed tool calls") : ""))
             }
         }
         if !stats.models.isEmpty {
-            OCSection("Models") {
+            OCSection(localized("Models")) {
                 ForEach(Array(stats.models.sorted { $0.steps > $1.steps }.enumerated()), id: \.offset) { _, model in
-                    metric(model.model.id, "\(model.steps) steps · " + model.cost.formatted(.currency(code: "USD")))
+                    metric(model.model.id, localized("\(model.steps) steps", comment: "%lld is the number of agent steps") + " · " + model.cost.formatted(.currency(code: "USD")))
                 }
             }
         }

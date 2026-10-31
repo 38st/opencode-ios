@@ -60,6 +60,40 @@ import OCRender
                     "process_resident_mb": Double(residentBytes()) / 1_024 / 1_024,
                     "process_footprint_mb": Double(physicalFootprint()) / 1_024 / 1_024], name: "rows")
     }
+    /// An hour of streaming at 50 tokens a second: 60 one-minute turns of 3,000 text deltas each. What stays in memory
+    /// afterwards is the transcript, not the events that built it.
+    @Test func anHourOfStreamedEvents() async throws {
+        let store = ReadStore(serverID: "performance")
+        store.seed(info: SessionInfo(raw: .object(["id": .string("s")])), messages: [])
+        func event(_ type: String, _ index: Int, _ data: [String: JSONValue]) throws -> ServerEvent {
+            var payload = data; payload["sessionID"] = .string("s")
+            return ServerEvent.decode(try JSONEncoder().encode(JSONValue.object(["id": .string("evt-\(index)"), "created": .integer(Int64(index)),
+                                                                              "type": .string(type), "data": .object(payload)])))
+        }
+        let before = physicalFootprint()
+        let start = ContinuousClock.now
+        var index = 0
+        for turn in 0..<60 {
+            let assistant: JSONValue = .string("a-\(turn)")
+            store.apply(try event("session.step.started", index, ["assistantMessageID": assistant])); index += 1
+            store.apply(try event("session.text.started", index, ["assistantMessageID": assistant, "ordinal": .integer(0)])); index += 1
+            for _ in 0..<3_000 {
+                store.apply(try event("session.text.delta", index, ["assistantMessageID": assistant, "ordinal": .integer(0), "delta": .string("token ")])); index += 1
+            }
+            store.apply(try event("session.text.ended", index, ["assistantMessageID": assistant, "ordinal": .integer(0), "text": .string(String(repeating: "token ", count: 3_000))])); index += 1
+            store.apply(try event("session.step.ended", index, ["assistantMessageID": assistant])); index += 1
+        }
+        let elapsed = seconds(start.duration(to: .now))
+        let grown = Double(physicalFootprint().subtractingReportingOverflow(before).overflow ? 0 : physicalFootprint() - before) / 1_024 / 1_024
+        let transcript = try #require(store.sessions["s"]?.transcript)
+        #expect(transcript.order.count == 60)
+        #expect(transcript.messages["a-59"]?.items.map(\.text.count) == [3_000 * 6])
+        // The 5,000-row session budget is 250 MB; an hour of events must stay far below it.
+        #expect(grown < 100, "Footprint grew \(grown) MB over an hour of events")
+        try record(["events": Double(index), "apply_seconds": elapsed, "footprint_growth_mb": grown,
+                    "process_footprint_mb": Double(physicalFootprint()) / 1_024 / 1_024], name: "hour-of-events")
+        await store.stop()
+    }
     func messages(_ count: Int) -> [SessionMessage] {
         (0..<count).map { index in
             let type = index % 3 == 0 ? "user" : index % 3 == 1 ? "assistant" : "idle"
@@ -82,8 +116,18 @@ import OCRender
         #endif
         try JSONEncoder().encode(values).write(to: directory.appending(path: "\(platform)-\(name).json"))
         print("PERFORMANCE \(platform) \(name): \(values)")
+        // Memory against the committed baselines (Fixtures/performance/baselines.json, recorded on the iPhone 17 Pro
+        // simulator and the macOS host): at most double, plus 10 MB.
+        // Times are reported, not gated: the simulator shares the machine with other work.
+        let file = root.appending(path: "Fixtures/performance/baselines.json")
+        if let data = try? Data(contentsOf: file) {
+            let baselines = try JSONDecoder().decode([String: [String: [String: Double]]].self, from: data)
+            for (key, baseline) in baselines[platform]?[name] ?? [:] where key.hasSuffix("_mb") {
+                if let value = values[key] { #expect(value <= baseline * 2 + 10, "\(name) \(key): \(value) MB against a \(baseline) MB baseline") }
+            }
+        }
     }
-    private func seconds(_ value: Duration) -> Double { Double(value.components.seconds) + Double(value.components.attoseconds) / 1e18 }
+    func seconds(_ value: Duration) -> Double { Double(value.components.seconds) + Double(value.components.attoseconds) / 1e18 }
     private func residentBytes() -> Int64 {
         var info = mach_task_basic_info(), count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size / MemoryLayout<natural_t>.size)
         let status = withUnsafeMutablePointer(to: &info) { pointer in

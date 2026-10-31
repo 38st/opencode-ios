@@ -5,6 +5,7 @@ import UIKit
 import OCDesign
 import OCModels
 import OCSync
+import FeatureSettings
 import OCShared
 import FeatureInbox
 import FeatureTranscript
@@ -32,6 +33,16 @@ public struct ServerRootView: View {
         var id: Self { self }
     }
     @State private var settingsDestination: SettingsDestination?
+    /// The accessibility audit's dark pass; nil (the system's) outside Debug UI tests.
+    private static var forcedColorScheme: ColorScheme? {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("--ui-testing-dark") ? .dark : nil
+        #else
+        nil
+        #endif
+    }
+    /// This window's server settings models.
+    @State private var adminScope = ServerAdminScope()
     @State private var sessionPath: [SessionRef] = []
     @State private var pendingLink: DeepLink?
     @State private var routingError: String?
@@ -73,17 +84,19 @@ public struct ServerRootView: View {
     }
     public var body: some View {
         status(presentations(routing(lifecycle(workspace)))).environment(\.ocPushController, registry.notifications)
+            .environment(\.ocServerAdminScope, adminScope)
+            .preferredColorScheme(Self.forcedColorScheme)
     }
     @ViewBuilder private var workspace: some View {
         // Keep the sheet presenter stable when adding the first server replaces onboarding.
         ZStack {
             if registry.servers.isEmpty {
                 NavigationStack {
-                    OCEmptyState("Your servers, anywhere", detail: "Connect to opencode on your computer to keep your work close.", icon: "server") {
-                        Button { settingsDestination = .addServer } label: { OCLabel("Add your first server", icon: "plus") }
+                    OCEmptyState(localized("Your servers, anywhere"), detail: localized("Connect to opencode on your computer to keep your work close."), icon: "server") {
+                        Button { settingsDestination = .addServer } label: { OCLabel(localized("Add your first server"), icon: "plus") }
                             .buttonStyle(OCButtonStyle(.contrast)).accessibilityIdentifier("addFirstServer")
                             .disabled(!registry.isLoaded)
-                    }.ocNavigationTitle("Opencode")
+                    }.ocNavigationTitle(localized("Opencode", comment: "App name"))
                 }
             } else if sizeClass == .regular {
                 OCWorkspaceShell(layout: $layout, selectionID: sessionPath.last?.id,
@@ -96,7 +109,7 @@ public struct ServerRootView: View {
                     if let ref = sessionPath.last {
                         VStack(spacing: 0) {
                             if sessionPath.count > 1 {
-                                Button("Back to parent") { sessionPath.removeLast() }.buttonStyle(OCButtonStyle(.ghost))
+                                Button(localized("Back to parent")) { sessionPath.removeLast() }.buttonStyle(OCButtonStyle(.ghost))
                             }
                             sessionView(ref, ownsCommands: !creatingSession)
                         }
@@ -214,11 +227,11 @@ public struct ServerRootView: View {
     }
     private func presentations(_ content: some View) -> some View {
         content
-            .alert("Could not open link", isPresented: Binding(get: { routingError != nil }, set: { if !$0 { routingError = nil } })) {
-                Button("OK") { routingError = nil }
+            .alert(localized("Could not open link"), isPresented: Binding(get: { routingError != nil }, set: { if !$0 { routingError = nil } })) {
+                Button(localized("OK")) { routingError = nil }
             } message: { Text(routingError ?? "") }
             .sheet(isPresented: $creatingSession) {
-                NavigationStack { newSessionView(ownsCommands: true).toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { creatingSession = false } } } }.ocSheet()
+                NavigationStack { newSessionView(ownsCommands: true).toolbar { ToolbarItem(placement: .cancellationAction) { Button(localized("Cancel")) { creatingSession = false } } } }.ocSheet()
             }
             .sheet(isPresented: Binding(get: { paletteOpen && sizeClass != .regular }, set: { paletteOpen = $0 })) {
                 palette.presentationDetents([.large]).ocSheet()
@@ -251,7 +264,7 @@ public struct ServerRootView: View {
                     OCToast(announcement: error) {
                         Text(error).font(OCType.body)
                         if !registry.isLoaded {
-                            Button("Try again") { phaseTask?.cancel(); phaseTask = Task { await registry.load() } }
+                            Button(localized("Try again")) { phaseTask?.cancel(); phaseTask = Task { await registry.load() } }
                                 .buttonStyle(OCButtonStyle())
                         }
                     }
@@ -269,14 +282,14 @@ public struct ServerRootView: View {
             }) { child in
                 sessionPath.append(.init(serverID: server.id, sessionID: child))
             }.id(ref.id)
-        } else { Text("This server is no longer saved.").font(OCType.body) }
+        } else { Text(localized("This server is no longer saved.")).font(OCType.body) }
     }
     private func routeLink() {
         guard registry.isLoaded, let link = pendingLink else { return }
         pendingLink = nil
         let id = ServerID(rawValue: link.serverID)
         guard registry.servers.contains(where: { $0.id == id }) else {
-            routingError = "This server is not saved. Add it in Settings first."; return
+            routingError = localized("This server is not saved. Add it in Settings first."); return
         }
         // Home's filters stay as the user left them; a server-only link starts New session on that server, and a
         // New prompt link opens the composer, in its project when it names one.
@@ -371,7 +384,7 @@ public struct ServerRootView: View {
             guard let next = new[server.id], next != announcedConnections[server.id] else { continue }
             let previous = announcedConnections.updateValue(next, forKey: server.id)
             if previous == nil && next == "connected" { continue }
-            let text = server.record.name + ": " + (server.connectionNotice?.title ?? "Connected")
+            let text = server.record.name + ": " + (server.connectionNotice?.title ?? localized("Connected"))
             AccessibilityNotification.Announcement(text).post()
         }
     }
@@ -421,7 +434,7 @@ public struct ServerRootView: View {
                                   canCreateSession: !registry.servers.isEmpty, supportsWindows: supportsMultipleWindows,
                                   sidebarAvailable: sizeClass == .regular && !registry.servers.isEmpty,
                                   current: sessionPath.first.flatMap(rootRef), sessions: ordered.map(\.ref),
-                                  sessionTitles: ordered.map { $0.session.info.title ?? "Untitled session" },
+                                  sessionTitles: ordered.map { $0.session.info.title ?? localized("Untitled session") },
                                   unread: Set(ordered.filter { $0.session.unread }.map(\.ref.id)),
                                   // A search or the hidden sessions never hide a pending request from ⇧⌘A.
                                   approvals: HomeOrdering.approvals(HomeOrdering.ordered(registry.servers, server: selectedServer, project: selectedProject)),
@@ -467,7 +480,7 @@ public struct ServerRootView: View {
             for session in server.sessions.values where session.info.parentID == nil && session.info.time.archived == nil {
                 let item = SessionSummary(server: server, session: session)
                 guard !item.meta.hidden else { continue }
-                sessions.append(.init(ref: item.ref, title: session.info.title ?? "Untitled session", project: item.projectName, updated: item.activity))
+                sessions.append(.init(ref: item.ref, title: session.info.title ?? localized("Untitled session"), project: item.projectName, updated: item.activity))
             }
             for project in server.projects {
                 projects.append(.init(filter: server.id.rawValue.uuidString + ":" + project.id, name: project.name ?? URL(fileURLWithPath: project.canonical).lastPathComponent,
@@ -574,26 +587,26 @@ public struct ServerRootView: View {
         #if DEBUG
         if ProcessInfo.processInfo.environment["OPENCODE_UI_TEST_ID"] != nil {
             VStack(spacing: 0) {
-                Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityLabel("Windows")
-                    .accessibilityValue("this=\(windowID.uuidString)\n" + windows.diagnostics).accessibilityIdentifier("windowInventory")
+                Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityLabel(Text(verbatim: "Windows"))
+                    .accessibilityValue(Text(verbatim: "this=\(windowID.uuidString)\n" + windows.diagnostics)).accessibilityIdentifier("windowInventory")
                 // UIKit does not publish scene changes to SwiftUI, nor do the intents their App Group trace (which
                 // process ran each intent, and what it answered); read them every second.
                 TimelineView(.periodic(from: .now, by: 1)) { _ in
                     VStack(spacing: 0) {
-                        Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityLabel("Scenes")
+                        Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityLabel(Text(verbatim: "Scenes"))
                             .accessibilityValue(WindowScenes.inventory).accessibilityIdentifier("sceneInventory")
-                        Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityLabel("Intents")
+                        Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityLabel(Text(verbatim: "Intents"))
                             .accessibilityValue(((try? SystemSnapshotStore.appGroup())?.intentTrace() ?? []).joined(separator: "\n"))
                             .accessibilityIdentifier("intentTrace")
                     }
                 }
-                Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityLabel("Commands")
+                Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityLabel(Text(verbatim: "Commands"))
                     .accessibilityValue(OCCommandTrace.shared.summary).accessibilityIdentifier("commandTrace")
-                Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityLabel("Home order")
+                Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityLabel(Text(verbatim: "Home order"))
                     .accessibilityValue(ordered.map { $0.session.id + ($0.session.unread ? "*" : "") }.joined(separator: " ")).accessibilityIdentifier("homeOrder")
                 // What the menu bar itself enabled, read every second like the scenes.
                 TimelineView(.periodic(from: .now, by: 1)) { _ in
-                    Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityLabel("Menu commands")
+                    Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityLabel(Text(verbatim: "Menu commands"))
                         .accessibilityValue(OCCommandTrace.shared.menuEnabled.joined(separator: " ")).accessibilityIdentifier("workspaceCommands")
                 }
             }.allowsHitTesting(true)
@@ -627,15 +640,15 @@ struct LocalNetworkExplanation: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: OCSpacing.xl) {
                     OCIcon("globe", size: 32).font(OCType.title).foregroundStyle(OCColor.iconMuted).accessibilityHidden(true)
-                    Text("Connect on your local network").font(OCType.title)
-                    Text("Opencode connects directly to the server you choose on your computer. iOS may ask you to allow Local Network access next.")
-                    Text("Allow access to connect over Wi-Fi. You can change this later in Settings → Privacy & Security → Local Network.")
+                    Text(localized("Connect on your local network")).font(OCType.title)
+                    Text(localized("Opencode connects directly to the server you choose on your computer. iOS may ask you to allow Local Network access next."))
+                    Text(localized("Allow access to connect over Wi-Fi. You can change this later in Settings → Privacy & Security → Local Network."))
                         .foregroundStyle(OCColor.textMuted)
-                    Button("Continue", action: proceed).buttonStyle(OCButtonStyle(.contrast))
+                    Button(localized("Continue"), action: proceed).buttonStyle(OCButtonStyle(.contrast))
                         .accessibilityIdentifier("localNetworkContinue")
                 }.padding(OCSpacing.xl).frame(maxWidth: OCLayout.readable, alignment: .leading)
                     .frame(maxWidth: .infinity, alignment: .top)
-            }.ocNavigationTitle("Local Network").navigationBarTitleDisplayMode(.inline).ocTheme()
+            }.ocNavigationTitle(localized("Local Network")).navigationBarTitleDisplayMode(.inline).ocTheme()
         }
     }
 }

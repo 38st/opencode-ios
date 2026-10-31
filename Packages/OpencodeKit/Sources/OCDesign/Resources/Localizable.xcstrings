@@ -1,0 +1,388 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ to %@" : {
+      "comment" : "Flowchart edge; %1$@ and %2$@ are node names"
+    },
+    "%@ to %@ (%@)" : {
+      "comment" : "Flowchart edge; %1$@ and %2$@ are node names, %3$@ the edge label"
+    },
+    "%@ will appear here" : {
+      "comment" : "%@ is a review panel tab name"
+    },
+    "%lld points" : {
+      "comment" : "Panel width; %lld is a number of screen points",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld point"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld points"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Add context for this change" : {
+      "comment" : "Shown in Comment Text View"
+    },
+    "Ask anything, / for commands, @ for context…" : {
+      "comment" : "Text in Workspace Panel"
+    },
+    "Ask anything…" : {
+      "comment" : "Shown in Surfaces"
+    },
+    "Binary file" : {
+      "comment" : "Shown in Diff View"
+    },
+    "Cancel" : {
+      "comment" : "Button title in Confirmation Sheet"
+    },
+    "Changes" : {
+      "comment" : "Review panel tab"
+    },
+    "Changes will appear here" : {
+      "comment" : "Shown in Workspace Panel"
+    },
+    "Close diff" : {
+      "comment" : "Icon button label in Diff Card View"
+    },
+    "Close review" : {
+      "comment" : "Icon button label in Workspace Shell"
+    },
+    "Collapse diff" : {
+      "comment" : "Shown in Diff Card View"
+    },
+    "Collapsed" : {
+      "comment" : "Shown in Code Cell"
+    },
+    "Command copied" : {
+      "comment" : "Shown in Feedback"
+    },
+    "Comment" : {
+      "comment" : "Noun: label on a line comment card"
+    },
+    "Comment on deleted line" : {
+      "comment" : "Shown in Code Cell"
+    },
+    "Comment on line" : {
+      "comment" : "Shown in Code Cell"
+    },
+    "Connect" : {
+      "comment" : "Shown in Controls"
+    },
+    "Context" : {
+      "comment" : "Review panel tab"
+    },
+    "Context will appear here" : {
+      "comment" : "Shown in Workspace Panel"
+    },
+    "Copied" : {
+      "comment" : "VoiceOver announcement after copying to the clipboard"
+    },
+    "Copy" : {
+      "comment" : "Verb: copies text to the clipboard"
+    },
+    "Copy code" : {
+      "comment" : "Icon button label in Code Block View"
+    },
+    "Copy deleted line" : {
+      "comment" : "Shown in Code Cell"
+    },
+    "Copy line" : {
+      "comment" : "Shown in Code Cell"
+    },
+    "Could not save the image" : {
+      "comment" : "Shown in Image Viewer"
+    },
+    "Delete" : {
+      "comment" : "Menu action that deletes a line comment"
+    },
+    "Diff too large to render" : {
+      "comment" : "Shown in Diff View"
+    },
+    "Diff view" : {
+      "comment" : "VoiceOver label in Diff Card View"
+    },
+    "Done" : {
+      "comment" : "Button title in Export Sheet"
+    },
+    "Edit" : {
+      "comment" : "Menu action that edits a line comment"
+    },
+    "Error" : {
+      "comment" : "Tool call status"
+    },
+    "Expand 20 lines above" : {
+      "comment" : "Shown in Code Cell"
+    },
+    "Expand 20 lines below" : {
+      "comment" : "Shown in Code Cell"
+    },
+    "Expand all" : {
+      "comment" : "Reveals every hidden unchanged line in a diff"
+    },
+    "Expand diff" : {
+      "comment" : "Shown in Diff Card View"
+    },
+    "Expanded" : {
+      "comment" : "Shown in Code Cell"
+    },
+    "Export session" : {
+      "comment" : "Screen title in Export Sheet"
+    },
+    "Extend selection to deleted line" : {
+      "comment" : "Shown in Code Cell"
+    },
+    "Extend selection to this line" : {
+      "comment" : "Shown in Code Cell"
+    },
+    "Failed" : {
+      "comment" : "Session status"
+    },
+    "Failed to export session. %@" : {
+      "comment" : "%@ is the system error description"
+    },
+    "Files" : {
+      "comment" : "Review panel tab"
+    },
+    "Files Changed" : {
+      "comment" : "Shown in Workspace Panel"
+    },
+    "Files will appear here" : {
+      "comment" : "Shown in Workspace Panel"
+    },
+    "Flowchart: %@" : {
+      "comment" : "%@ is a list of flowchart edges"
+    },
+    "Format" : {
+      "comment" : "Noun: export file format picker"
+    },
+    "Git changes" : {
+      "comment" : "Shown in Workspace Panel"
+    },
+    "Hide non-diff lines" : {
+      "comment" : "Shown in Diff Card View"
+    },
+    "Idle" : {
+      "comment" : "Session status"
+    },
+    "Image" : {
+      "comment" : "Attachment kind"
+    },
+    "Image preview" : {
+      "comment" : "Shown in Code Editor Cell"
+    },
+    "Jump to latest" : {
+      "comment" : "Shown in Timeline Chrome"
+    },
+    "Jump to latest (%lld)" : {
+      "comment" : "%lld is the number of new messages"
+    },
+    "Last seen running" : {
+      "comment" : "Session status"
+    },
+    "Line %lld, added, %@" : {
+      "comment" : "Diff line; %lld is the line number, %@ its text"
+    },
+    "Line %lld, context, %@" : {
+      "comment" : "Unchanged diff line; %lld is the line number, %@ its text"
+    },
+    "Line %lld, deleted, %@" : {
+      "comment" : "Diff line; %lld is the line number, %@ its text"
+    },
+    "Message composer. Ask anything, slash for commands, at for context. Sending is not available yet." : {
+      "comment" : "VoiceOver label in Workspace Panel"
+    },
+    "More options" : {
+      "comment" : "Shown in Code Cell"
+    },
+    "More options: Edit or Delete" : {
+      "comment" : "Shown in Code Cell"
+    },
+    "Name" : {
+      "comment" : "Shown in Surfaces"
+    },
+    "Needs you" : {
+      "comment" : "Session status"
+    },
+    "No changes" : {
+      "comment" : "Shown in Diff View"
+    },
+    "Offline" : {
+      "comment" : "Session status"
+    },
+    "Old line %lld, %@. %@" : {
+      "comment" : "Split diff row; %1$lld is the old line number, %2$@ its text, %3$@ the new line's description"
+    },
+    "Open file" : {
+      "comment" : "Shown in Code Cell"
+    },
+    "Open file %@" : {
+      "comment" : "%@ is a file path"
+    },
+    "Opens the image to zoom, save or share" : {
+      "comment" : "VoiceOver hint in Image Viewer"
+    },
+    "PDF" : {
+      "comment" : "Attachment kind"
+    },
+    "Pending" : {
+      "comment" : "Tool call status"
+    },
+    "Photos access is off. Allow adding photos in Settings." : {
+      "comment" : "Shown in Image Viewer"
+    },
+    "Preparing export…" : {
+      "comment" : "Shown in Export Sheet"
+    },
+    "Projects" : {
+      "comment" : "Label in Workspace Shell"
+    },
+    "Redact content" : {
+      "comment" : "Switch label in Export Sheet"
+    },
+    "Remove attachment" : {
+      "comment" : "Icon button label in Composer Chrome"
+    },
+    "Remove server" : {
+      "comment" : "Shown in Controls"
+    },
+    "Replace titles, paths, prompts, replies and tool output with placeholders, to share a transcript’s shape without its content." : {
+      "comment" : "Shown in Export Sheet"
+    },
+    "Resize Home sidebar" : {
+      "comment" : "Shown in Workspace Shell"
+    },
+    "Resize session panel" : {
+      "comment" : "Shown in Workspace Shell"
+    },
+    "Review panel" : {
+      "comment" : "Shown in Workspace Panel"
+    },
+    "Review tools are not available yet." : {
+      "comment" : "Text in Workspace Panel"
+    },
+    "Running" : {
+      "comment" : "Tool call status"
+    },
+    "Save" : {
+      "comment" : "Shown in Line Comment Editor"
+    },
+    "Save to Photos" : {
+      "comment" : "VoiceOver label in Image Viewer"
+    },
+    "Saved to Photos" : {
+      "comment" : "Shown in Image Viewer"
+    },
+    "Select model" : {
+      "comment" : "Label in Workspace Panel"
+    },
+    "Select text" : {
+      "comment" : "Button title in Text Selection"
+    },
+    "Sequence diagram: %@" : {
+      "comment" : "%@ is a list of participant names"
+    },
+    "Server URL" : {
+      "comment" : "Shown in Controls"
+    },
+    "Share %@" : {
+      "comment" : "%@ is the exported file name"
+    },
+    "Share image" : {
+      "comment" : "VoiceOver label in Image Viewer"
+    },
+    "Show all lines" : {
+      "comment" : "Shown in Diff Card View"
+    },
+    "Show full diff" : {
+      "comment" : "Button title in Diff Card View"
+    },
+    "Show full output (%lld lines)" : {
+      "comment" : "%lld is the number of lines in a folded code block",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Show full output (%lld line)"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Show full output (%lld lines)"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Split" : {
+      "comment" : "Diff layout with side-by-side columns"
+    },
+    "Streaming" : {
+      "comment" : "Badge on a code block that is still being written"
+    },
+    "Syncing" : {
+      "comment" : "Session status"
+    },
+    "Terminal" : {
+      "comment" : "Review panel tab"
+    },
+    "Terminal will appear here" : {
+      "comment" : "Shown in Workspace Panel"
+    },
+    "Text" : {
+      "comment" : "Code block language label for plain text"
+    },
+    "This diagram could not be rendered" : {
+      "comment" : "Shown in Diagram Views"
+    },
+    "This formula could not be rendered" : {
+      "comment" : "Shown in Diagram Views"
+    },
+    "Toggle Home sidebar" : {
+      "comment" : "Icon button label in Workspace Shell"
+    },
+    "Toggle review" : {
+      "comment" : "Icon button label in Workspace Shell"
+    },
+    "Unified" : {
+      "comment" : "Diff layout with one column"
+    },
+    "Unread" : {
+      "comment" : "Session status"
+    },
+    "Wrap lines" : {
+      "comment" : "Switch label in Diff Card View"
+    },
+    "closed" : {
+      "comment" : "Accessibility value: a panel is hidden"
+    },
+    "open" : {
+      "comment" : "Accessibility value: a panel is shown"
+    },
+    "opencode serve" : {
+      "comment" : "Shown in Rows"
+    },
+    "original fixture line" : {
+      "comment" : "Shown in Rows"
+    }
+  },
+  "version" : "1.0"
+}

@@ -15,7 +15,7 @@ public enum ReviewSource: Codable, Hashable, Sendable {
         switch self { case .working: "working"; case .branch: "branch"; case .lastTurn: "lastTurn"; case .turn(let id): "turn:" + id }
     }
     public var title: String {
-        switch self { case .working: "Git changes"; case .branch: "Branch changes"; case .lastTurn: "Last turn changes"; case .turn: "Turn changes" }
+        switch self { case .working: localized("Git changes"); case .branch: localized("Branch changes"); case .lastTurn: localized("Last turn changes"); case .turn: localized("Turn changes") }
     }
     public var projectRelative: Bool { switch self { case .lastTurn, .turn: true; default: false } }
     public static func available(vcs: VCSInfo, session: Bool) -> [Self] {

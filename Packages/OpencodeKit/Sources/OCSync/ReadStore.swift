@@ -58,6 +58,10 @@ import OCSecurity
     @ObservationIgnored var terminalLists: [String: TerminalListModel] = [:]
     @ObservationIgnored var shellRuns: [String: ShellRunModel] = [:]
     @ObservationIgnored var adminModel: ServerAdminModel?
+    /// Every settings model open on this server (one per window); events and backgrounding reach each.
+    @ObservationIgnored private var adminModels: [WeakAdminModel] = []
+    var liveAdminModels: [ServerAdminModel] { adminModels.compactMap(\.model) }
+    func register(_ model: ServerAdminModel) { adminModels.removeAll { $0.model == nil }; adminModels.append(.init(model: model)) }
     /// Opens PTY sockets; tests replace it.
     @ObservationIgnored public var webSockets: any WebSocketConnecting = URLSessionWebSockets()
     @ObservationIgnored var composers: [String: ComposerModel] = [:]
@@ -195,7 +199,7 @@ import OCSecurity
         guard !stopped else { return }
         let id = UUID()
         work[id] = Task { [weak self] in
-            do { try await operation() } catch is CancellationError {} catch { self?.error = "Could not refresh server data." }
+            do { try await operation() } catch is CancellationError {} catch { self?.error = localized("Could not refresh server data.") }
             self?.work.removeValue(forKey: id)
         }
     }
@@ -217,7 +221,7 @@ import OCSecurity
                     if let existing = self.sessionLoads[id] { try await existing.value }
                     try await self.refreshSession(id, includeTranscript: true)
                 }
-            } catch is CancellationError {} catch { self.error = "Could not refresh the session." }
+            } catch is CancellationError {} catch { self.error = localized("Could not refresh the session.") }
         }
     }
     func confirmStatus() { lastStatusSync = clock.date() }
@@ -249,7 +253,7 @@ import OCSecurity
             do {
                 if !immediate { try await clock.sleep(.seconds(2)) }
                 try Task.checkCancellation(); try await self?.flush()
-            } catch is CancellationError {} catch { self?.error = "Could not save the cache." }
+            } catch is CancellationError {} catch { self?.error = localized("Could not save the cache.") }
         }
     }
     public func flush() async throws {
@@ -264,6 +268,11 @@ import OCSecurity
         await cache.save(snapshot)
         do { try await cache.flush() } catch { dirty.formUnion(ids); throw error }
     }
+    /// The server is being removed: its terminals end now, so no renderer or socket outlives it.
+    func endTerminals() {
+        for list in terminalLists.values { list.endAll() }
+        terminalLists = [:]
+    }
     public func stop() async {
         resolveDraftReplacement(false)
         stopped = true
@@ -271,7 +280,7 @@ import OCSecurity
         writeTask?.cancel()
         await writeTask?.value; writeTask = nil
         _ = try? await submissionTask?.value
-        do { try await flushComposers(); try await drafts?.flush() } catch { writeError = "Could not save drafts." }
+        do { try await flushComposers(); try await drafts?.flush() } catch { writeError = localized("Could not save drafts.") }
         let persistence = persistTask, refreshes = Array(refreshTasks.values), work = Array(work.values), loads = Array(sessionLoads.values)
         persistence?.cancel()
         for task in refreshes { task.cancel() }
@@ -284,18 +293,18 @@ import OCSecurity
         // Terminals save their screens and close their sockets; they reconnect from the saved cursor after the next resync.
         for list in terminalLists.values { await list.suspend() }
         for run in shellRuns.values { run.cancel() }
-        adminModel?.suspend()
+        for model in liveAdminModels { model.suspend() }
         await outboxDrain?.stop()
         await persistence?.value
         for task in refreshes { await task.value }
         for task in work { await task.value }
         for task in loads { _ = try? await task.value }
         persistTask = nil
-        do { try await flush() } catch { self.error = "Could not save the cache." }
+        do { try await flush() } catch { self.error = localized("Could not save the cache.") }
     }
     public func resume() {
         stopped = false
-        adminModel?.resume()
+        for model in liveAdminModels { model.resume() }
         // A composer that appeared while the store was paused, as when a link opens a session while the app comes
         // forward, could not load its draft; it loads now.
         for composer in composers.values where !composer.loaded { Task { await composer.load() } }

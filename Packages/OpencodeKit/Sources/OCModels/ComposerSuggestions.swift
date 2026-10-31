@@ -33,26 +33,26 @@ public enum ComposerCommand: String, CaseIterable, Sendable {
     case new, undo, redo, compact, fork, btw, model, agent
     public var title: String {
         switch self {
-        case .btw: "Ask a side question"
-        case .new: "New session"
-        case .undo: "Undo"
-        case .redo: "Redo"
-        case .compact: "Compact session"
-        case .fork: "Fork from message"
-        case .model: "Choose model"
-        case .agent: "Cycle agent"
+        case .btw: localized("Ask a side question")
+        case .new: localized("New session")
+        case .undo: localized("Undo", comment: "Composer command")
+        case .redo: localized("Redo", comment: "Composer command")
+        case .compact: localized("Compact session")
+        case .fork: localized("Fork from message")
+        case .model: localized("Choose model")
+        case .agent: localized("Cycle agent")
         }
     }
     public var description: String {
         switch self {
         case .new: ""
-        case .undo: "Undo the last message"
-        case .redo: "Redo the last undone message"
-        case .compact: "Summarize the session to reduce context size"
-        case .fork: "Create a new session from a previous message"
-        case .btw: "Get a one-shot answer without adding to the conversation"
-        case .model: "Select a different model"
-        case .agent: "Switch to the next agent"
+        case .undo: localized("Undo the last message")
+        case .redo: localized("Redo the last undone message")
+        case .compact: localized("Summarize the session to reduce context size")
+        case .fork: localized("Create a new session from a previous message")
+        case .btw: localized("Get a one-shot answer without adding to the conversation")
+        case .model: localized("Select a different model")
+        case .agent: localized("Switch to the next agent")
         }
     }
     public static func available(session: Bool, showAgent: Bool, hasPrompts: Bool = true, reverted: Bool = true) -> [Self] {
@@ -70,10 +70,11 @@ public struct ComposerSuggestion: Identifiable, Equatable, Sendable {
     public let mention: DraftMention?
     public let command: ComposerCommand?
     public let serverCommand: String?
+    public let isDirectory: Bool
     public init(id: String, label: String, description: String = "", mention: DraftMention? = nil,
-                command: ComposerCommand? = nil, serverCommand: String? = nil) {
+                command: ComposerCommand? = nil, serverCommand: String? = nil, isDirectory: Bool = false) {
         self.id = id; self.label = label; self.description = description; self.mention = mention
-        self.command = command; self.serverCommand = serverCommand
+        self.command = command; self.serverCommand = serverCommand; self.isDirectory = isDirectory
     }
 }
 
@@ -110,7 +111,8 @@ public enum ComposerSuggestions {
             ComposerSuggestion(id: "agent:" + ComposerPickers.agentID($0), label: "@" + ComposerPickers.agentID($0), description: $0.description ?? "", mention: .init(kind: "agent", value: ComposerPickers.agentID($0)))
         }
         return (references + skills + agents).filter { matches($0.label, query: query) } + files.map {
-            .init(id: "file:" + $0.path, label: $0.path, description: $0.type == .directory ? "Directory" : "File", mention: .init(kind: "file", value: $0.path))
+            .init(id: "file:" + $0.path, label: $0.path, description: $0.type == .directory ? localized("Directory", comment: "Suggestion kind: a folder") : localized("File", comment: "Suggestion kind: a file"), mention: .init(kind: "file", value: $0.path),
+                  isDirectory: $0.type == .directory)
         }
     }
     public static func commands(query: String, server: JSONValue?, session: Bool, showAgent: Bool, hasPrompts: Bool = true, reverted: Bool = true) -> [ComposerSuggestion] {

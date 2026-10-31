@@ -1,0 +1,39 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%lld waiting" : {
+      "comment" : "%lld is the number of waiting approval requests"
+    },
+    "Failed" : {
+      "comment" : "Session status"
+    },
+    "Idle" : {
+      "comment" : "Session status"
+    },
+    "Last seen retrying" : {
+      "comment" : "Shown in Widget Content"
+    },
+    "Last seen running" : {
+      "comment" : "Shown in Widget Content"
+    },
+    "None waiting" : {
+      "comment" : "No approval requests are waiting"
+    },
+    "Permission" : {
+      "comment" : "Session status: waiting on a permission request"
+    },
+    "Question" : {
+      "comment" : "Session status: waiting on a question"
+    },
+    "Retrying" : {
+      "comment" : "Session status"
+    },
+    "Running" : {
+      "comment" : "Session status"
+    },
+    "Unread" : {
+      "comment" : "Session status"
+    }
+  },
+  "version" : "1.0"
+}

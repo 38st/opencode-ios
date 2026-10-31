@@ -37,12 +37,12 @@ public enum NotificationContentBuilder {
             // without conflating two completions from the same session and second.
             let id = payload.requestID ?? "result_" + Base64URL.encode(Data(SHA256.hash(data: opened.envelope.ciphertext)))
             let preferences = try store.preferences()
-            var content = NotificationPresentation(body: payload.summary ?? PushContract.shared.kinds[payload.kind]?.alert ?? generic.body)
+            var content = NotificationPresentation(body: payload.summary ?? alert(kind: payload.kind) ?? generic.body)
             switch payload.kind {
-            case "permission": content.title = "Allow \(payload.action ?? "this action")?"
-            case "question": content.title = "A session needs your answer"
-            case "resolved": content.title = "Request resolved"; content.body = "Answered on another device"
-            default: content.title = PushContract.shared.kinds[payload.kind]?.alert ?? generic.title
+            case "permission": content.title = payload.action.map { localized("Allow \($0)?", comment: "Notification title; %@ is the action a session asks to run") } ?? localized("Allow this action?")
+            case "question": content.title = localized("A session needs your answer")
+            case "resolved": content.title = localized("Request resolved"); content.body = localized("Answered on another device")
+            default: content.title = alert(kind: payload.kind) ?? generic.title
             }
             content.subtitle = [payload.title, payload.project].compactMap { $0 }.joined(separator: " · ")
             content.category = NotificationCategories.category(kind: payload.kind, risk: payload.riskTier,
@@ -62,6 +62,19 @@ public enum NotificationContentBuilder {
             content.shownID = id; content.receipt = shown.receipt.uuidString; content.url = shown.url
             return content
         } catch { return fallback }
+    }
+
+    /// The alert text `constants.json` gives each kind.
+    static func alert(kind: String) -> String? {
+        switch kind {
+        case "permission": localized("opencode needs your approval")
+        case "question": localized("opencode has a question")
+        case "finished": localized("A session finished")
+        case "failed": localized("A session failed")
+        case "resolved": localized("Answered on another device")
+        case "test": localized("Test notification from opencode")
+        default: PushContract.shared.kinds[kind]?.alert
+        }
     }
 
     public static func process(envelope: JSONValue, now: Date = .now, generic: NotificationPresentation,

@@ -1,0 +1,108 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "A subagent session is read only. Send to its parent session instead." : {
+      "comment" : "Shown in Intent Environment"
+    },
+    "All servers" : {
+      "comment" : "Shown in Entities"
+    },
+    "Choose the server the widget shows." : {
+      "comment" : "Shown in Session Intents"
+    },
+    "Failed" : {
+      "comment" : "Session status"
+    },
+    "Finished" : {
+      "comment" : "Session status"
+    },
+    "Idle" : {
+      "comment" : "Session status"
+    },
+    "Interrupt this opencode session." : {
+      "comment" : "Shown in Stop Session Intent"
+    },
+    "Last activity %@." : {
+      "comment" : "%@ is a relative time, like 5 minutes ago"
+    },
+    "New output to read." : {
+      "comment" : "Shown in Intent Environment"
+    },
+    "New prompt" : {
+      "comment" : "Shown in Session Intents"
+    },
+    "Nothing is waiting for your approval." : {
+      "comment" : "Shown in Session Intents"
+    },
+    "Open a new session's composer in the project you used last." : {
+      "comment" : "Shown in Session Intents"
+    },
+    "Open the app, then try again." : {
+      "comment" : "Shown in Intent Environment"
+    },
+    "Open the next permission or question that waits for you. You answer it in the app." : {
+      "comment" : "Shown in Session Intents"
+    },
+    "Opening the request." : {
+      "comment" : "Shown in Session Intents"
+    },
+    "Project" : {
+      "comment" : "Shown in Entities"
+    },
+    "Retrying" : {
+      "comment" : "Session status"
+    },
+    "Review the next approval" : {
+      "comment" : "Shown in Session Intents"
+    },
+    "Running" : {
+      "comment" : "Session status"
+    },
+    "Server" : {
+      "comment" : "Shown in Entities"
+    },
+    "Session" : {
+      "comment" : "Shown in Entities"
+    },
+    "Sessions" : {
+      "comment" : "Shown in Session Intents"
+    },
+    "Started %@." : {
+      "comment" : "%@ is a relative time, like 5 minutes ago"
+    },
+    "Stop session" : {
+      "comment" : "Shown in Stop Session Intent"
+    },
+    "Stopped" : {
+      "comment" : "Session status"
+    },
+    "That project is no longer on your servers." : {
+      "comment" : "Shown in Intent Environment"
+    },
+    "That session is no longer on your servers." : {
+      "comment" : "Shown in Intent Environment"
+    },
+    "The prompt is empty." : {
+      "comment" : "Shown in Intent Environment"
+    },
+    "The server is not saved in the app." : {
+      "comment" : "Shown in Intent Environment"
+    },
+    "This is the last known state: the server could not be reached." : {
+      "comment" : "Shown in Intent Environment"
+    },
+    "This session has an undo waiting to be confirmed. Open it in the app first." : {
+      "comment" : "Shown in Intent Environment"
+    },
+    "Waiting for your answer" : {
+      "comment" : "Shown in Intent Environment"
+    },
+    "Waiting for your approval" : {
+      "comment" : "Shown in Intent Environment"
+    },
+    "just now" : {
+      "comment" : "Relative time: less than a minute ago"
+    }
+  },
+  "version" : "1.0"
+}

@@ -124,10 +124,10 @@ public struct OCDiffView: View {
             let doc = docs[input.id]
             var rows = await doc.mapAsync { await DiffRows.prepare($0, split: split, showAll: showAll || input.source, expansion: expansion[input.id] ?? .init()) } ?? []
             if let doc, rows.isEmpty && input.expanded {
-                rows = [.init(id: 0, label: doc.kind == .headerOnly ? "Diff too large to render" : doc.kind == .empty || doc.kind == .binary ? "Binary file" : "No changes")]
+                rows = [.init(id: 0, label: doc.kind == .headerOnly ? DiffPlaceholder.tooLarge : doc.kind == .empty || doc.kind == .binary ? DiffPlaceholder.binary : localized("No changes"))]
             }
             if input.expanded {
-                if input.imageData != nil { rows = [.init(id: -2, label: "Image", commentID: "__image")] }
+                if input.imageData != nil { rows = [.init(id: -2, label: localized("Image"), commentID: "__image")] }
                 else if let message = input.mediaMessage { rows = [.init(id: -2, label: message)] }
             }
             let annotations = comments.filter { $0.file == input.path && $0.id != inlineComment?.id }
@@ -138,7 +138,7 @@ public struct OCDiffView: View {
                     for (i, comment) in annotations.enumerated() {
                         let line = comment.selection?.deleted == true ? row.left?.oldLine : (row.right ?? row.left)?.newLine
                         if line != nil && line == (comment.selection?.deleted == true ? comment.selection?.upper : comment.selection?.newRange.upperBound) {
-                            var annotation = DiffRow(id: -1_000_000 - i, label: (comment.selection?.label ?? "Comment") + "\n" + comment.comment, commentID: comment.id)
+                            var annotation = DiffRow(id: -1_000_000 - i, label: (comment.selection?.label ?? localized("Comment", comment: "Noun: label on a line comment card")) + "\n" + comment.comment, commentID: comment.id)
                             annotation.commentOnOldSide = comment.selection?.deleted == true
                             annotated.append(annotation)
                         }
@@ -192,6 +192,13 @@ public struct OCDiffView: View {
 }
 private extension Optional where Wrapped == DiffDocument {
     func mapAsync<T>(_ transform: (Wrapped) async -> T) async -> T? { if let value = self { return await transform(value) }; return nil }
+}
+
+/// Placeholder rows that open the file when tapped.
+enum DiffPlaceholder {
+    static var binary: String { localized("Binary file") }
+    static var tooLarge: String { localized("Diff too large to render") }
+    static func opensFile(_ label: String?) -> Bool { label != nil && (label == binary || label == tooLarge) }
 }
 
 struct CodeSection {

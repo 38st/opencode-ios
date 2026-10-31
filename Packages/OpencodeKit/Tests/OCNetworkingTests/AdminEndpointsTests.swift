@@ -95,3 +95,14 @@ private func query(_ request: URLRequest) -> [String: String] {
         #expect(WorktreeFailure(raw: body).forceRequired)
     }
 }
+
+@Test func serverChosenNamesStayInOneSegment() throws {
+    let mcp = try request(AdminEndpoints.mcpConnect("../session/x", directory: "/w"))
+    #expect(mcp.url?.absoluteString.hasPrefix(testURL.absoluteString + "/api/experimental/mcp/..%2Fsession%2Fx/connect") == true)
+    let percent = try request(AdminEndpoints.removeCredential("cred%2Fother"))
+    #expect(mcp.url != nil && percent.url?.absoluteString == testURL.absoluteString + "/api/credential/cred%252Fother")
+    let spaced = try request(AdminEndpoints.mcpDisconnect("my server", directory: "/w"))
+    #expect(spaced.url?.path == "/api/experimental/mcp/my server/disconnect")
+    let file = try APIClient.request(baseURL: testURL, path: "/api/fs/read/" + "a b/100%.txt".split(separator: "/").map { pathSegment(String($0)) }.joined(separator: "/"))
+    #expect(file.url?.absoluteString == testURL.absoluteString + "/api/fs/read/a%20b/100%25.txt")
+}

@@ -14,7 +14,7 @@ import UserNotifications
 
 @MainActor @Observable public final class PushController {
     public let registration: PushRegistration
-    public private(set) var permission = "Not requested"
+    public private(set) var permission = localized("Not requested", comment: "Notification permission status")
     public private(set) var preferences: PushPreferences
     public private(set) var audit: [NotificationAuditEntry] = []
     public private(set) var error: String?
@@ -82,12 +82,12 @@ import UserNotifications
         await registration.loadPendingRevocations()
         let settings = await UNUserNotificationCenter.current().notificationSettings()
         switch settings.authorizationStatus {
-        case .notDetermined: permission = "Not requested"
-        case .denied: permission = "Off in system settings"
-        case .authorized: permission = "Allowed"
-        case .provisional: permission = "Quiet delivery"
-        case .ephemeral: permission = "Temporary permission"
-        @unknown default: permission = "Unknown"
+        case .notDetermined: permission = localized("Not requested", comment: "Notification permission status")
+        case .denied: permission = localized("Off in system settings")
+        case .authorized: permission = localized("Allowed", comment: "Notification permission status")
+        case .provisional: permission = localized("Quiet delivery")
+        case .ephemeral: permission = localized("Temporary permission")
+        @unknown default: permission = localized("Unknown", comment: "Notification permission status")
         }
         for server in registry?.servers ?? [] {
             await registration.register(server: server.id, name: server.record.name, rpc: rpc(server))
@@ -100,11 +100,11 @@ import UserNotifications
                 #if !targetEnvironment(simulator)
                 UIApplication.shared.registerForRemoteNotifications()
                 #else
-                if registration.relayState != "Registered" { registration.unavailable() }
+                if !registration.isRelayRegistered { registration.unavailable() }
                 #endif
             }
             await refresh()
-        } catch { self.error = "Could not request notification permission" }
+        } catch { self.error = localized("Could not request notification permission") }
     }
     func reloadAudit() { audit = (try? registration.store.audit()) ?? audit }
     public func setApprovals(_ value: Bool) {
@@ -138,15 +138,15 @@ import UserNotifications
     }
     private func savePreferences() {
         do { try registration.store.save(preferences: preferences); error = nil }
-        catch { self.error = "Could not save notification settings" }
+        catch { self.error = localized("Could not save notification settings") }
     }
     public func test(server ref: String) async {
         guard let server = server(ref) else { return }
         do {
-            guard let key = try await registration.keys.existingKey(for: server.id) else { error = "Register notifications first"; return }
+            guard let key = try await registration.keys.existingKey(for: server.id) else { error = localized("Register notifications first"); return }
             _ = try await rpc(server)("test", .object(["keyID": .string(key.keyID)]))
             await refresh()
-        } catch { self.error = "Could not send the test push" }
+        } catch { self.error = localized("Could not send the test push") }
     }
     func registered(token: Data) async {
         do {
@@ -156,7 +156,7 @@ import UserNotifications
             await refresh()
             await activities.retryRegistrations()
             await presence.setForeground(registry?.phase == .active)
-        } catch { self.error = "Could not register notifications" }
+        } catch { self.error = localized("Could not register notifications") }
     }
     func connected(_ server: ServerStore) {
         guard !removing.contains(server.id.rawValue.uuidString) else { return }
@@ -200,7 +200,7 @@ import UserNotifications
                 let pending = server.permissions.values.reduce(0) { $0 + $1.count } + server.forms.values.reduce(0) { $0 + $1.count }
                 let badge = try self.registration.store.setPending(pending, server: server.id.rawValue.uuidString)
                 try await UNUserNotificationCenter.current().setBadgeCount(badge)
-            } catch { self.error = "Could not update the app badge" }
+            } catch { self.error = localized("Could not update the app badge") }
             for session in server.sessions.values { await self.updateActivity(server, session: session, start: false) }
         }
     }
@@ -222,7 +222,7 @@ import UserNotifications
         state.phase = phase; state.updatedAt = now
         if start { server.readPath.activityProgress.states[session.id] = state }
         await activities.update(attributes: .init(serverID: server.id.rawValue.uuidString, sessionID: session.id,
-            title: session.info.title ?? "Session", project: URL(fileURLWithPath: session.info.location.directory).lastPathComponent),
+            title: session.info.title ?? localized("Session", comment: "Live Activity title when a session has none"), project: URL(fileURLWithPath: session.info.location.directory).lastPathComponent),
             state: state, enabled: startsLiveActivities,
             foreground: registry?.phase == .active, start: start)
     }

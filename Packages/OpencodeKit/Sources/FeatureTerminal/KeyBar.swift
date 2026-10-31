@@ -14,30 +14,30 @@ public struct KeyBarView: View {
     public var body: some View {
         ScrollView(.horizontal) {
             HStack(spacing: OCSpacing.xs) {
-                key("esc", label: "Escape") { session.press(.escape) }
-                latch("ctrl", label: "Control", .control)
-                latch("alt", label: "Option", .alt)
+                key("esc", identifier: "Escape", label: localized("Escape", comment: "Escape key")) { session.press(.escape) }
+                latch("ctrl", identifier: "Control", label: localized("Control", comment: "Control key"), .control)
+                latch("alt", identifier: "Option", label: localized("Option", comment: "Option key"), .alt)
                 ForEach(Array(TerminalKeys.bar.enumerated()), id: \.offset) { _, item in
-                    key(title(item), label: label(item)) { session.press(item) }
+                    key(title(item), identifier: identifier(item), label: label(item)) { session.press(item) }
                 }
             }.padding(.horizontal, OCSpacing.sm).padding(.vertical, OCSpacing.xs)
         }.scrollIndicators(.hidden)
             .background(OCColor.layer2)
             .overlay(alignment: .top) { Rectangle().fill(OCColor.border).frame(height: OCBorder.hairline) }
-            .accessibilityElement(children: .contain).accessibilityLabel("Terminal keys").accessibilityIdentifier("terminalKeyBar")
+            .accessibilityElement(children: .contain).accessibilityLabel(localized("Terminal keys")).accessibilityIdentifier("terminalKeyBar")
     }
-    private func key(_ title: String, label: String, action: @escaping () -> Void) -> some View {
+    private func key(_ title: String, identifier: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) { cap(title, latched: false) }
-            .buttonStyle(.plain).accessibilityLabel(label).accessibilityIdentifier("terminalKey-" + label)
+            .buttonStyle(.plain).accessibilityLabel(label).accessibilityIdentifier("terminalKey-" + identifier)
     }
-    private func latch(_ title: String, label: String, _ modifier: TerminalModifiers) -> some View {
+    private func latch(_ title: String, identifier: String, label: String, _ modifier: TerminalModifiers) -> some View {
         let latched = session.latch.latched.contains(modifier)
         return Button { session.toggle(modifier) } label: { cap(title, latched: latched) }
             .buttonStyle(.plain).accessibilityLabel(label).accessibilityAddTraits(latched ? .isSelected : [])
-            .accessibilityValue(latched ? "Latched for the next key" : "Off").accessibilityIdentifier("terminalKey-" + label)
+            .accessibilityValue(latched ? localized("Latched for the next key") : localized("Off", comment: "Modifier key state: not latched")).accessibilityIdentifier("terminalKey-" + identifier)
     }
     private func cap(_ title: String, latched: Bool) -> some View {
-        Text(title).font(OCType.code).foregroundStyle(latched ? OCColor.textInverse : OCColor.text)
+        Text(verbatim: title).font(OCType.code).foregroundStyle(latched ? OCColor.textInverse : OCColor.text)
             .frame(minWidth: OCLayout.touchTarget, minHeight: OCLayout.touchTarget)
             .background(latched ? OCColor.contrast : OCColor.surface, in: RoundedRectangle(cornerRadius: OCRadius.sm))
             .contentShape(Rectangle())
@@ -53,7 +53,7 @@ public struct KeyBarView: View {
         case .text(let text): text
         }
     }
-    private func label(_ key: TerminalKey) -> String {
+    private func identifier(_ key: TerminalKey) -> String {
         switch key {
         case .escape: "Escape"
         case .tab: "Tab"
@@ -65,6 +65,21 @@ public struct KeyBarView: View {
         case .text("~"): "Tilde"
         case .text("/"): "Slash"
         case .text("-"): "Hyphen"
+        case .text(let text): text
+        }
+    }
+    private func label(_ key: TerminalKey) -> String {
+        switch key {
+        case .escape: localized("Escape", comment: "Escape key")
+        case .tab: localized("Tab", comment: "Tab key")
+        case .up: localized("Up arrow")
+        case .down: localized("Down arrow")
+        case .left: localized("Left arrow")
+        case .right: localized("Right arrow")
+        case .text("|"): localized("Vertical bar", comment: "The | key")
+        case .text("~"): localized("Tilde", comment: "The ~ key")
+        case .text("/"): localized("Slash", comment: "The / key")
+        case .text("-"): localized("Hyphen", comment: "The - key")
         case .text(let text): text
         }
     }

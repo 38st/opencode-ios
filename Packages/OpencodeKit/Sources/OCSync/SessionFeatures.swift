@@ -19,8 +19,8 @@ public struct MoveTarget: Identifiable, Equatable, Sendable {
     public var id: String { kind == .newWorktree ? "new" : directory }
     public var title: String {
         switch kind {
-        case .newWorktree: "New worktree"
-        case .checkout: "Project checkout"
+        case .newWorktree: localized("New worktree")
+        case .checkout: localized("Project checkout")
         case .worktree: (directory as NSString).lastPathComponent
         }
     }
@@ -58,7 +58,7 @@ extension ReadStore {
             if sessions[sessionID]?.info.location.directory == directory { requestedMoves[sessionID] = .applied(directory: directory) }
         } catch {
             var message = WriteErrorMessage.message(error)
-            if target.kind == .newWorktree && !directory.isEmpty { message += " The new worktree was kept: " + directory }
+            if target.kind == .newWorktree && !directory.isEmpty { message = localized("\(message) The new worktree was kept: \(directory)", comment: "First %@ is the error message, second a directory path") }
             requestedMoves[sessionID] = .failed(directory: directory, message: message)
             throw error
         }

@@ -22,6 +22,8 @@ public struct FormRenderer: View {
             ForEach(Array(FormValidation.visibleFields(form, answers: answers).enumerated()), id: \.offset) { _, field in
                 VStack(alignment: .leading, spacing: OCSpacing.sm) {
                     Text((field.fields.title ?? field.fields.key) + (field.fields.required ? " *" : "")).font(OCType.heading)
+                        .accessibilityLabel((field.fields.title ?? field.fields.key) + (field.fields.required ? ", " + localized("required", comment: "VoiceOver: this form field must be answered") : ""))
+                        .accessibilityAddTraits(.isHeader)
                     if let description = field.fields.description { Text(description).font(OCType.body).foregroundStyle(OCColor.textMuted) }
                     control(field)
                     if showErrors, let error = FormValidation.errors(form, answers: answers)[field.fields.key] {
@@ -36,20 +38,20 @@ public struct FormRenderer: View {
         switch field {
         case .string:
             if !f.options.isEmpty {
-                Text("Select one answer").font(OCType.small).foregroundStyle(OCColor.textMuted)
+                Text(localized("Select one answer")).font(OCType.small).foregroundStyle(OCColor.textMuted)
                 options(field, multiple: false)
             }
             if f.options.isEmpty || custom.contains(f.key) || (f.custom && isCustom(field)) {
-                TextField(f.placeholder ?? "Type your answer…", text: text(f.key), axis: .vertical)
+                TextField(f.placeholder ?? localized("Type your answer…"), text: text(f.key), axis: .vertical)
                     .textFieldStyle(OCTextFieldStyle()).accessibilityIdentifier("formField-" + f.key)
             }
         case .multiselect:
-            Text("Select all answers that apply").font(OCType.small).foregroundStyle(OCColor.textMuted)
+            Text(localized("Select all answers that apply")).font(OCType.small).foregroundStyle(OCColor.textMuted)
             options(field, multiple: true)
             if f.custom && custom.contains(f.key) {
-                TextField("Type your own answer…", text: Binding(get: { customText[f.key] ?? "" }, set: { customText[f.key] = $0 }))
+                TextField(localized("Type your own answer…"), text: Binding(get: { customText[f.key] ?? "" }, set: { customText[f.key] = $0 }))
                     .textFieldStyle(OCTextFieldStyle())
-                Button("Add answer") {
+                Button(localized("Add answer")) {
                     let value = (customText[f.key] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
                     guard !value.isEmpty else { return }
                     var values = answers[f.key]?.arrayValue ?? []
@@ -61,7 +63,7 @@ public struct FormRenderer: View {
                 Button { toggle(value, key: f.key) } label: { OCLabel(value, icon: "check") }.buttonStyle(OCButtonStyle(.neutral))
             }
         case .number, .integer:
-            TextField(field.type == "integer" ? "Whole number" : "Number", text: Binding(get: {
+            TextField(field.type == "integer" ? localized("Whole number") : localized("Number", comment: "Placeholder for a numeric form field"), text: Binding(get: {
                 if let text = numericText[f.key] { return text }
                 if let text = answers[f.key]?.stringValue { return text }
                 return answers[f.key]?.doubleValue.map { value in
@@ -76,17 +78,17 @@ public struct FormRenderer: View {
             })).keyboardType(.numbersAndPunctuation).textFieldStyle(OCTextFieldStyle()).accessibilityIdentifier("formField-" + f.key)
         case .boolean:
             HStack {
-                choice("Yes", selected: answers[f.key]?.boolValue == true) { answers[f.key] = .bool(true) }
-                choice("No", selected: answers[f.key]?.boolValue == false) { answers[f.key] = .bool(false) }
+                choice(localized("Yes"), selected: answers[f.key]?.boolValue == true) { answers[f.key] = .bool(true) }
+                choice(localized("No"), selected: answers[f.key]?.boolValue == false) { answers[f.key] = .bool(false) }
             }
         case .external:
             if let raw = f.url, let url = URL(string: raw), ["https", "http"].contains(url.scheme?.lowercased() ?? "") {
-                Link(destination: url) { OCLabel("Open " + (url.host ?? raw), icon: "square-arrow-top-right") }.buttonStyle(OCButtonStyle(.neutral))
+                Link(destination: url) { OCLabel(localized("Open \(url.host ?? raw)", comment: "%@ is a website host name"), icon: "square-arrow-top-right") }.buttonStyle(OCButtonStyle(.neutral))
                 Text(raw).font(OCType.code).ocSelectableText(raw)
-                OCToggleRow("I completed this step", isOn: Binding(get: { answers[f.key]?.boolValue == true }, set: { answers[f.key] = .bool($0) }))
-            } else { Text("This external URL cannot be opened.").font(OCType.small).foregroundStyle(OCColor.danger) }
+                OCToggleRow(localized("I completed this step"), isOn: Binding(get: { answers[f.key]?.boolValue == true }, set: { answers[f.key] = .bool($0) }))
+            } else { Text(localized("This external URL cannot be opened.")).font(OCType.small).foregroundStyle(OCColor.danger) }
         default:
-            Text("This field needs a newer client. You can dismiss the request with a reason.").font(OCType.small).foregroundStyle(OCColor.danger)
+            Text(localized("This field needs a newer client. You can dismiss the request with a reason.")).font(OCType.small).foregroundStyle(OCColor.danger)
             CodeBlockView((try? field.raw.prettyPrinted()) ?? "", language: "json")
         }
     }
@@ -101,7 +103,7 @@ public struct FormRenderer: View {
                 }.accessibilityIdentifier("formOption-" + f.key + "-" + option.value)
             }
             if f.custom {
-                choice("Other", selected: custom.contains(f.key) || isCustom(field)) {
+                choice(localized("Other", comment: "Option for typing a custom answer"), selected: custom.contains(f.key) || isCustom(field)) {
                     custom.insert(f.key)
                     if !multiple { answers[f.key] = .string("") }
                 }

@@ -25,7 +25,7 @@ struct OpencodeApp: App {
                     ApplicationServices.windows.applyPhase = { await registry.setScenePhase($0) }
                     self.registry = registry
                 }
-                catch { startupError = "Application Support is unavailable. Relaunch the app to try again." }
+                catch { startupError = String(localized: "Application Support is unavailable. Relaunch the app to try again.") }
             }
         }
         .commands { WorkspaceCommands() }

@@ -1,0 +1,197 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "(not answered)" : {
+      "comment" : "Shown in Question Sheet"
+    },
+    "Action" : {
+      "comment" : "Label for the requested permission action"
+    },
+    "Add answer" : {
+      "comment" : "Button title in Form Renderer"
+    },
+    "Allow always" : {
+      "comment" : "Button title in Permission Sheet"
+    },
+    "Allow always and Allow once on high-risk requests need a device passcode. Set one in Settings." : {
+      "comment" : "Shown in Permission Sheet"
+    },
+    "Allow always needs a device passcode. Set one in Settings." : {
+      "comment" : "Shown in Permission Sheet"
+    },
+    "Allow always saves these patterns in this project" : {
+      "comment" : "Shown in Permission Sheet"
+    },
+    "Allow once" : {
+      "comment" : "Button title in Approval Dock"
+    },
+    "Already handled" : {
+      "comment" : "Badge in Permission Sheet"
+    },
+    "Answer question" : {
+      "comment" : "Button title in Approval Dock"
+    },
+    "Answers could not be sent. Review and try again." : {
+      "comment" : "Text in Question Sheet"
+    },
+    "Back" : {
+      "comment" : "Button title in Permission Sheet"
+    },
+    "Close" : {
+      "comment" : "Closes the sheet"
+    },
+    "Copy action" : {
+      "comment" : "Shown in Permission Sheet"
+    },
+    "Copy allow always saves these patterns in this project" : {
+      "comment" : "Shown in Permission Sheet"
+    },
+    "Copy resources" : {
+      "comment" : "Shown in Permission Sheet"
+    },
+    "Copy working directory" : {
+      "comment" : "Shown in Permission Sheet"
+    },
+    "Dismiss" : {
+      "comment" : "Button that dismisses an agent question"
+    },
+    "Dismiss question" : {
+      "comment" : "Button title in Question Sheet"
+    },
+    "Dismissing without a reason ends the turn." : {
+      "comment" : "Text in Question Sheet"
+    },
+    "Edit answers" : {
+      "comment" : "Button title in Question Sheet"
+    },
+    "Elevated risk" : {
+      "comment" : "Shown in Permission Sheet"
+    },
+    "High risk" : {
+      "comment" : "Shown in Permission Sheet"
+    },
+    "I completed this step" : {
+      "comment" : "Switch label in Form Renderer"
+    },
+    "Low risk" : {
+      "comment" : "Shown in Permission Sheet"
+    },
+    "No" : {
+      "comment" : "Shown in Form Renderer"
+    },
+    "Number" : {
+      "comment" : "Placeholder for a numeric form field"
+    },
+    "Open %@" : {
+      "comment" : "%@ is a website host name"
+    },
+    "Other" : {
+      "comment" : "Option for typing a custom answer"
+    },
+    "Permission required" : {
+      "comment" : "Label in Approval Dock"
+    },
+    "Permission required. %@. %@. Options: %@." : {
+      "comment" : "VoiceOver announcement; the first %@ is the risk tier, the second the action, the third the list of choices"
+    },
+    "Question" : {
+      "comment" : "Heading of an agent question card"
+    },
+    "Question: %@" : {
+      "comment" : "%@ is the question's title"
+    },
+    "Question: %@. Options: %@." : {
+      "comment" : "VoiceOver announcement; the first %@ is the question, the second its choices"
+    },
+    "Reason (optional)" : {
+      "comment" : "Text field placeholder in Question Sheet"
+    },
+    "Reject" : {
+      "comment" : "Button title in Permission Sheet"
+    },
+    "Rejecting also rejects %lld other pending requests in this session." : {
+      "comment" : "%lld is the number of other pending permission requests",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Rejecting also rejects %lld other pending request in this session."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Rejecting also rejects %lld other pending requests in this session."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Reply could not be sent. Try again." : {
+      "comment" : "Shown in Permission Sheet"
+    },
+    "Resources" : {
+      "comment" : "Shown in Permission Sheet"
+    },
+    "Review" : {
+      "comment" : "Button that opens the full permission request"
+    },
+    "Review answers" : {
+      "comment" : "Button title in Question Sheet"
+    },
+    "Review your answers" : {
+      "comment" : "Text in Question Sheet"
+    },
+    "Select all answers that apply" : {
+      "comment" : "Text in Form Renderer"
+    },
+    "Select one answer" : {
+      "comment" : "Text in Form Renderer"
+    },
+    "Sending answers…" : {
+      "comment" : "Shown in Question Sheet"
+    },
+    "Subagent" : {
+      "comment" : "Badge on a request raised by a child agent session"
+    },
+    "Submit answers" : {
+      "comment" : "Button title in Question Sheet"
+    },
+    "Tell the agent what to do instead (optional)" : {
+      "comment" : "Text field placeholder in Permission Sheet"
+    },
+    "This external URL cannot be opened." : {
+      "comment" : "Text in Form Renderer"
+    },
+    "This field needs a newer client. You can dismiss the request with a reason." : {
+      "comment" : "Text in Form Renderer"
+    },
+    "Type your answer…" : {
+      "comment" : "Shown in Form Renderer"
+    },
+    "Type your own answer…" : {
+      "comment" : "Text field placeholder in Form Renderer"
+    },
+    "Whole number" : {
+      "comment" : "Shown in Form Renderer"
+    },
+    "Without a note, rejecting ends the turn." : {
+      "comment" : "Text in Permission Sheet"
+    },
+    "Working directory" : {
+      "comment" : "Shown in Permission Sheet"
+    },
+    "Yes" : {
+      "comment" : "Shown in Form Renderer"
+    },
+    "required" : {
+      "comment" : "VoiceOver: this form field must be answered"
+    }
+  },
+  "version" : "1.0"
+}

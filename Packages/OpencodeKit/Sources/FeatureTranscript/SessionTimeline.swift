@@ -78,7 +78,7 @@ struct SessionTimeline: View {
         pageTask = Task {
             defer { pageTask = nil }
             do { try await store.loadOlder(session.id); error = nil }
-            catch is CancellationError {} catch { self.error = "Could not load earlier messages." }
+            catch is CancellationError {} catch { self.error = localized("Could not load earlier messages.") }
         }
     }
 }

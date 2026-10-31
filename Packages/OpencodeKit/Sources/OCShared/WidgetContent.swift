@@ -49,11 +49,11 @@ public struct WidgetContent: Equatable, Sendable {
         /// Home's words for the row's state; `stale` rows only say what was last seen.
         public func label(stale: Bool) -> String {
             switch status {
-            case .needsYou: requestKind == .question ? "Question" : "Permission"
-            case .failed: "Failed"
-            case .running: stale ? "Last seen running" : "Running"
-            case .retrying: stale ? "Last seen retrying" : "Retrying"
-            case .idle: unread ? "Unread" : "Idle"
+            case .needsYou: requestKind == .question ? localized("Question", comment: "Session status: waiting on a question") : localized("Permission", comment: "Session status: waiting on a permission request")
+            case .failed: localized("Failed", comment: "Session status")
+            case .running: stale ? localized("Last seen running") : localized("Running", comment: "Session status")
+            case .retrying: stale ? localized("Last seen retrying") : localized("Retrying", comment: "Session status")
+            case .idle: unread ? localized("Unread", comment: "Session status") : localized("Idle", comment: "Session status")
             }
         }
     }
@@ -167,5 +167,5 @@ public enum ControlContent {
     public static func newPromptProject(_ read: SystemSnapshotStore.Read) -> String? { read.snapshot?.lastProject?.name }
     /// Review approval's waiting requests: the app icon badge's number.
     public static func waitingRequests(_ pending: [String: Int]) -> Int { pending.values.reduce(0) { $0 + max(0, $1) } }
-    public static func waitingText(_ count: Int) -> String { count == 0 ? "None waiting" : "\(count) waiting" }
+    public static func waitingText(_ count: Int) -> String { count == 0 ? localized("None waiting", comment: "No approval requests are waiting") : localized("\(count) waiting", comment: "%lld is the number of waiting approval requests") }
 }

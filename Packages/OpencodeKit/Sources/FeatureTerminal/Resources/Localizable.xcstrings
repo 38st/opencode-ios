@@ -1,0 +1,201 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "About %@ characters of output were lost while this terminal was disconnected: the server keeps only its latest 2 MiB." : {
+      "comment" : "%@ is a formatted character count"
+    },
+    "Agent" : {
+      "comment" : "Badge: the command was started by the agent"
+    },
+    "All terminals" : {
+      "comment" : "Icon button label in Terminal Screen"
+    },
+    "Cancel" : {
+      "comment" : "Button title in Terminal List"
+    },
+    "Catching up…" : {
+      "comment" : "Shown in Terminal Screen"
+    },
+    "Clear exited terminals" : {
+      "comment" : "Button title in Terminal List"
+    },
+    "Close %@" : {
+      "comment" : "%@ is the terminal title"
+    },
+    "Close %@?" : {
+      "comment" : "%@ is the terminal title"
+    },
+    "Close terminal" : {
+      "comment" : "Shown in Terminal List"
+    },
+    "Close terminal?" : {
+      "comment" : "Shown in Terminal Screen"
+    },
+    "Command" : {
+      "comment" : "Placeholder for the shell command field"
+    },
+    "Connecting…" : {
+      "comment" : "Shown in Terminal Screen"
+    },
+    "Connection lost. Reconnecting…" : {
+      "comment" : "Shown in Terminal Screen"
+    },
+    "Control" : {
+      "comment" : "Control key"
+    },
+    "Default shell" : {
+      "comment" : "Button title in Terminal List"
+    },
+    "Dismiss" : {
+      "comment" : "Icon button label in Terminal Screen"
+    },
+    "Done" : {
+      "comment" : "Button title in Run Command Sheet"
+    },
+    "Down arrow" : {
+      "comment" : "Shown in Key Bar"
+    },
+    "Escape" : {
+      "comment" : "Escape key"
+    },
+    "Exited" : {
+      "comment" : "Terminal status"
+    },
+    "Exited %lld" : {
+      "comment" : "Terminal status; %lld is the exit code"
+    },
+    "Exited with code %lld" : {
+      "comment" : "%lld is the exit code"
+    },
+    "Finished" : {
+      "comment" : "Command status: ended"
+    },
+    "Hyphen" : {
+      "comment" : "The - key"
+    },
+    "Its process is still running and will be stopped." : {
+      "comment" : "Shown in Terminal List"
+    },
+    "Latched for the next key" : {
+      "comment" : "Shown in Key Bar"
+    },
+    "Left arrow" : {
+      "comment" : "Shown in Key Bar"
+    },
+    "Loading terminals…" : {
+      "comment" : "Shown in Terminal List"
+    },
+    "More terminal actions" : {
+      "comment" : "VoiceOver label in Terminal List"
+    },
+    "New terminal" : {
+      "comment" : "VoiceOver label in Terminal List"
+    },
+    "No terminals" : {
+      "comment" : "Shown in Terminal List"
+    },
+    "Off" : {
+      "comment" : "Modifier key state: not latched"
+    },
+    "Open" : {
+      "comment" : "Opens the terminal"
+    },
+    "Option" : {
+      "comment" : "Option key"
+    },
+    "Output printed while this screen was saved is not shown." : {
+      "comment" : "Shown in Terminal Screen"
+    },
+    "Rename" : {
+      "comment" : "Button title in Terminal List"
+    },
+    "Rename terminal" : {
+      "comment" : "Alert title in Terminal List"
+    },
+    "Right arrow" : {
+      "comment" : "Shown in Key Bar"
+    },
+    "Run" : {
+      "comment" : "Runs the shell command"
+    },
+    "Run a command" : {
+      "comment" : "Screen title in Run Command Sheet"
+    },
+    "Running" : {
+      "comment" : "Status: the command is running"
+    },
+    "Running commands" : {
+      "comment" : "Section heading in Run Command Sheet"
+    },
+    "Runs in %@ on the server, outside any session." : {
+      "comment" : "%@ is a directory path"
+    },
+    "Shells" : {
+      "comment" : "Section heading in Terminal List"
+    },
+    "Slash" : {
+      "comment" : "The / key"
+    },
+    "Start a shell on your server in this folder." : {
+      "comment" : "Shown in Terminal List"
+    },
+    "Stop" : {
+      "comment" : "Stops the running command"
+    },
+    "Stopped" : {
+      "comment" : "Command status: stopped by the user"
+    },
+    "Tab" : {
+      "comment" : "Tab key"
+    },
+    "Terminal" : {
+      "comment" : "Fallback title of a terminal"
+    },
+    "Terminal actions" : {
+      "comment" : "VoiceOver label in Terminal Screen"
+    },
+    "Terminal keys" : {
+      "comment" : "VoiceOver label in Key Bar"
+    },
+    "Terminals" : {
+      "comment" : "Text in Terminal List"
+    },
+    "The first %@ characters of output are no longer on the server." : {
+      "comment" : "%@ is a formatted character count"
+    },
+    "The process exited while this terminal was disconnected; output after the saved screen is not available." : {
+      "comment" : "Shown in Terminal Screen"
+    },
+    "The process exited with code %lld." : {
+      "comment" : "%lld is the exit code"
+    },
+    "The process exited." : {
+      "comment" : "Shown in Terminal Screen"
+    },
+    "The server's output no longer matches this screen, so it was redrawn from what the server kept." : {
+      "comment" : "Shown in Terminal Screen"
+    },
+    "This terminal was closed." : {
+      "comment" : "Shown in Terminal Screen"
+    },
+    "Tilde" : {
+      "comment" : "The ~ key"
+    },
+    "Timed out" : {
+      "comment" : "Shown in Run Command Sheet"
+    },
+    "Title" : {
+      "comment" : "Placeholder for the terminal title field"
+    },
+    "Unknown" : {
+      "comment" : "Shown in Terminal List"
+    },
+    "Up arrow" : {
+      "comment" : "Shown in Key Bar"
+    },
+    "Vertical bar" : {
+      "comment" : "The | key"
+    }
+  },
+  "version" : "1.0"
+}

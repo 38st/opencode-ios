@@ -14,7 +14,8 @@ public struct ServerAdminView: View {
     public init(server: ServerStore, section: ServerSettingsSection) {
         self.server = server; _section = State(initialValue: section)
     }
-    private var admin: ServerAdminModel { server.readPath.admin }
+    @Environment(\.ocServerAdminScope) private var scope
+    private var admin: ServerAdminModel { scope?.model(for: server.readPath) ?? server.readPath.admin }
     public var body: some View {
         Group {
             if wide {
@@ -36,7 +37,7 @@ public struct ServerAdminView: View {
     private var sidebar: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: OCSpacing.xxs) {
-                OCSidebarHeader("Server settings").padding(.bottom, OCSpacing.xs)
+                OCSidebarHeader(localized("Server settings")).padding(.bottom, OCSpacing.xs)
                 ForEach(ServerSettingsSection.allCases) { item in
                     Button { section = item } label: {
                         OCLabel(item.title, icon: item.icon).font(OCType.body)
@@ -67,11 +68,16 @@ public struct ServerAdminView: View {
 }
 
 /// The server detail screen's links into its settings.
+extension EnvironmentValues {
+    /// The window's settings models; set by each window's root view.
+    @Entry public var ocServerAdminScope: ServerAdminScope? = nil
+}
+
 public struct ServerAdminLinks: View {
     let server: ServerStore
     public init(server: ServerStore) { self.server = server }
     public var body: some View {
-        OCSection("Server settings") {
+        OCSection(localized("Server settings")) {
             ForEach(ServerSettingsSection.allCases) { section in
                 NavigationLink { ServerAdminView(server: server, section: section) } label: {
                     HStack {

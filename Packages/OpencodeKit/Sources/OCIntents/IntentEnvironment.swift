@@ -37,14 +37,14 @@ public struct SessionStatusReport: Sendable, Equatable {
     }
     public var label: String {
         switch state {
-        case .needsPermission: "Waiting for your approval"
-        case .needsAnswer: "Waiting for your answer"
-        case .running: "Running"
-        case .retrying: "Retrying"
-        case .failed: "Failed"
-        case .stopped: "Stopped"
-        case .finished: "Finished"
-        case .idle: "Idle"
+        case .needsPermission: localized("Waiting for your approval")
+        case .needsAnswer: localized("Waiting for your answer")
+        case .running: localized("Running", comment: "Session status")
+        case .retrying: localized("Retrying", comment: "Session status")
+        case .failed: localized("Failed", comment: "Session status")
+        case .stopped: localized("Stopped", comment: "Session status")
+        case .finished: localized("Finished", comment: "Session status")
+        case .idle: localized("Idle", comment: "Session status")
         }
     }
     /// The status and a short account of the last activity.
@@ -52,12 +52,12 @@ public struct SessionStatusReport: Sendable, Equatable {
         let formatter = RelativeDateTimeFormatter()
         formatter.locale = locale; formatter.unitsStyle = .full
         // The server's clock can be a little ahead of the device's: within a minute, or later, is "just now".
-        let relative = { (date: Date) in date.timeIntervalSince(now) > -60 ? "just now" : formatter.localizedString(for: date, relativeTo: now) }
-        var parts = ["\(title): \(label)."]
-        if let runningSince, [.running, .retrying].contains(state) { parts.append("Started \(relative(runningSince)).") }
-        if let lastActivity { parts.append("Last activity \(relative(lastActivity)).") }
-        if unread { parts.append("New output to read.") }
-        if !live { parts.append("This is the last known state: the server could not be reached.") }
+        let relative = { (date: Date) in date.timeIntervalSince(now) > -60 ? localized("just now", comment: "Relative time: less than a minute ago") : formatter.localizedString(for: date, relativeTo: now) }
+        var parts = [localized("\(title): \(label).", comment: "First %@ is a session title, second its status")]
+        if let runningSince, [.running, .retrying].contains(state) { parts.append(localized("Started \(relative(runningSince)).", comment: "%@ is a relative time, like 5 minutes ago")) }
+        if let lastActivity { parts.append(localized("Last activity \(relative(lastActivity)).", comment: "%@ is a relative time, like 5 minutes ago")) }
+        if unread { parts.append(localized("New output to read.")) }
+        if !live { parts.append(localized("This is the last known state: the server could not be reached.")) }
         return parts.joined(separator: " ")
     }
 }
@@ -107,13 +107,13 @@ public enum IntentError: Error, CustomLocalizedStringResourceConvertible {
     case serverUnavailable
     public var localizedStringResource: LocalizedStringResource {
         switch self {
-        case .appUnavailable: "Open the app, then try again."
-        case .sessionNotFound: "That session is no longer on your servers."
-        case .projectNotFound: "That project is no longer on your servers."
-        case .emptyPrompt: "The prompt is empty."
-        case .subagentSession: "A subagent session is read only. Send to its parent session instead."
-        case .revertStaged: "This session has an undo waiting to be confirmed. Open it in the app first."
-        case .serverUnavailable: "The server is not saved in the app."
+        case .appUnavailable: LocalizedStringResource("Open the app, then try again.", bundle: .module)
+        case .sessionNotFound: LocalizedStringResource("That session is no longer on your servers.", bundle: .module)
+        case .projectNotFound: LocalizedStringResource("That project is no longer on your servers.", bundle: .module)
+        case .emptyPrompt: LocalizedStringResource("The prompt is empty.", bundle: .module)
+        case .subagentSession: LocalizedStringResource("A subagent session is read only. Send to its parent session instead.", bundle: .module)
+        case .revertStaged: LocalizedStringResource("This session has an undo waiting to be confirmed. Open it in the app first.", bundle: .module)
+        case .serverUnavailable: LocalizedStringResource("The server is not saved in the app.", bundle: .module)
         }
     }
 }

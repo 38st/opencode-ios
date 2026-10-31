@@ -64,7 +64,7 @@ import OCShared
         else if item.runningCount > 0 { status = item.family.contains { if case .retrying = $0.status { true } else { false } } ? .retrying : .running }
         else { status = .idle }
         let since = item.family.compactMap { model -> Double? in if case .running(let since) = model.status { since } else { nil } }.min()
-        return .init(server: server.id.rawValue.uuidString, session: item.session.id, title: item.session.info.title ?? "Untitled session",
+        return .init(server: server.id.rawValue.uuidString, session: item.session.id, title: item.session.info.title ?? localized("Untitled session"),
                      project: item.projectName, projectID: item.session.info.projectID, status: status, unread: item.session.unread,
                      activity: minute(item.activity), runningSince: since.flatMap { $0 > 0 ? minute($0) : nil }, requests: requests, request: request)
     }

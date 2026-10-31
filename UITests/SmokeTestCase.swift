@@ -6,17 +6,39 @@ nonisolated class SmokeTestCase: XCTestCase {
     @MainActor lazy var app = XCUIApplication()
 
     /// - Parameter animations: false launches the Debug build without UIKit animations.
-    @MainActor func launchFreshApp(suffix: String, animations: Bool = true) throws {
+    /// - Parameter dark: launches the Debug build in dark mode (XCUIDevice's appearance does not reach the app here).
+    @MainActor func launchFreshApp(suffix: String, animations: Bool = true, dark: Bool = false) throws {
         let id = try XCTUnwrap(ProcessInfo.processInfo.environment["OPENCODE_UI_TEST_ID"])
         app.launchEnvironment["OPENCODE_UI_TEST_ID"] = id + suffix
-        app.launchArguments = ["--ui-testing-reset"] + (animations ? [] : ["--ui-testing-no-animations"])
+        app.launchArguments = ["--ui-testing-reset"] + (animations ? [] : ["--ui-testing-no-animations"]) + (dark ? ["--ui-testing-dark"] : [])
         addTeardownBlock { @MainActor [self] in finishTest() }
         app.launch()
-        // XCUIApplication.open can relaunch the process. Only the test's initial launch resets data.
-        app.launchArguments = []
+        // XCUIApplication.open can relaunch the process. Only the test's initial launch resets data; dark mode stays.
+        app.launchArguments = dark ? ["--ui-testing-dark"] : []
         // Set orientation after launch: a cold iPad launch can restore the previous portrait scene.
         rotate(to: .portrait)
         XCTAssertTrue(app.buttons["addFirstServer"].waitForExistence(timeout: 10), "Reset must restore onboarding")
+    }
+
+    /// Pairs the sandbox server from the add-server screen: a pairing link on iPad, the password on iPhone.
+    /// `url` overrides the server address for the password method (the fault proxy, for instance).
+    @MainActor func pairSandbox(name: String, url: String? = nil) async throws {
+        let env = ProcessInfo.processInfo.environment
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            let pairing = try await api("/api/pair", method: "POST")
+            let link = try XCTUnwrap(env["OPENCODE_UI_URL"]) + "/auth/connect/" + XCTUnwrap(pairing["code"] as? String)
+            XCTAssertTrue(app.textFields["pairingLink"].waitForExistence(timeout: 5))
+            app.textFields["pairingLink"].tap(); app.textFields["pairingLink"].typeText(link)
+        } else {
+            XCTAssertTrue(app.buttons["Use password"].waitForExistence(timeout: 5))
+            app.buttons["Use password"].tap()
+            XCTAssertTrue(app.textFields["serverName"].waitForExistence(timeout: 5))
+            app.textFields["serverName"].tap(); app.textFields["serverName"].typeText(name)
+            app.textFields["serverURL"].tap(); app.textFields["serverURL"].typeText(try XCTUnwrap(url ?? env["OPENCODE_UI_URL"]))
+            app.secureTextFields["serverPassword"].tap(); app.secureTextFields["serverPassword"].typeText(try XCTUnwrap(env["OPENCODE_UI_PASSWORD"]))
+        }
+        connect(explainingLocalNetwork: true)
+        waitForConnections()
     }
 
     @MainActor func connect(explainingLocalNetwork: Bool) {

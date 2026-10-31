@@ -49,7 +49,7 @@ import UserNotifications
             _ = status
             #endif
             #if targetEnvironment(simulator)
-            if let registry = try? await ApplicationServices.registry() { if registry.notifications?.registration.relayState != "Registered" { registry.notifications?.registration.unavailable() } }
+            if let registry = try? await ApplicationServices.registry() { if registry.notifications?.registration.isRelayRegistered != true { registry.notifications?.registration.unavailable() } }
             #endif
         }
         return true
@@ -81,7 +81,7 @@ import UserNotifications
                 try Task.checkCancellation()
                 await self.handle(registry, shownID: shownID, receipt: receipt, route: route, envelope: envelope, action: action, text: text, identifier: identifier)
             }
-        } catch { await feedback("Couldn't reach your server", replacing: identifier, route: route) }
+        } catch { await feedback(localized("Couldn't reach your server"), replacing: identifier, route: route) }
     }
     private func handle(_ registry: ServerRegistry, shownID: String?, receipt: String?, route: String?, envelope: Data?, action: NotificationAction.ID, text: String?, identifier: String) async {
         guard let push = registry.notifications else { return }

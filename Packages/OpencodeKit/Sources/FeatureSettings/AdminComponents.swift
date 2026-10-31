@@ -11,16 +11,16 @@ struct AdminProjectPicker: View {
     var body: some View {
         if admin.projects.count > 1 {
             Menu {
-                Picker("Project", selection: Binding(get: { admin.directory ?? "" }, set: { admin.directory = $0 })) {
+                Picker(localized("Project"), selection: Binding(get: { admin.directory ?? "" }, set: { admin.directory = $0 })) {
                     ForEach(admin.projects) { project in Text(AdminText.name(project)).tag(project.canonical) }
                 }
             } label: {
                 HStack(spacing: OCSpacing.sm) {
                     OCIcon("folder").foregroundStyle(OCColor.iconMuted)
-                    Text(admin.project.map(AdminText.name) ?? "Choose a project").font(OCType.body).foregroundStyle(OCColor.text)
+                    Text(admin.project.map(AdminText.name) ?? localized("Choose a project")).font(OCType.body).foregroundStyle(OCColor.text)
                     OCIcon("chevron-down", size: 12).foregroundStyle(OCColor.iconMuted)
                 }.frame(minHeight: OCLayout.touchTarget)
-            }.accessibilityLabel("Project: " + (admin.project.map(AdminText.name) ?? "none"))
+            }.accessibilityLabel(admin.project.map { localized("Project: \(AdminText.name($0))", comment: "%@ is a project name") } ?? localized("Project: none"))
                 .accessibilityIdentifier("adminProjectPicker")
         } else if let project = admin.project {
             OCLabel(AdminText.name(project), icon: "folder").font(OCType.body).foregroundStyle(OCColor.textMuted)
@@ -47,9 +47,9 @@ struct AdminLoadState<Value: Sendable, Content: View>: View {
                 }.accessibilityElement(children: .combine)
             } else { content(values) }
         } else if isLoading {
-            HStack(spacing: OCSpacing.sm) { ProgressView(); Text("Loading…").font(OCType.body).foregroundStyle(OCColor.textMuted) }
+            HStack(spacing: OCSpacing.sm) { ProgressView(); Text(localized("Loading…")).font(OCType.body).foregroundStyle(OCColor.textMuted) }
         } else {
-            Text("Not loaded. Pull to refresh.").font(OCType.body).foregroundStyle(OCColor.textMuted)
+            Text(localized("Not loaded. Pull to refresh.")).font(OCType.body).foregroundStyle(OCColor.textMuted)
         }
     }
 }
@@ -91,8 +91,8 @@ struct AdminFeedback: ViewModifier {
     @Bindable var admin: ServerAdminModel
     func body(content: Content) -> some View {
         content
-            .alert("Could not complete action", isPresented: Binding(get: { admin.error != nil }, set: { if !$0 { admin.error = nil } })) {
-                Button("OK") { admin.error = nil }
+            .alert(localized("Could not complete action"), isPresented: Binding(get: { admin.error != nil }, set: { if !$0 { admin.error = nil } })) {
+                Button(localized("OK")) { admin.error = nil }
             } message: { Text(admin.error ?? "") }
             .overlay(alignment: .bottom) {
                 if let notice = admin.notice {

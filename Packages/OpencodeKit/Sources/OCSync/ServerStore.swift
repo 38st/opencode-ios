@@ -206,7 +206,7 @@ import OCPersistence
     }
     private func persist() async {
         do { try await recordChanged(); persistenceError = nil }
-        catch { persistenceError = "Could not save server changes. Try again." }
+        catch { persistenceError = localized("Could not save server changes. Try again.") }
     }
     private func refreshInfo() async throws {
         guard let endpoint = lastResolution?.selected ?? record.endpoints.first else { return }
@@ -240,9 +240,9 @@ import OCPersistence
     }
     public func transitionDescription(_ transition: StateTransition) -> String {
         switch transition.state {
-        case .idle: return "Idle"
-        case .resolving: return "Resolving endpoints"
-        case .connecting(let attempt): return "Connecting (attempt \(attempt))"
+        case .idle: return localized("Idle", comment: "Connection state")
+        case .resolving: return localized("Resolving endpoints")
+        case .connecting(let attempt): return localized("Connecting (attempt \(attempt))", comment: "Connection history; %lld is the attempt number")
         default:
             let status = ServerStatus(state: transition.state, endpoints: record.endpoints, now: transition.at)
             return status.title + (status.detail.map { " — " + $0 } ?? "")
@@ -250,14 +250,14 @@ import OCPersistence
     }
     public func diagnosis(for id: EndpointID) -> String {
         if let failure = record.endpoints.first(where: { $0.id == id })?.stats.lastFailure { return failure.message }
-        guard let diagnosis = lastResolution?.diagnoses[id] else { return "Not checked" }
+        guard let diagnosis = lastResolution?.diagnoses[id] else { return localized("Not checked", comment: "Endpoint health: not yet checked") }
         switch diagnosis {
-        case .success: return "Healthy"
+        case .success: return localized("Healthy", comment: "Endpoint health")
         case .failure(let failure): return failure.message
-        case .starting: return "Server is starting"
-        case .incompatible(.v1): return "Needs opencode 2"
-        case .incompatible: return "Unsupported server version"
-        case .notSelected: return "Another endpoint won the race"
+        case .starting: return localized("Server is starting")
+        case .incompatible(.v1): return localized("Needs opencode 2")
+        case .incompatible: return localized("Unsupported server version")
+        case .notSelected: return localized("Another endpoint won the race")
         }
     }
 }

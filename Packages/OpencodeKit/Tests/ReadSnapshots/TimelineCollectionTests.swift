@@ -17,6 +17,39 @@ extension ReadPerformanceTests {
         #expect(SessionTimeline.appendedRowCount(previous: previous, next: [row("older")] + previous + [row("new")]) == 1)
         #expect(SessionTimeline.appendedRowCount(previous: [], next: previous) == 0)
     }
+    /// Scrolls a 2,000-row transcript top to bottom one 60-point step at a time and times the main-thread layout of
+    /// each step. Report-only on the simulator: smoothness is an iPhone 13 trace.
+    @Test func transcriptScrollThroughTwoThousandRows() async throws {
+        let sampleMessages = messages(2_000)
+        let transcript = TranscriptModel(messages: sampleMessages)
+        let session = SessionModel(info: .init(raw: .object(["id": .string("scroll")])))
+        let rows = await TimelineRowBuilder().build(sampleMessages, detail: .compact)
+        let store = ReadStore(serverID: "performance"), control = TimelineScrollControl()
+        let content = TimelineCollection(rows: rows, store: store, session: session, transcript: transcript, detail: .compact,
+            working: false, control: control, openChild: { _ in }, openRoot: { _ in }, atBottom: { _ in }, reachedTop: {})
+        let coordinator = content.makeCoordinator()
+        let view = content.makeCollection(coordinator: coordinator)
+        view.frame = CGRect(x: 0, y: 0, width: 393, height: 700)
+        coordinator.update(content)
+        defer { control.cancel() }
+        try await collectionSettled { control.coordinator?.ids.count == rows.count && control.coordinator?.applying == false }
+        control.following = false
+        view.setContentOffset(.zero, animated: false); view.layoutIfNeeded()
+        var steps: [Double] = []
+        var offset: CGFloat = 0
+        while offset + view.bounds.height < view.contentSize.height, steps.count < 20_000 {
+            offset += 60
+            let start = ContinuousClock.now
+            view.setContentOffset(CGPoint(x: 0, y: offset), animated: false); view.layoutIfNeeded()
+            steps.append(seconds(start.duration(to: .now)) * 1_000)
+        }
+        let sorted = steps.sorted()
+        let p95 = sorted.isEmpty ? 0 : sorted[Int(Double(sorted.count - 1) * 0.95)]
+        #expect(steps.count > 100, "The transcript must be long enough to scroll")
+        try record(["steps": Double(steps.count), "step_p95_ms": p95, "step_max_ms": sorted.last ?? 0,
+                    "steps_over_16ms": Double(steps.filter { $0 > 1_000 / 60 }.count), "content_height_pt": Double(view.contentSize.height)],
+                   name: "transcript-scroll")
+    }
     @Test func renderedFiveThousandRowsAndPrependAnchor() async throws {
         let before = physicalFootprint()
         let sampleMessages = messages(5_000)

@@ -7,6 +7,15 @@ import OCRender
 import OCDesign
 
 public struct ReviewScreen: View {
+    /// "Example.swift, modified, in Sources, reviewed": the name first, then what changed and where.
+    static func accessibilityLabel(_ file: FileDiff, reviewed: Bool) -> String {
+        let name = (file.file as NSString).lastPathComponent, folder = (file.file as NSString).deletingLastPathComponent
+        let change = file.status == "added" ? localized("added", comment: "File change kind") : file.status == "deleted" ? localized("deleted", comment: "File change kind") : localized("modified", comment: "File change kind")
+        var parts = [name, change]
+        if !folder.isEmpty { parts.append(localized("in \(folder)", comment: "%@ is the folder that holds a changed file")) }
+        if reviewed { parts.append(localized("reviewed", comment: "The changed file has been marked reviewed")) }
+        return parts.joined(separator: ", ")
+    }
     @Bindable var model: ReviewModel
     let composer: ComposerModel
     let openFile: (ReviewPath, Int?) -> Void
@@ -30,23 +39,23 @@ public struct ReviewScreen: View {
             let regular = geometry.size.width >= 480 && !typeSize.isAccessibilitySize
             VStack(spacing: 0) {
                 if let error = model.error { Text(error).font(OCType.small).foregroundStyle(OCColor.danger).padding(OCSpacing.sm).ocAnnounce(error, initial: true) }
-                if (model.loading || model.awaitingProvider) && !model.loaded { ProgressView("Loading changes…").font(OCType.small).frame(maxWidth: .infinity, maxHeight: .infinity) }
+                if (model.loading || model.awaitingProvider) && !model.loaded { ProgressView(localized("Loading changes…")).font(OCType.small).frame(maxWidth: .infinity, maxHeight: .infinity) }
                 else if model.error != nil && !model.providerKnown {
-                    OCEmptyState("Request failed", detail: "", icon: "warning", presentation: .panel) {
-                        Button("Try again") { model.refresh() }.buttonStyle(OCButtonStyle())
+                    OCEmptyState(localized("Request failed"), detail: "", icon: "warning", presentation: .panel) {
+                        Button(localized("Try again")) { model.refresh() }.buttonStyle(OCButtonStyle())
                     }
                 } else if model.loaded && model.vcs.provider == nil {
-                    OCEmptyState("No tracked changes", detail: "Track, review, and undo changes in this project", icon: "review", presentation: .panel, fileIcon: ".gitignore") {
-                        Button(model.creating ? "Creating Git repository…" : "Create Git repository") { model.initializeGit() }.buttonStyle(OCButtonStyle()).disabled(model.creating)
+                    OCEmptyState(localized("No tracked changes"), detail: localized("Track, review, and undo changes in this project"), icon: "review", presentation: .panel, fileIcon: ".gitignore") {
+                        Button(model.creating ? localized("Creating Git repository…") : localized("Create Git repository")) { model.initializeGit() }.buttonStyle(OCButtonStyle()).disabled(model.creating)
                     }
                 } else if model.files.isEmpty {
                     sourceMenu.padding(OCSpacing.sm)
-                    OCEmptyState(regular ? "No file changes yet" : model.source == .working ? "No uncommitted changes yet" : model.source == .branch ? "No branch changes yet" : "No changes", detail: regular ? "Project changes will appear here" : "", icon: "review", presentation: .panel) { EmptyView() }
+                    OCEmptyState(regular ? localized("No file changes yet") : model.source == .working ? localized("No uncommitted changes yet") : model.source == .branch ? localized("No branch changes yet") : localized("No changes"), detail: regular ? localized("Project changes will appear here") : "", icon: "review", presentation: .panel) { EmptyView() }
                 } else if regular {
                     HStack(spacing: 0) {
                         if model.sidebarVisible {
                             sidebar.frame(width: min(model.sidebarWidth, geometry.size.width - 200))
-                            OCResizeHandle("Resize file tree", value: $model.sidebarWidth, range: WorkspaceWidths.reviewTreeMinimum...WorkspaceWidths.reviewTreeMaximum,
+                            OCResizeHandle(localized("Resize file tree"), value: $model.sidebarWidth, range: WorkspaceWidths.reviewTreeMinimum...WorkspaceWidths.reviewTreeMaximum,
                                            reset: WorkspaceWidths.reviewTreeDefault)
                         }
                         preview
@@ -73,8 +82,8 @@ public struct ReviewScreen: View {
                 Task { do { try await composer.sendAgentPrompt(action.prompt) } catch { gitError = WriteErrorMessage.message(error) } }
             }.ocSheet()
         }
-        .alert("Could not send the prompt", isPresented: Binding(get: { gitError != nil }, set: { if !$0 { gitError = nil } })) {
-            Button("OK") { gitError = nil }
+        .alert(localized("Could not send the prompt"), isPresented: Binding(get: { gitError != nil }, set: { if !$0 { gitError = nil } })) {
+            Button(localized("OK")) { gitError = nil }
         } message: { Text(gitError ?? "") }
         .onChange(of: phase) { _, phase in if phase == .active { model.invalidate() } }
     }
@@ -82,13 +91,13 @@ public struct ReviewScreen: View {
     private var sourceMenu: some View {
         Group {
             if model.sources.count > 1 {
-                Menu { ForEach(model.sources, id: \.key) { source in Button(source.title) { model.choose(source) } } } label: { OCLabel(model.source.title, icon: "branch").font(OCType.small) }.buttonStyle(OCButtonStyle(.ghost)).accessibilityLabel("Review source")
+                Menu { ForEach(model.sources, id: \.key) { source in Button(source.title) { model.choose(source) } } } label: { OCLabel(model.source.title, icon: "branch").font(OCType.small) }.buttonStyle(OCButtonStyle(.ghost)).accessibilityLabel(localized("Review source"))
             } else { Text(model.source.title).font(OCType.small).frame(minHeight: OCLayout.touchTarget) }
         }
     }
     private var totals: some View {
         HStack(spacing: OCSpacing.xs) {
-            Text("+\(model.additions)").foregroundStyle(OCColor.success); Text("−\(model.deletions)").foregroundStyle(OCColor.danger)
+            Text(verbatim: "+\(model.additions)").foregroundStyle(OCColor.success); Text(verbatim: "−\(model.deletions)").foregroundStyle(OCColor.danger)
             gitMenu
         }.font(OCType.micro)
     }
@@ -97,14 +106,14 @@ public struct ReviewScreen: View {
         Menu {
             ForEach(GitQuickAction.allCases) { action in Button(action.title) { gitAction = action } }
         } label: { OCIcon("branch-out").frame(width: OCLayout.touchTarget, height: OCLayout.touchTarget) }
-            .accessibilityLabel("Git actions").accessibilityIdentifier("reviewGitActions")
+            .accessibilityLabel(localized("Git actions")).accessibilityIdentifier("reviewGitActions")
             .disabled(model.vcs.provider == nil || composer.session == nil || composer.session?.info.parentID != nil)
     }
     private var sidebar: some View {
         VStack(spacing: 0) {
             HStack { sourceMenu; Spacer(minLength: 0); totals }.padding(.horizontal, OCSpacing.sm)
-            Text("\(model.reviewedCount) of \(model.files.count) reviewed").font(OCType.micro).foregroundStyle(OCColor.textMuted)
-            TextField("Filter files", text: $model.filter).textFieldStyle(.plain).font(OCType.small).padding(OCSpacing.md).frame(minHeight: OCLayout.touchTarget)
+            Text(localized("\(model.reviewedCount) of \(model.files.count) reviewed", comment: "First %lld is reviewed files, second is all changed files")).font(OCType.micro).foregroundStyle(OCColor.textMuted)
+            TextField(localized("Filter files"), text: $model.filter).textFieldStyle(.plain).font(OCType.small).padding(OCSpacing.md).frame(minHeight: OCLayout.touchTarget)
             ScrollView {
                 LazyVStack(spacing: 0) {
                     ForEach(Array(treeRows.enumerated()), id: \.offset) { _, entry in
@@ -120,19 +129,20 @@ public struct ReviewScreen: View {
                                     }
                                     Spacer(minLength: 0)
                                     if model.isReviewed(file) { OCIcon("check") }
-                                    if file.status == "added" || file.status == "deleted" { Text(file.status == "added" ? "A" : "D").font(OCType.micro).foregroundStyle(file.status == "added" ? OCColor.success : OCColor.danger) }
+                                    if file.status == "added" || file.status == "deleted" { Text(file.status == "added" ? localized("A", comment: "Abbreviation for an added file") : localized("D", comment: "Abbreviation for a deleted file")).font(OCType.micro).foregroundStyle(file.status == "added" ? OCColor.success : OCColor.danger) }
                                 }.padding(.leading, CGFloat(entry.depth) * 16 + OCSpacing.sm).padding(.trailing, OCSpacing.sm).frame(minHeight: OCLayout.touchTarget).contentShape(Rectangle())
                                     .background(model.selected?.file == file.file ? OCColor.pressed : .clear).background(OCColor.background).ocHover(Rectangle())
                             }.buttonStyle(.plain).accessibilityIdentifier("reviewFile-" + file.file)
-                                .accessibilityValue(model.selected?.file == file.file ? "Selected" : "")
+                                .accessibilityLabel(Self.accessibilityLabel(file, reviewed: model.isReviewed(file)))
+                                .accessibilityValue(model.selected?.file == file.file ? localized("Selected") : "")
                                 .contextMenu {
-                                    Button("Open file") { open(file) }
-                                    Button("Mention in composer") { if let path = model.path(file.file) { composer.mentionFile(path.absolute, focus: true) } }
-                                    Button(model.isReviewed(file) ? "Mark as not reviewed" : "Mark as reviewed") { model.mark(file, reviewed: !model.isReviewed(file)) }
+                                    Button(localized("Open file")) { open(file) }
+                                    Button(localized("Mention in composer")) { if let path = model.path(file.file) { composer.mentionFile(path.absolute, focus: true) } }
+                                    Button(model.isReviewed(file) ? localized("Mark as not reviewed") : localized("Mark as reviewed")) { model.mark(file, reviewed: !model.isReviewed(file)) }
                                 }
                         } else { OCLabel(entry.name, icon: "folder").font(OCType.small).padding(.leading, CGFloat(entry.depth) * 16 + OCSpacing.sm).frame(maxWidth: .infinity, minHeight: OCLayout.touchTarget, alignment: .leading) }
                     }
-                    if model.filteredFiles.isEmpty { Text("No results found").font(OCType.small).padding() }
+                    if model.filteredFiles.isEmpty { Text(localized("No results found")).font(OCType.small).padding() }
                 }
             }.refreshable { model.refresh() }
         }.background(OCColor.background)
@@ -153,13 +163,13 @@ public struct ReviewScreen: View {
     private var toolbar: some View {
         ScrollView(.horizontal) {
             HStack(spacing: OCSpacing.xxs) {
-                OCIconButton("Toggle file tree", icon: "file-tree") { model.sidebarVisible.toggle() }
-                if !model.sidebarVisible { sourceMenu; totals; Text("\((model.orderedFiles.firstIndex { $0.file == model.selected?.file } ?? 0) + 1)/\(model.files.count)").font(OCType.micro) }
-                OCIconButton("Previous file", icon: "chevron-left") { model.move(-1) }
-                OCIconButton("Next file", icon: "chevron-right") { model.move(1) }
-                OCIconButton(showAll ? "Hide non-diff lines" : "Show all lines", icon: "code-lines") { showAll.toggle() }
-                Menu { Button("Unified") { split = false }; if diffWidth >= 560 { Button("Split") { split = true } }; Toggle("Wrap lines", isOn: $wrap) } label: { OCIcon(split && diffWidth >= 560 ? "split" : "unified").frame(width: 44, height: 44) }.accessibilityLabel("Diff view")
-                if let file = model.selected { OCToggleRow("Reviewed", isOn: Binding(get: { model.isReviewed(file) }, set: { model.mark(file, reviewed: $0) })).fixedSize() }
+                OCIconButton(localized("Toggle file tree"), icon: "file-tree") { model.sidebarVisible.toggle() }
+                if !model.sidebarVisible { sourceMenu; totals; Text(verbatim: "\((model.orderedFiles.firstIndex { $0.file == model.selected?.file } ?? 0) + 1)/\(model.files.count)").font(OCType.micro) }
+                OCIconButton(localized("Previous file"), icon: "chevron-left") { model.move(-1) }
+                OCIconButton(localized("Next file"), icon: "chevron-right") { model.move(1) }
+                OCIconButton(showAll ? localized("Hide non-diff lines") : localized("Show all lines"), icon: "code-lines") { showAll.toggle() }
+                Menu { Button(localized("Unified", comment: "Diff layout option")) { split = false }; if diffWidth >= 560 { Button(localized("Split", comment: "Side-by-side diff layout option")) { split = true } }; Toggle(localized("Wrap lines"), isOn: $wrap) } label: { OCIcon(split && diffWidth >= 560 ? "split" : "unified").frame(width: 44, height: 44) }.accessibilityLabel(localized("Diff view"))
+                if let file = model.selected { OCToggleRow(localized("Reviewed", comment: "Toggle: the file has been reviewed"), isOn: Binding(get: { model.isReviewed(file) }, set: { model.mark(file, reviewed: $0) })).fixedSize() }
             }
         }.scrollIndicators(.hidden)
     }
@@ -168,7 +178,7 @@ public struct ReviewScreen: View {
             toolbar
             if let file = model.selected {
                 HStack(spacing: OCSpacing.sm) {
-                    Text(file.status == "added" ? "A" : file.status == "deleted" ? "D" : "M").font(OCType.micro).foregroundStyle(OCColor.textMuted)
+                    Text(file.status == "added" ? localized("A", comment: "Abbreviation for an added file") : file.status == "deleted" ? localized("D", comment: "Abbreviation for a deleted file") : localized("M", comment: "Abbreviation for a modified file")).font(OCType.micro).foregroundStyle(OCColor.textMuted)
                     OCFileIcon(file.file)
                     VStack(alignment: .leading, spacing: OCSpacing.xxs) {
                         Text((file.file as NSString).lastPathComponent).font(OCType.small).lineLimit(1)
@@ -176,8 +186,8 @@ public struct ReviewScreen: View {
                         if !directory.isEmpty { Text(directory).font(OCType.micro).foregroundStyle(OCColor.textMuted).lineLimit(1) }
                     }
                     Spacer(minLength: 0)
-                    HStack(spacing: OCSpacing.xs) { Text("+\(file.additions)").foregroundStyle(OCColor.success); Text("−\(file.deletions)").foregroundStyle(OCColor.danger) }.font(OCType.micro)
-                    OCIconButton("Open file", icon: "open-file") { open(file) }
+                    HStack(spacing: OCSpacing.xs) { Text(verbatim: "+\(file.additions)").foregroundStyle(OCColor.success); Text(verbatim: "−\(file.deletions)").foregroundStyle(OCColor.danger) }.font(OCType.micro)
+                    OCIconButton(localized("Open file"), icon: "open-file") { open(file) }
                 }.padding(.horizontal, OCSpacing.sm).frame(minHeight: OCLayout.touchTarget)
                 diff([file], headers: false).onGeometryChange(for: CGFloat.self) { $0.size.width } action: { diffWidth = $0 }
             }
@@ -190,20 +200,20 @@ public struct ReviewScreen: View {
                     VStack(alignment: .leading, spacing: OCSpacing.xs) { sourceMenu; totals }
                     Spacer(minLength: 0)
                 } else { sourceMenu; Spacer(minLength: 0); totals }
-                OCIconButton(model.state.openFiles.isEmpty ? "Expand all" : "Collapse all", icon: model.state.openFiles.isEmpty ? "expand" : "collapse") { model.expandAll(model.state.openFiles.isEmpty) }
+                OCIconButton(model.state.openFiles.isEmpty ? localized("Expand all") : localized("Collapse all"), icon: model.state.openFiles.isEmpty ? "expand" : "collapse") { model.expandAll(model.state.openFiles.isEmpty) }
             }.frame(minHeight: 40).padding(.horizontal, OCSpacing.sm)
             let optionsLayout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: OCSpacing.xs)) : AnyLayout(HStackLayout())
-            optionsLayout { Text("\(model.reviewedCount) of \(model.files.count) reviewed").font(OCType.micro)
+            optionsLayout { Text(localized("\(model.reviewedCount) of \(model.files.count) reviewed", comment: "First %lld is reviewed files, second is all changed files")).font(OCType.micro)
                 if !typeSize.isAccessibilitySize { Spacer() }
                 HStack {
                 if case .turn = model.source {
-                    OCIconButton("Previous file", icon: "chevron-left") { model.move(-1) }
-                    OCIconButton("Next file", icon: "chevron-right") { model.move(1) }
+                    OCIconButton(localized("Previous file"), icon: "chevron-left") { model.move(-1) }
+                    OCIconButton(localized("Next file"), icon: "chevron-right") { model.move(1) }
                 }
                 Menu {
-                    Toggle("Show all lines", isOn: $showAll)
-                    ForEach(model.files, id: \.file) { file in Button((model.isReviewed(file) ? "Unmark " : "Reviewed ") + file.file) { model.mark(file, reviewed: !model.isReviewed(file)) } }
-                } label: { Text("Review options").font(OCType.small).frame(minHeight: OCLayout.touchTarget).contentShape(Rectangle()) }
+                    Toggle(localized("Show all lines"), isOn: $showAll)
+                    ForEach(model.files, id: \.file) { file in Button(model.isReviewed(file) ? localized("Unmark \(file.file)", comment: "Menu item; %@ is a file path") : localized("Reviewed \(file.file)", comment: "Menu item marking a file reviewed; %@ is a file path")) { model.mark(file, reviewed: !model.isReviewed(file)) } }
+                } label: { Text(localized("Review options")).font(OCType.small).frame(minHeight: OCLayout.touchTarget).contentShape(Rectangle()) }
                 }
             }.padding(.horizontal, OCSpacing.sm)
             diff(model.files, headers: true)
@@ -211,7 +221,7 @@ public struct ReviewScreen: View {
     }
     @ViewBuilder private func diff(_ files: [FileDiff], headers: Bool) -> some View {
         if !renderLarge && files.contains(where: { $0.changedLines > 20_000 }) {
-            VStack { Text("Diff too large to render"); Button("Render anyway") { renderLarge = true }.buttonStyle(OCButtonStyle()) }.font(OCType.small)
+            VStack { Text(localized("Diff too large to render")); Button(localized("Render anyway")) { renderLarge = true }.buttonStyle(OCButtonStyle()) }.font(OCType.small)
         } else {
             OCDiffView(files.map { input($0, headers: headers) }, split: !headers && split, showAll: showAll, wrap: wrap, headers: headers,
                        comments: composer.comments.map { c in var c = c; c.file = files.first { commentPath($0.file) == c.file }?.file ?? c.file; return c },
@@ -222,9 +232,9 @@ public struct ReviewScreen: View {
     }
     private func input(_ file: FileDiff, headers: Bool) -> OCDiffInput {
         let image = FileContent.image(file.file)
-        let message: String? = image ? (file.status == "deleted" ? "Removed image file." : model.imageErrors.contains(file.file) ? "Unable to load image." : "Loading…") : nil
+        let message: String? = image ? (file.status == "deleted" ? localized("Removed image file.") : model.imageErrors.contains(file.file) ? localized("Unable to load image.") : localized("Loading…")) : nil
         return .init(path: file.file, text: file.patch, fullFile: file["bounded"]?.boolValue != true,
-                     expanded: !headers || model.isOpen(file.file), summary: "\(file.status == "added" ? "Added" : file.status == "deleted" ? "Removed" : "Modified") +\(file.additions) −\(file.deletions)",
+                     expanded: !headers || model.isOpen(file.file), summary: file.status == "added" ? localized("Added +\(file.additions) −\(file.deletions)", comment: "Diff summary; added and deleted line counts") : file.status == "deleted" ? localized("Removed +\(file.additions) −\(file.deletions)", comment: "Diff summary; added and deleted line counts") : localized("Modified +\(file.additions) −\(file.deletions)", comment: "Diff summary; added and deleted line counts"),
                      imageData: image ? model.images[file.file] : nil, mediaMessage: message)
     }
     private var inlinePlacement: LineComment? {

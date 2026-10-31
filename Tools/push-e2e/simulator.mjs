@@ -26,7 +26,9 @@ const signing = await readFile(path.join(repository, 'Config/Signing.xcconfig'),
 const prefix = /^BUNDLE_ID_PREFIX\s*=\s*([A-Za-z0-9.-]+)\s*$/m.exec(signing)?.[1];
 assert.ok(prefix, 'Signing.xcconfig must supply the bundle prefix');
 const bundleID = `${prefix}.client`;
-const devices = JSON.parse((await exec('xcrun', ['simctl', 'list', 'devices', 'available', '--json'])).stdout);
+// simctl can print installer notices before its JSON (an Xcode update waiting for an administrator); skip them.
+const listing = (await exec('xcrun', ['simctl', 'list', 'devices', 'available', '--json'])).stdout;
+const devices = JSON.parse(listing.slice(listing.indexOf('{')));
 const device = Object.values(devices.devices).flat().find(item => item.name === 'iPhone 17 Pro' && item.isAvailable);
 assert.ok(device, 'The existing iPhone 17 Pro simulator is required; this harness never creates or configures simulators');
 // Boot the existing device when a previous xcodebuild shut it down; `simctl push` needs a booted device.

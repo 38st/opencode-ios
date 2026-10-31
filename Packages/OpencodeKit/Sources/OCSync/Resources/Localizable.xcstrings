@@ -1,0 +1,485 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ The new worktree was kept: %@" : {
+      "comment" : "First %@ is the error message, second a directory path"
+    },
+    "%@ connected" : {
+      "comment" : "%@ is a provider or integration name"
+    },
+    "%@ · showing saved messages" : {
+      "comment" : "Connection banner; %@ is the server status"
+    },
+    "%@. Could not save the notification audit." : {
+      "comment" : "%@ is the outcome of a notification action"
+    },
+    "APNs registration unavailable in this build" : {
+      "comment" : "Shown in Push Registration"
+    },
+    "Allow high-risk %@" : {
+      "comment" : "Authentication reason; %@ is a tool action"
+    },
+    "Allow high-risk %@: %@" : {
+      "comment" : "Authentication reason; first %@ is a tool action, second its resource"
+    },
+    "Allowed" : {
+      "comment" : "Notification permission status"
+    },
+    "Already handled" : {
+      "comment" : "Shown in Notification Action Handler"
+    },
+    "Already replied" : {
+      "comment" : "Shown in Notification Action Handler"
+    },
+    "Always allow %@ in this project" : {
+      "comment" : "Authentication reason; %@ is a tool action"
+    },
+    "Always allow %@ in this project: %@" : {
+      "comment" : "Authentication reason; first %@ is a tool action, second its resource"
+    },
+    "Another endpoint won the race" : {
+      "comment" : "Shown in Server Store"
+    },
+    "Answered" : {
+      "comment" : "Notification action outcome"
+    },
+    "Answers could not be sent. Review and try again." : {
+      "comment" : "Shown in Approval Actions"
+    },
+    "Approved" : {
+      "comment" : "Notification action outcome"
+    },
+    "Attempt %lld · %@" : {
+      "comment" : "%lld is the attempt number, %@ the connection error"
+    },
+    "Configuration reloaded" : {
+      "comment" : "Shown in Server Admin Model"
+    },
+    "Confirm discarding the reverted messages before sending." : {
+      "comment" : "Shown in Write Error Message"
+    },
+    "Connected · %@" : {
+      "comment" : "Server status; %@ is the connection kind, like Tailscale"
+    },
+    "Connecting" : {
+      "comment" : "Server status"
+    },
+    "Connecting (attempt %lld)" : {
+      "comment" : "Connection history; %lld is the attempt number"
+    },
+    "Could not close the terminal." : {
+      "comment" : "Shown in Terminal Store"
+    },
+    "Could not complete this action. Please try again." : {
+      "comment" : "Shown in Write Error Message"
+    },
+    "Could not load saved servers or their Keychain credentials. Try again." : {
+      "comment" : "Shown in Server Registry"
+    },
+    "Could not load shell output." : {
+      "comment" : "Shown in Session Read Actions"
+    },
+    "Could not load terminals." : {
+      "comment" : "Shown in Terminal Store"
+    },
+    "Could not load the output." : {
+      "comment" : "Shown in Shell Run Model"
+    },
+    "Could not load your saved draft." : {
+      "comment" : "Shown in Composer Model"
+    },
+    "Could not reach the server." : {
+      "comment" : "Shown in Shell Run Model"
+    },
+    "Could not read the saved outbox." : {
+      "comment" : "Shown in Write Store"
+    },
+    "Could not refresh server data." : {
+      "comment" : "Shown in Read Store"
+    },
+    "Could not refresh the session." : {
+      "comment" : "Shown in Read Store"
+    },
+    "Could not refresh · showing saved messages" : {
+      "comment" : "Shown in Connection Notice"
+    },
+    "Could not register notifications" : {
+      "comment" : "Shown in Push Controller"
+    },
+    "Could not register with the relay" : {
+      "comment" : "Shown in Push Registration"
+    },
+    "Could not rename the terminal." : {
+      "comment" : "Shown in Terminal Store"
+    },
+    "Could not request notification permission" : {
+      "comment" : "Shown in Push Controller"
+    },
+    "Could not save drafts before pausing." : {
+      "comment" : "Shown in Server Registry"
+    },
+    "Could not save drafts." : {
+      "comment" : "Shown in Read Store"
+    },
+    "Could not save notification settings" : {
+      "comment" : "Shown in Push Controller"
+    },
+    "Could not save or connect to the server. Try again." : {
+      "comment" : "Shown in Server Setup"
+    },
+    "Could not save review state." : {
+      "comment" : "Shown in Review Model"
+    },
+    "Could not save server changes. Try again." : {
+      "comment" : "Shown in Server Store"
+    },
+    "Could not save servers before pausing." : {
+      "comment" : "Shown in Server Registry"
+    },
+    "Could not save the cache." : {
+      "comment" : "Shown in Read Store"
+    },
+    "Could not save the notification audit. Open the app to review" : {
+      "comment" : "Shown in Notification Action Handler"
+    },
+    "Could not save your draft." : {
+      "comment" : "Shown in Composer Model"
+    },
+    "Could not search files." : {
+      "comment" : "Shown in Composer Model"
+    },
+    "Could not send the test push" : {
+      "comment" : "Shown in Push Controller"
+    },
+    "Could not start a terminal." : {
+      "comment" : "Shown in Terminal Store"
+    },
+    "Could not update the app badge" : {
+      "comment" : "Shown in Push Controller"
+    },
+    "Couldn't reach your server" : {
+      "comment" : "Shown in Mobile App Delegate"
+    },
+    "Endpoint" : {
+      "comment" : "Shown when a server address has no host name"
+    },
+    "Enter a valid HTTP or HTTPS server URL without credentials or query parameters." : {
+      "comment" : "Shown in Server Setup"
+    },
+    "Failed to send command. %@" : {
+      "comment" : "%@ is the error message"
+    },
+    "Failed to send shell command. %@" : {
+      "comment" : "%@ is the error message"
+    },
+    "File not found: %@" : {
+      "comment" : "%@ is a file path"
+    },
+    "Healthy" : {
+      "comment" : "Endpoint health"
+    },
+    "Idle" : {
+      "comment" : "Connection state"
+    },
+    "Keep at least one endpoint for this server." : {
+      "comment" : "Shown in Server Setup"
+    },
+    "Leave shell mode before undoing a queued prompt" : {
+      "comment" : "Shown in Composer Model"
+    },
+    "Live Activity remote updates unavailable" : {
+      "comment" : "Shown in Live Activity Coordinator"
+    },
+    "Needs opencode 2" : {
+      "comment" : "Shown in Server Store"
+    },
+    "Needs re-pairing" : {
+      "comment" : "Shown in Server Status"
+    },
+    "Needs re-pairing · showing saved messages" : {
+      "comment" : "Shown in Connection Notice"
+    },
+    "Needs you" : {
+      "comment" : "Home section: sessions waiting for the user"
+    },
+    "New session" : {
+      "comment" : "Shown in Intent Actions"
+    },
+    "New worktree" : {
+      "comment" : "Shown in Session Features"
+    },
+    "None of the server addresses could be reached." : {
+      "comment" : "Shown in Server Setup"
+    },
+    "Not an opencode server" : {
+      "comment" : "Shown in Server Status"
+    },
+    "Not checked" : {
+      "comment" : "Endpoint health: not yet checked"
+    },
+    "Not registered" : {
+      "comment" : "Shown in Push Registration"
+    },
+    "Not requested" : {
+      "comment" : "Notification permission status"
+    },
+    "Off in system settings" : {
+      "comment" : "Shown in Push Controller"
+    },
+    "Offline · showing saved messages" : {
+      "comment" : "Shown in Connection Notice"
+    },
+    "Open" : {
+      "comment" : "Notification action outcome: the app opened"
+    },
+    "Open the app to answer" : {
+      "comment" : "Shown in Notification Action Handler"
+    },
+    "Open the app to reply" : {
+      "comment" : "Shown in Notification Action Handler"
+    },
+    "Open the app to review" : {
+      "comment" : "Shown in Notification Action Handler"
+    },
+    "Open the app to review this high-risk request" : {
+      "comment" : "Shown in Notification Action Handler"
+    },
+    "Open the app to review your answer" : {
+      "comment" : "Shown in Notification Action Handler"
+    },
+    "Pair again" : {
+      "comment" : "Shown in Connection Notice"
+    },
+    "Pairing is unavailable. Create a new link on the server." : {
+      "comment" : "Shown in Server Setup"
+    },
+    "Pairing needs opencode %@ or later." : {
+      "comment" : "Shown in Resync Coordinator"
+    },
+    "Paused" : {
+      "comment" : "Server status"
+    },
+    "Paused · showing saved messages" : {
+      "comment" : "Shown in Connection Notice"
+    },
+    "Plugin not installed" : {
+      "comment" : "Shown in Push Registration"
+    },
+    "Project checkout" : {
+      "comment" : "Shown in Session Features"
+    },
+    "Quiet delivery" : {
+      "comment" : "Shown in Push Controller"
+    },
+    "Reconnect now" : {
+      "comment" : "Shown in Connection Notice"
+    },
+    "Register notifications first" : {
+      "comment" : "Shown in Push Controller"
+    },
+    "Registered" : {
+      "comment" : "Push notification registration status"
+    },
+    "Registration unavailable. Try again." : {
+      "comment" : "Shown in Push Registration"
+    },
+    "Rejected" : {
+      "comment" : "Notification action outcome"
+    },
+    "Relay unreachable" : {
+      "comment" : "Shown in Push Registration"
+    },
+    "Reply could not be sent. Try again." : {
+      "comment" : "Shown in Approval Actions"
+    },
+    "Reply queued" : {
+      "comment" : "Shown in Notification Action Handler"
+    },
+    "Request failed" : {
+      "comment" : "Shown in Review Model"
+    },
+    "Resolving endpoints" : {
+      "comment" : "Shown in Server Store"
+    },
+    "Retry" : {
+      "comment" : "Button: try refreshing again"
+    },
+    "Retrying in %llds" : {
+      "comment" : "Server status; %lld is a number of seconds, s abbreviates seconds"
+    },
+    "Running" : {
+      "comment" : "Home section: sessions that are running"
+    },
+    "Saved servers could not be loaded. Retry before adding a server." : {
+      "comment" : "Shown in Server Setup"
+    },
+    "Server" : {
+      "comment" : "Connection kind when unknown"
+    },
+    "Server is starting" : {
+      "comment" : "Shown in Server Store"
+    },
+    "Server starting · showing saved messages" : {
+      "comment" : "Shown in Connection Notice"
+    },
+    "Session" : {
+      "comment" : "Live Activity title when a session has none"
+    },
+    "Started; outcome not yet confirmed" : {
+      "comment" : "Shown in Notification Action Handler"
+    },
+    "Starting" : {
+      "comment" : "Server status"
+    },
+    "Subagent sessions are read only. Send prompts to the parent session." : {
+      "comment" : "Shown in Composer Model"
+    },
+    "Temporary permission" : {
+      "comment" : "Shown in Push Controller"
+    },
+    "The action was cancelled." : {
+      "comment" : "Shown in Write Error Message"
+    },
+    "The file changed. Open it again to refresh." : {
+      "comment" : "Shown in Files Model"
+    },
+    "The request changed. Open the app to review" : {
+      "comment" : "Shown in Notification Action Handler"
+    },
+    "The requested range is unavailable." : {
+      "comment" : "Shown in Files Model"
+    },
+    "The server could not be reached. Check your connection and try again." : {
+      "comment" : "Shown in Write Error Message"
+    },
+    "The server could not complete this action (HTTP %lld). Try again." : {
+      "comment" : "%lld is an HTTP status code"
+    },
+    "The server did not respond in time. Check your connection and try again." : {
+      "comment" : "Shown in Write Error Message"
+    },
+    "The server is starting. Try again when it is ready." : {
+      "comment" : "Shown in Write Error Message"
+    },
+    "The server returned an invalid pairing token. Create a new pairing link." : {
+      "comment" : "Shown in Server Setup"
+    },
+    "The server returned an unreadable response. Try again." : {
+      "comment" : "Shown in Write Error Message"
+    },
+    "The staged revert changed. Review it before resending." : {
+      "comment" : "Shown in Outbox Drain"
+    },
+    "This attachment could not be opened. Remove it and attach it again." : {
+      "comment" : "Shown in Write Error Message"
+    },
+    "This file is larger than the 20 MiB attachment limit." : {
+      "comment" : "Shown in Write Error Message"
+    },
+    "This input conflicts with an existing request. Edit it and send again." : {
+      "comment" : "Shown in Write Error Message"
+    },
+    "This input is no longer available. It may already have been handled." : {
+      "comment" : "Shown in Write Error Message"
+    },
+    "This is an opencode 1 server. Update opencode." : {
+      "comment" : "Shown in Server Setup"
+    },
+    "This item is no longer available on the server." : {
+      "comment" : "Shown in Write Error Message"
+    },
+    "This project already has a saved draft. Choose which draft to use." : {
+      "comment" : "Shown in Composer Model"
+    },
+    "This prompt cannot be queued" : {
+      "comment" : "Shown in Composer Model"
+    },
+    "This saved prompt has changed. Use Edit and resend to send a new copy." : {
+      "comment" : "Shown in Write Error Message"
+    },
+    "This server is no longer available. Your draft has been kept." : {
+      "comment" : "Shown in Composer Model"
+    },
+    "This server record is already saved." : {
+      "comment" : "Shown in Server Setup"
+    },
+    "This server version is too old. Update opencode." : {
+      "comment" : "Shown in Server Setup"
+    },
+    "This session is no longer available. Your draft has been kept." : {
+      "comment" : "Shown in Write Error Message"
+    },
+    "Today" : {
+      "comment" : "Shown in Home Ordering"
+    },
+    "Tunnel" : {
+      "comment" : "Connection kind"
+    },
+    "Unknown" : {
+      "comment" : "Notification permission status"
+    },
+    "Unsupported server version" : {
+      "comment" : "Shown in Server Store"
+    },
+    "Untitled session" : {
+      "comment" : "Shown in Home Ordering"
+    },
+    "Update opencode" : {
+      "comment" : "Shown in Server Status"
+    },
+    "Updating %@" : {
+      "comment" : "%@ is a plugin name"
+    },
+    "Updating %lld plugins" : {
+      "comment" : "%lld is a number of plugins",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Updating %lld plugin"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Updating %lld plugins"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "View details" : {
+      "comment" : "Shown in Connection Notice"
+    },
+    "Voice input stopped: %@" : {
+      "comment" : "%@ is the system's error description"
+    },
+    "Wait for the current action to finish, then try again." : {
+      "comment" : "Shown in Composer Model"
+    },
+    "Waiting for APNs registration" : {
+      "comment" : "Shown in Push Registration"
+    },
+    "Waiting for notification permission" : {
+      "comment" : "Shown in Push Registration"
+    },
+    "Waiting to send. Your prompt is saved on this device." : {
+      "comment" : "Shown in Write Store"
+    },
+    "Yesterday" : {
+      "comment" : "Shown in Home Ordering"
+    },
+    "Your prompt could not be saved on this device. Try again." : {
+      "comment" : "Shown in Write Error Message"
+    },
+    "Your prompt is saved to send. Could not clean up the previous draft." : {
+      "comment" : "Shown in Composer Model"
+    }
+  },
+  "version" : "1.0"
+}

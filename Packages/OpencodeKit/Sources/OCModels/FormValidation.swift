@@ -33,8 +33,8 @@ public enum FormValidation {
         func label(_ text: String) -> String { options.first { $0.value == text && !$0.label.isEmpty }?.label ?? text }
         if let values = value.arrayValue { return values.compactMap(\.stringValue).map(label).joined(separator: ", ") }
         if let text = value.stringValue { return label(text) }
-        if let flag = value.boolValue { return flag ? "Yes" : "No" }
-        guard let number = value.doubleValue else { return "(not answered)" }
+        if let flag = value.boolValue { return flag ? localized("Yes", comment: "Form answer for a yes/no question") : localized("No", comment: "Form answer for a yes/no question") }
+        guard let number = value.doubleValue else { return localized("(not answered)") }
         let text = String(number)
         return text.hasSuffix(".0") ? String(text.dropLast(2)) : text
     }
@@ -43,13 +43,13 @@ public enum FormValidation {
         var errors: [String: String] = [:]
         for field in form.fields where isActive(field, answers: active) {
             let f = field.fields
-            if field.isFallback { errors[f.key] = "This field needs a newer client."; continue }
+            if field.isFallback { errors[f.key] = localized("This field needs a newer client."); continue }
             if field.type == "external" {
-                if active[f.key]?.boolValue != true { errors[f.key] = "Complete the external step and confirm below." }
+                if active[f.key]?.boolValue != true { errors[f.key] = localized("Complete the external step and confirm below.") }
                 continue
             }
             guard let value = active[f.key] else {
-                if f.required { errors[f.key] = "Required" }
+                if f.required { errors[f.key] = localized("Required", comment: "Form field error: the field must be filled in") }
                 continue
             }
             if let error = validate(field, value: value) { errors[f.key] = error }
@@ -60,32 +60,32 @@ public enum FormValidation {
         let f = field.fields
         switch field {
         case .string:
-            guard let text = value.stringValue else { return "Enter text." }
-            if f.required && text.isEmpty { return "Required" }
-            if let min = f.minLength, Double(text.utf16.count) < min { return "Enter at least \(min.formatted()) characters." }
-            if let max = f.maxLength, Double(text.utf16.count) > max { return "Enter at most \(max.formatted()) characters." }
+            guard let text = value.stringValue else { return localized("Enter text.") }
+            if f.required && text.isEmpty { return localized("Required", comment: "Form field error: the field must be filled in") }
+            if let min = f.minLength, Double(text.utf16.count) < min { return localized("Enter at least \(min.formatted()) characters.", comment: "%@ is a number of characters") }
+            if let max = f.maxLength, Double(text.utf16.count) > max { return localized("Enter at most \(max.formatted()) characters.", comment: "%@ is a number of characters") }
             if let pattern = f.pattern {
-                guard let regex = try? NSRegularExpression(pattern: pattern), regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) != nil else { return "Match the requested format." }
+                guard let regex = try? NSRegularExpression(pattern: pattern), regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) != nil else { return localized("Match the requested format.") }
             }
-            if f["options"] != nil && !f.custom && !f.options.contains(where: { $0.value == text }) { return "Choose one of the options." }
-            if f.format == "email" && text.range(of: #"^[^\s@]+@[^\s@]+\.[^\s@]+$"#, options: .regularExpression) == nil { return "Enter an email address." }
-            if f.format == "uri", URL(string: text)?.scheme == nil { return "Enter a full URL." }
-            if f.format == "date", !validDate(text) { return "Enter a date as YYYY-MM-DD." }
-            if f.format == "date-time", !validTimestamp(text) { return "Enter a date and time with a time zone." }
+            if f["options"] != nil && !f.custom && !f.options.contains(where: { $0.value == text }) { return localized("Choose one of the options.") }
+            if f.format == "email" && text.range(of: #"^[^\s@]+@[^\s@]+\.[^\s@]+$"#, options: .regularExpression) == nil { return localized("Enter an email address.") }
+            if f.format == "uri", URL(string: text)?.scheme == nil { return localized("Enter a full URL.") }
+            if f.format == "date", !validDate(text) { return localized("Enter a date as YYYY-MM-DD.") }
+            if f.format == "date-time", !validTimestamp(text) { return localized("Enter a date and time with a time zone.") }
         case .number, .integer:
-            guard let number = value.doubleValue, number.isFinite else { return "Enter a number." }
-            if field.type == "integer" && number.rounded() != number { return "Enter a whole number." }
-            if let min = f.minimum, number < min { return "Minimum: \(min.formatted())" }
-            if let max = f.maximum, number > max { return "Maximum: \(max.formatted())" }
+            guard let number = value.doubleValue, number.isFinite else { return localized("Enter a number.") }
+            if field.type == "integer" && number.rounded() != number { return localized("Enter a whole number.") }
+            if let min = f.minimum, number < min { return localized("Minimum: \(min.formatted())", comment: "%@ is the smallest allowed number") }
+            if let max = f.maximum, number > max { return localized("Maximum: \(max.formatted())", comment: "%@ is the largest allowed number") }
         case .boolean:
-            if value.boolValue == nil { return "Choose Yes or No." }
+            if value.boolValue == nil { return localized("Choose Yes or No.") }
         case .multiselect:
-            guard let items = value.arrayValue, items.allSatisfy({ $0.stringValue != nil }) else { return "Choose answers." }
-            if f.required && items.isEmpty { return "Required" }
-            if Set(items).count != items.count { return "Choose each answer once." }
-            if let min = f.minItems, Double(items.count) < min { return "Choose at least \(min.formatted()) answers." }
-            if let max = f.maxItems, Double(items.count) > max { return "Choose at most \(max.formatted()) answers." }
-            if !f.custom && items.contains(where: { value in !f.options.contains { .string($0.value) == value } }) { return "Choose from the listed options." }
+            guard let items = value.arrayValue, items.allSatisfy({ $0.stringValue != nil }) else { return localized("Choose answers.") }
+            if f.required && items.isEmpty { return localized("Required", comment: "Form field error: the field must be filled in") }
+            if Set(items).count != items.count { return localized("Choose each answer once.") }
+            if let min = f.minItems, Double(items.count) < min { return localized("Choose at least \(min.formatted()) answers.", comment: "%@ is a number of answers") }
+            if let max = f.maxItems, Double(items.count) > max { return localized("Choose at most \(max.formatted()) answers.", comment: "%@ is a number of answers") }
+            if !f.custom && items.contains(where: { value in !f.options.contains { .string($0.value) == value } }) { return localized("Choose from the listed options.") }
         default: break
         }
         return nil

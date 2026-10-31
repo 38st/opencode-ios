@@ -76,8 +76,10 @@ extension NetworkingTests {
 }
 
 @Test func versionGatesAndNullTolerance() throws {
-    for (version, supported, pairing) in [("2.0.9", false, false), ("2.0.10", true, false), ("2.0.24", true, false),
-                                          ("2.0.25", true, true), ("2.0.25-beta", true, false)] {
+    #expect(ServerInfo.minimumVersion == "2.0.25")
+    for (version, supported, pairing) in [("2.0.9", false, false), ("2.0.10", false, false), ("2.0.24", false, false),
+                                          ("2.0.25", true, true), ("2.0.25-beta", false, false), ("2.2.2", true, true),
+                                          ("3.0.0", false, true), ("garbage", false, false)] {
         let json = "{\"version\":\"\(version)\",\"pid\":null,\"urls\":[null,4,\"http://localhost:1\"],\"paths\":null,\"capabilities\":null,\"future\":true}"
         let info = try JSONDecoder().decode(ServerInfo.self, from: Data(json.utf8))
         #expect(info.isSupported == supported && info.supportsPairing == pairing)

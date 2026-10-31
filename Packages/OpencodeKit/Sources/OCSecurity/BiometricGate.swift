@@ -16,10 +16,10 @@ public enum DeviceAuthenticationMethod: Sendable, Equatable {
 
     public var prompt: String {
         switch self {
-        case .faceID: "Confirm with Face ID or passcode…"
-        case .touchID: "Confirm with Touch ID or passcode…"
-        case .opticID: "Confirm with Optic ID or passcode…"
-        case .passcode, .unavailable: "Confirm with your passcode…"
+        case .faceID: localized("Confirm with Face ID or passcode…")
+        case .touchID: localized("Confirm with Touch ID or passcode…")
+        case .opticID: localized("Confirm with Optic ID or passcode…")
+        case .passcode, .unavailable: localized("Confirm with your passcode…")
         }
     }
 }
@@ -43,9 +43,9 @@ public enum DeviceAuthenticationError: Error, Equatable, Sendable {
     public var message: String? {
         switch self {
         case .cancelled: nil
-        case .passcodeNotSet: "Set a device passcode in Settings to approve this request."
-        case .lockedOut: "Authentication is locked. Unlock your device with its passcode, then try again."
-        case .failed: "Could not confirm it is you. Try again."
+        case .passcodeNotSet: localized("Set a device passcode in Settings to approve this request.")
+        case .lockedOut: localized("Authentication is locked. Unlock your device with its passcode, then try again.")
+        case .failed: localized("Could not confirm it is you. Try again.")
         }
     }
 }

@@ -102,7 +102,7 @@ public actor OutboxProcessor {
         }
         if raw["commitRevert"]?.boolValue == true, info.revert != nil {
             if let expected = raw["revertMessageID"]?.stringValue, info.revert?.messageID != expected {
-                throw APIError.server(tag: "ConflictError", status: 409, body: .object(["message": .string("The staged revert changed. Review it before resending.")]))
+                throw APIError.server(tag: "ConflictError", status: 409, body: .object(["message": .string(localized("The staged revert changed. Review it before resending."))]))
             }
             try await api.send(WriteEndpoints.commitRevert(entry.sessionID))
         }

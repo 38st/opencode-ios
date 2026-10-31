@@ -40,7 +40,7 @@ public struct HomeSessionRow: View {
                     OCProjectAvatar(item.projectName)
                     VStack(alignment: .leading, spacing: OCSpacing.xs) {
                         HStack(alignment: .firstTextBaseline, spacing: OCSpacing.sm) {
-                            Text(item.session.info.title ?? "Untitled session").font(OCType.small.weight(item.session.unread ? .semibold : .regular))
+                            Text(item.session.info.title ?? localized("Untitled session")).font(OCType.small.weight(item.session.unread ? .semibold : .regular))
                                 .foregroundStyle(OCColor.text).lineLimit(typeSize.isAccessibilitySize ? nil : 2)
                             Spacer(minLength: 0)
                             OCSessionIndicator(indicator)
@@ -59,18 +59,18 @@ public struct HomeSessionRow: View {
             .accessibilityIdentifier("homeSession-" + item.session.id)
     }
     @ViewBuilder private var badges: some View {
-        if item.meta.pinned { OCBadge("Pinned") }
+        if item.meta.pinned { OCBadge(localized("Pinned", comment: "Badge on a pinned session row")) }
         if item.runningCount > 0 {
-            Text(offline ? "Last seen running" : "\(item.runningCount) running").font(OCType.micro).foregroundStyle(OCColor.textMuted)
-        } else if offline { Text("Offline").font(OCType.micro).foregroundStyle(OCColor.textMuted) }
-        if item.session.unread { Text("Unread").font(OCType.micro).foregroundStyle(OCColor.info) }
+            Text(offline ? localized("Last seen running") : localized("\(item.runningCount) running", comment: "%lld is the number of running agent sessions")).font(OCType.micro).foregroundStyle(OCColor.textMuted)
+        } else if offline { Text(localized("Offline", comment: "Session row status while the server is unreachable")).font(OCType.micro).foregroundStyle(OCColor.textMuted) }
+        if item.session.unread { Text(localized("Unread", comment: "Session row status")).font(OCType.micro).foregroundStyle(OCColor.info) }
     }
     private var cost: some View {
         Text(item.cost.formatted(.currency(code: "USD"))).font(OCType.micro).foregroundStyle(OCColor.textFaint)
     }
     @ViewBuilder private var reviewButton: some View {
         if item.needsYou {
-            Button("Review", action: review).buttonStyle(OCButtonStyle(.ghost)).accessibilityIdentifier("review-" + item.session.id)
+            Button(localized("Review", comment: "Button that opens the session's pending request"), action: review).buttonStyle(OCButtonStyle(.ghost)).accessibilityIdentifier("review-" + item.session.id)
         }
     }
 }

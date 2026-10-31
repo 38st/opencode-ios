@@ -314,8 +314,8 @@ The spec has **118 paths / 142 operations**. They are grouped below by domain, w
 | `POST /api/session/{id}/move` | G | `{ directory, delivery?: "steer"\|"queue" }` → 204 | Moves the session to another directory at a delivery boundary (enqueues a `move` inbox item; `session.moved` when applied). 400 if the directory is missing, not a directory, or unavailable (`handlers/session.ts:283-305`). |
 | `PUT /api/session/{id}/environment` | G | `{ variables: {K:V} }` → 204 | Replaces the process environment used by this session's local shell commands (process-local, not persisted). |
 | `POST /api/session/{id}/view` | G | `{ idle: <epoch ms> }` → 204 | Marks the idle transition the viewer saw as viewed (`session.viewed`); the server never marks a newer idle transition viewed. Pair with `Session.Info.time.idle` / `time.viewed` / `outcome` to drive "unread" badges. |
-| `GET /api/experimental/session/stats` | G | `from?, to?` (epoch ms strings), `project?`, `timezone?` (IANA, default UTC), `tools?: none\|summary\|detail` → `{data: SessionStats.Info}` | Usage analytics (sessions, prompts, steps, tokens, cost, tool reliability, activity days, models). |
-| `POST /api/experimental/session/import`, `GET /api/experimental/session/{id}/export?sanitize=` | G | `SessionTransfer.Data {info, messages[]}` | Transcript import/export (V2 replacement for V1 `opencode export/import`). |
+| `GET /api/experimental/session/stats` | G | `from?, to?` (epoch ms strings), `project?`, `timezone?` (IANA, default UTC), `tools?: none\|summary\|detail` → `{data: SessionStats.Info}` | Usage analytics (sessions, prompts, steps, tokens, cost, tool reliability, activity days, models). The response is wrapped in `data`; `tools=detail` adds a per-tool `usage[]` list. An unknown `timezone` answers 400 (2.2.2). |
+| `POST /api/experimental/session/import`, `GET /api/experimental/session/{id}/export?sanitize=` | G | `SessionTransfer.Data {info, messages[]}` | Transcript import/export (V2 replacement for V1 `opencode export/import`). Export answers `{data: {info, messages}}`, wrapped in `data`, and 404 for a missing session (2.2.2). |
 
 ### 5.3 Sessions: sending input and controlling execution
 
@@ -489,7 +489,7 @@ Session.Info = {                          // packages/schema/src/session.ts:31-5
   cost: number                            // USD, this session only (not children)
   tokens: TokenUsage                      // cumulative
   outcome?: "succeeded"|"failed"|"interrupted"   // of the last finished execution, recorded at time.idle
-  time: { created, updated, idle?, viewed?, archived? }
+  time: { created, updated, busy? /* start of the running turn, 2.2.2+ */, idle?, viewed?, archived? }
   title?: string
   location: { directory }
   subpath?: string                        // path relative to the project root

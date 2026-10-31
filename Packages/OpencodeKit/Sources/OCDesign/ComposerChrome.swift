@@ -86,10 +86,10 @@ public struct OCAttachmentChip: View {
             } else {
                 VStack(alignment: .leading, spacing: OCSpacing.xxs) {
                     Text(name).lineLimit(1)
-                    Text(mime == "application/pdf" ? "PDF" : mime.hasPrefix("image/") ? "Image" : "Text").foregroundStyle(OCColor.textMuted)
+                    Text(mime == "application/pdf" ? localized("PDF", comment: "Attachment kind") : mime.hasPrefix("image/") ? localized("Image", comment: "Attachment kind") : localized("Text", comment: "Attachment kind")).foregroundStyle(OCColor.textMuted)
                 }.font(OCType.small).padding(OCSpacing.sm)
             }
-            if let remove { OCIconButton("Remove attachment", icon: "outline-xmark", action: remove).accessibilityHint(name) }
+            if let remove { OCIconButton(localized("Remove attachment"), icon: "outline-xmark", action: remove).accessibilityHint(name) }
         }.background(OCColor.layer2, in: RoundedRectangle(cornerRadius: OCRadius.md))
             .task(id: Source(data: data, base64: base64, url: url)) {
                 guard mime.hasPrefix("image/") else { return }

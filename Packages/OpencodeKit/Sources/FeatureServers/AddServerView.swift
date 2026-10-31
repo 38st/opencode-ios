@@ -2,6 +2,7 @@
 import SwiftUI
 import OCDesign
 import Observation
+import OCModels
 import OCSync
 import OCModels
 import VisionKit
@@ -37,52 +38,52 @@ struct AddServerView: View {
                     VStack(spacing: OCSpacing.lg) {
                         OCIcon("server", size: 32).foregroundStyle(OCColor.iconMuted).accessibilityHidden(true)
                         VStack(spacing: OCSpacing.sm) {
-                            Text(repairing == nil ? "Connect to a server" : "Re-pair server").font(OCType.title)
-                            Text(method == 0 ? "Paste the pairing link from the server, or scan its QR code." : "Enter your server address and password to get started.")
+                            Text(repairing == nil ? localized("Connect to a server") : localized("Re-pair server")).font(OCType.title)
+                            Text(method == 0 ? localized("Paste the pairing link from the server, or scan its QR code.") : localized("Enter your server address and password to get started."))
                                 .font(OCType.small).foregroundStyle(OCColor.textMuted)
                         }.multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true).padding(.bottom, OCSpacing.lg)
                         if let repairing {
-                            OCBanner("Needs re-pairing", tone: .warning)
+                            OCBanner(localized("Needs re-pairing"), tone: .warning)
                             if repairing.tokenExpiresSoon {
-                                Text("Your pairing token expires within 5 days. Pair again to stay connected.")
+                                Text(localized("Your pairing token expires within 5 days. Pair again to stay connected."))
                                     .font(OCType.small).foregroundStyle(OCColor.warning)
                             }
                         }
                         if method == 0 {
                             VStack(alignment: .leading, spacing: OCSpacing.sm) {
-                                Text("Pairing link").font(OCType.button)
-                                TextField("Pairing link", text: $link, prompt: Text(verbatim: "http://192.168.1.2:4096/auth/connect/…").foregroundStyle(OCColor.textFaint), axis: .vertical)
+                                Text(localized("Pairing link")).font(OCType.button)
+                                TextField(localized("Pairing link"), text: $link, prompt: Text(verbatim: "http://192.168.1.2:4096/auth/connect/…").foregroundStyle(OCColor.textFaint), axis: .vertical)
                                     .textInputAutocapitalization(.never).autocorrectionDisabled()
-                                    .accessibilityLabel("Pairing link").accessibilityIdentifier("pairingLink")
+                                    .accessibilityLabel(localized("Pairing link")).accessibilityIdentifier("pairingLink")
                             }
                         } else {
                             VStack(alignment: .leading, spacing: OCSpacing.md) {
                                 if repairing == nil {
-                                    Text("Name (optional)").font(OCType.button)
-                                    TextField("Studio Mac", text: $name).accessibilityLabel("Name (optional)").accessibilityIdentifier("serverName")
+                                    Text(localized("Name (optional)")).font(OCType.button)
+                                    TextField(localized("Studio Mac", comment: "Placeholder: an example server name"), text: $name).accessibilityLabel(localized("Name (optional)")).accessibilityIdentifier("serverName")
                                 }
-                                Text("Server URL").font(OCType.button)
-                                TextField("Server URL", text: $address, prompt: Text(verbatim: "http://192.168.1.2:4096").foregroundStyle(OCColor.textFaint)).keyboardType(.URL)
+                                Text(localized("Server URL")).font(OCType.button)
+                                TextField(localized("Server URL"), text: $address, prompt: Text(verbatim: "http://192.168.1.2:4096").foregroundStyle(OCColor.textFaint)).keyboardType(.URL)
                                     .textInputAutocapitalization(.never).autocorrectionDisabled()
-                                    .accessibilityLabel("Server URL").accessibilityIdentifier("serverURL")
-                                Text("Password").font(OCType.button)
-                                SecureField("Password", text: $password).textContentType(.password).accessibilityIdentifier("serverPassword")
+                                    .accessibilityLabel(localized("Server URL")).accessibilityIdentifier("serverURL")
+                                Text(localized("Password")).font(OCType.button)
+                                SecureField(localized("Password"), text: $password).textContentType(.password).accessibilityIdentifier("serverPassword")
                                 if address.lowercased().hasPrefix("http://") {
-                                    OCLabel("Unencrypted: anyone on this network may be able to read your credential. Prefer HTTPS on networks you don’t trust.", icon: "lock")
+                                    OCLabel(localized("Unencrypted: anyone on this network may be able to read your credential. Prefer HTTPS on networks you don’t trust."), icon: "lock")
                                         .font(OCType.small).foregroundStyle(OCColor.textMuted)
                                 }
                             }
                         }
                         if let error { OCBanner(error, tone: .danger).accessibilityIdentifier("setupError").ocAnnounce(error, initial: true) }
                         if working {
-                            OCSpinner(method == 0 ? "Pairing with server…" : "Connecting to server…").accessibilityIdentifier("pairingProgress")
+                            OCSpinner(method == 0 ? localized("Pairing with server…") : localized("Connecting to server…")).accessibilityIdentifier("pairingProgress")
                         } else {
-                            Button { connectTapped() } label: { Text(repairing == nil ? "Connect" : "Pair again").frame(maxWidth: .infinity) }
+                            Button { connectTapped() } label: { Text(repairing == nil ? localized("Connect") : localized("Pair again")).frame(maxWidth: .infinity) }
                                 .buttonStyle(OCButtonStyle(.contrast))
                                 .disabled(method == 0 ? link.isEmpty : address.isEmpty).accessibilityIdentifier("connectServer")
                         }
                         if method == 0 && DataScannerViewController.isSupported {
-                            Button { scanning = true } label: { Text("Scan QR code").frame(maxWidth: .infinity) }
+                            Button { scanning = true } label: { Text(localized("Scan QR code")).frame(maxWidth: .infinity) }
                                 .buttonStyle(OCButtonStyle()).accessibilityIdentifier("scanPairingCode")
                         }
                         ViewThatFits(in: .horizontal) {
@@ -91,12 +92,15 @@ struct AddServerView: View {
                         }
                         if method == 0 {
                             VStack(spacing: OCSpacing.md) {
-                                Text("Run this command on the server’s computer to get a pairing link and QR code.")
+                                Text(localized("Run this command on the server’s computer to get a pairing link and QR code."))
                                     .font(OCType.small).foregroundStyle(OCColor.textMuted).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
                                 Button { OCCopy.text("opencode pair"); copiedPairCommand = true } label: {
-                                    Text(copiedPairCommand ? "Copied" : "opencode pair").font(OCType.code)
-                                }.buttonStyle(OCButtonStyle()).accessibilityLabel("Copy opencode pair")
+                                    Text(copiedPairCommand ? localized("Copied", comment: "Confirmation that the command was copied") : "opencode pair").font(OCType.code)
+                                }.buttonStyle(OCButtonStyle()).accessibilityLabel(localized("Copy opencode pair", comment: "opencode pair is a shell command"))
                                     .accessibilityIdentifier("copyPairCommand")
+                                Text(localized("Needs opencode \(ServerInfo.minimumVersion) or later.", comment: "%@ is the oldest supported opencode version"))
+                                    .font(OCType.small).foregroundStyle(OCColor.textMuted).multilineTextAlignment(.center)
+                                    .accessibilityIdentifier("minimumServerVersionHint")
                             }.padding(.top, OCSpacing.lg)
                         }
                     }.frame(maxWidth: OCLayout.connectionForm)
@@ -106,9 +110,9 @@ struct AddServerView: View {
             }
             .disabled(working)
             .ocTheme()
-            .ocNavigationTitle(repairing == nil ? "Add server" : "Re-pair server")
+            .ocNavigationTitle(repairing == nil ? localized("Add server") : localized("Re-pair server"))
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { task?.cancel(); dismiss() } } }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(localized("Cancel")) { task?.cancel(); dismiss() } } }
             .sheet(isPresented: $explainLocal) {
                 LocalNetworkExplanation {
                     explainLocal = false
@@ -118,12 +122,12 @@ struct AddServerView: View {
             .sheet(isPresented: $scanning) {
                 NavigationStack {
                     QRScannerView(scanned: { value in link = value; scanning = false; connectTapped() },
-                                  failed: { scannerError = "The camera is unavailable. Allow Camera access in Settings, or paste your pairing link." })
+                                  failed: { scannerError = localized("The camera is unavailable. Allow Camera access in Settings, or paste your pairing link.") })
                         .overlay {
-                            if let scannerError { ContentUnavailableView("Camera unavailable", systemImage: "camera", description: Text(scannerError)) }
+                            if let scannerError { ContentUnavailableView(localized("Camera unavailable"), systemImage: "camera", description: Text(scannerError)) }
                         }
-                        .ocNavigationTitle("Scan pairing code")
-                        .toolbar { Button("Cancel") { scanning = false } }
+                        .ocNavigationTitle(localized("Scan pairing code"))
+                        .toolbar { Button(localized("Cancel")) { scanning = false } }
                 }
                 .onDisappear { scannerError = nil }
             }
@@ -140,8 +144,8 @@ struct AddServerView: View {
         }.ocSheet().uiTestConnectionDiagnostics(registry)
     }
     @ViewBuilder private var methodSwitch: some View {
-        Text(method == 0 ? "No pairing link?" : "Have a pairing link?").font(OCType.small).foregroundStyle(OCColor.textFaint)
-        Button(method == 0 ? "Use password" : "Use pairing link") { method = method == 0 ? 1 : 0; error = nil }
+        Text(method == 0 ? localized("No pairing link?") : localized("Have a pairing link?")).font(OCType.small).foregroundStyle(OCColor.textMuted)
+        Button(method == 0 ? localized("Use password") : localized("Use pairing link")) { method = method == 0 ? 1 : 0; error = nil }
             .buttonStyle(OCButtonStyle(.ghost)).accessibilityIdentifier("connectionMethod")
     }
     private func connectTapped() {

@@ -64,24 +64,24 @@ public struct OCWorkspaceShell<Sidebar: View, Tabs: View, Main: View, Panel: Vie
             let chatWidth = WorkspaceWidths.clampChat(max(WorkspaceWidths.chatMinimum, layout.wrappedValue.chatWidth), available: available, split: split)
             VStack(spacing: OCSpacing.sm) {
                 HStack(spacing: OCSpacing.xs) {
-                    OCIconButton("Toggle Home sidebar", icon: "layout-left") { layout.wrappedValue.homeOpen.toggle() }
+                    OCIconButton(localized("Toggle Home sidebar"), icon: "layout-left") { layout.wrappedValue.homeOpen.toggle() }
                         .accessibilityIdentifier("toggleHome")
                         // What is visible: the sidebar, or Home as a sheet at narrow widths.
-                        .accessibilityValue(homeOpen && (wide || allowsPresentation) ? "open" : "closed")
+                        .accessibilityValue(homeOpen && (wide || allowsPresentation) ? localized("open", comment: "Accessibility value: a panel is shown") : localized("closed", comment: "Accessibility value: a panel is hidden"))
                     tabs
-                    OCIconButton("Toggle review", icon: "sidebar-right") { toggleReview(beside: beside) }
+                    OCIconButton(localized("Toggle review"), icon: "sidebar-right") { toggleReview(beside: beside) }
                         .accessibilityIdentifier("toggleReview")
-                        .accessibilityValue(reviewOpen && beside || reviewSheet ? "open" : "closed")
+                        .accessibilityValue(reviewOpen && beside || reviewSheet ? localized("open", comment: "Accessibility value: a panel is shown") : localized("closed", comment: "Accessibility value: a panel is hidden"))
                 }
                 HStack(spacing: 0) {
                     if homeOpen && wide {
                         sidebar.frame(width: homeWidth)
-                        OCResizeHandle("Resize Home sidebar", value: layout.homeWidth, range: homeRange, reset: WorkspaceWidths.homeDefault, style: .gap)
+                        OCResizeHandle(localized("Resize Home sidebar"), value: layout.homeWidth, range: homeRange, reset: WorkspaceWidths.homeDefault, style: .gap)
                             .accessibilityIdentifier("resizeHome")
                     }
                     if reviewOpen && beside {
                         main.frame(width: chatWidth).frame(maxHeight: .infinity)
-                        OCResizeHandle("Resize session panel", value: Binding(get: { chatWidth }, set: { layout.wrappedValue.chatWidth = $0 }),
+                        OCResizeHandle(localized("Resize session panel"), value: Binding(get: { chatWidth }, set: { layout.wrappedValue.chatWidth = $0 }),
                                        range: chatRange, reset: WorkspaceWidths.chatDefault, style: .gap)
                             .accessibilityIdentifier("resizeSession")
                         panel.frame(maxWidth: .infinity)
@@ -111,7 +111,7 @@ public struct OCWorkspaceShell<Sidebar: View, Tabs: View, Main: View, Panel: Vie
                 // A restored window showing a session does not open with Home's sheet over it.
                 .onAppear { if !wide && selectionID != nil && homeOpen { layout.wrappedValue.homeOpen = false } }
                 .sheet(isPresented: $reviewSheet) {
-                    panel.safeAreaInset(edge: .top) { HStack { Spacer(); OCIconButton("Close review", icon: "close") { reviewSheet = false }.accessibilityIdentifier("closeReview") }.padding(.horizontal, OCSpacing.sm) }.ocSheet()
+                    panel.safeAreaInset(edge: .top) { HStack { Spacer(); OCIconButton(localized("Close review"), icon: "close") { reviewSheet = false }.accessibilityIdentifier("closeReview") }.padding(.horizontal, OCSpacing.sm) }.ocSheet()
                 }
         }.ocTheme()
     }
@@ -136,7 +136,7 @@ public struct OCProjectTabs: View {
                     Button { selection = project.id } label: { OCLabel(project.title, icon: "folder") }
                         .buttonStyle(OCTabStyle(selected: selection == project.id))
                 }
-                if projects.isEmpty { OCLabel("Projects", icon: "folder").font(OCType.small).foregroundStyle(OCColor.textMuted) }
+                if projects.isEmpty { OCLabel(localized("Projects"), icon: "folder").font(OCType.small).foregroundStyle(OCColor.textMuted) }
             }
         }.scrollIndicators(.hidden).frame(maxWidth: .infinity, alignment: .leading)
     }

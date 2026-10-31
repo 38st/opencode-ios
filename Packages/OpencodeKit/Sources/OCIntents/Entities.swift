@@ -9,7 +9,7 @@ public struct ServerEntity: AppEntity, Equatable {
     public static let typeDisplayRepresentation: TypeDisplayRepresentation = "Server"
     public static let defaultQuery = ServerQuery()
     /// The widgets' default: every server.
-    public static let all = ServerEntity(id: "all", name: "All servers")
+    public static var all: ServerEntity { ServerEntity(id: "all", name: localized("All servers")) }
     public let id: String
     public let name: String
     public init(id: String, name: String) { self.id = id; self.name = name }

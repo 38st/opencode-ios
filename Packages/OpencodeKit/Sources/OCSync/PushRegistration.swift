@@ -11,10 +11,11 @@ public struct PushServerHealth: Sendable, Identifiable {
     public let id: String
     public var name: String
     public var pluginVersion: String?
-    public var registration = "Not registered"
+    public var registration = localized("Not registered")
     public var pluginMissing = false
     public var lastDelivery: String?
     public var lastDeliveryAt: Date?
+    public var isRegistered: Bool { registration == PushRegistration.registered }
     public init(id: String, name: String) { self.id = id; self.name = name }
 }
 
@@ -32,7 +33,10 @@ enum PushRegistrationError: Error { case deviceNotRegistered }
 @MainActor @Observable public final class PushRegistration {
     public typealias Relay = @Sendable (HTTPMethod, String, String?, JSONValue?) async throws -> JSONValue
     public typealias RPC = @MainActor @Sendable (String, JSONValue) async throws -> JSONValue
-    public private(set) var relayState = "Waiting for notification permission"
+    public private(set) var relayState = localized("Waiting for notification permission")
+    /// The status both the relay and a server show once registration succeeded.
+    public static var registered: String { localized("Registered", comment: "Push notification registration status") }
+    public var isRelayRegistered: Bool { relayState == Self.registered }
     public private(set) var health: [String: PushServerHealth] = [:]
     /// Removed servers whose relay sender could not be revoked yet; retried on every token registration.
     public private(set) var pendingRevocations: [String] = []
@@ -49,7 +53,7 @@ enum PushRegistrationError: Error { case deviceNotRegistered }
         self.relayURL = relayURL; self.keys = keys; self.store = store; self.secrets = secrets; self.relay = relay
     }
     deinit { tokenTask?.cancel(); for task in registering.values { task.cancel() } }
-    public func unavailable() { relayState = "APNs registration unavailable in this build" }
+    public func unavailable() { relayState = localized("APNs registration unavailable in this build") }
     public func registerToken(_ token: String, bundleID: String, environment: String = "sandbox") async throws {
         let previous = tokenTask
         let task = Task { [self] in
@@ -64,12 +68,12 @@ enum PushRegistrationError: Error { case deviceNotRegistered }
                 let identity = try JSONDecoder().decode(RelayIdentity.self, from: JSONEncoder().encode(raw))
                 try await secrets.write(JSONEncoder().encode(identity), account: "device")
             }
-            relayState = "Registered"
+            relayState = Self.registered
         }
         tokenTask = task
         do { try await task.value }
-        catch PushRelayError.unreachable { relayState = "Relay unreachable"; throw PushRelayError.unreachable }
-        catch { relayState = "Could not register with the relay"; throw error }
+        catch PushRelayError.unreachable { relayState = localized("Relay unreachable"); throw PushRelayError.unreachable }
+        catch { relayState = localized("Could not register with the relay"); throw error }
         await retryRevocations()
     }
     public func identity() async throws -> RelayIdentity? {
@@ -85,7 +89,7 @@ enum PushRegistrationError: Error { case deviceNotRegistered }
             do {
                 let status = try await rpc("status", .object([:]))
                 state.pluginVersion = status["pluginVersion"]?.stringValue
-                guard let identity = try await identity(), relayState == "Registered" else { state.registration = "Waiting for APNs registration"; return }
+                guard let identity = try await identity(), isRelayRegistered else { state.registration = localized("Waiting for APNs registration"); return }
                 let key = try await keys.key(for: server)
                 let sender: PushSender
                 if let data = try await secrets.read(account: "sender." + ref) {
@@ -103,16 +107,16 @@ enum PushRegistrationError: Error { case deviceNotRegistered }
                 try await keys.pin(serverPublicKey: pinned, for: server)
                 try store.register(keyID: key.keyID, server: ref)
                 state.pluginVersion = output["pluginVersion"]?.stringValue
-                state.registration = "Registered"
+                state.registration = Self.registered
                 let devices = try await rpc("listDevices", .object([:]))
                 if let device = devices["devices"]?.arrayValue?.first(where: { $0["keyID"]?.stringValue == key.keyID }),
                    let delivery = device["lastDelivery"] {
                     state.lastDelivery = delivery["result"]?.stringValue
                     if let time = delivery["at"]?.doubleValue { state.lastDeliveryAt = Date(timeIntervalSince1970: time / 1000) }
                 }
-            } catch APIError.server(_, 404, _) { state.pluginMissing = true; state.registration = "Plugin not installed" }
-            catch PushRelayError.unreachable { state.registration = "Relay unreachable" }
-            catch { state.registration = "Registration unavailable. Try again." }
+            } catch APIError.server(_, 404, _) { state.pluginMissing = true; state.registration = localized("Plugin not installed") }
+            catch PushRelayError.unreachable { state.registration = localized("Relay unreachable") }
+            catch { state.registration = localized("Registration unavailable. Try again.") }
         }
         registering[ref] = task
         await task.value

@@ -14,8 +14,8 @@ struct WorkspacePlaceholder: View {
             ScrollView {
                 VStack(spacing: OCSpacing.md) {
                     OCIcon("bubble-5", size: 32).foregroundStyle(OCColor.iconMuted)
-                    Text("Your conversation appears here").font(OCType.heading)
-                    Text("Choose a conversation from Home to follow its progress.")
+                    Text(localized("Your conversation appears here")).font(OCType.heading)
+                    Text(localized("Choose a conversation from Home to follow its progress."))
                         .font(OCType.small).foregroundStyle(OCColor.textMuted)
                 }.multilineTextAlignment(.center).padding(OCSpacing.xl).frame(maxWidth: .infinity)
                     .padding(.top, OCSpacing.section)

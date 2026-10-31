@@ -132,7 +132,7 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
                     }
                 }
             }
-        } catch { self.error = "Could not load saved servers or their Keychain credentials. Try again." }
+        } catch { self.error = localized("Could not load saved servers or their Keychain credentials. Try again.") }
     }
     private func makeStore(_ record: ServerRecord) async throws -> ServerStore {
         let credential = try await credentials.credential(for: record.id)
@@ -213,6 +213,7 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
             if phase == .active && mayConnect(server) { await server.start() }
             throw error
         }
+        server.readPath.endTerminals()
         await server.dispose()
         await FileCache.shared.removeServer(server.readPath.serverID)
         try? await server.readPath.cache?.writer.forgetTerminals(serverID: server.readPath.serverID)
@@ -260,8 +261,8 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
             #if os(iOS)
             await notifications?.phase(.background)
             #endif
-            do { for server in servers { try await server.readPath.flushComposers() }; try await drafts?.flush() } catch { self.error = "Could not save drafts before pausing." }
-            do { try await persist() } catch { self.error = "Could not save servers before pausing." }
+            do { for server in servers { try await server.readPath.flushComposers() }; try await drafts?.flush() } catch { self.error = localized("Could not save drafts before pausing.") }
+            do { try await persist() } catch { self.error = localized("Could not save servers before pausing.") }
             for server in servers {
                 await server.readPath.flushWrites()
                 await server.suspend()
@@ -280,7 +281,7 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
             }
             if generation == pathGeneration { pathChanged = false }
         case .inactive:
-            do { for server in servers { try await server.readPath.flushComposers() }; try await drafts?.flush() } catch { self.error = "Could not save drafts." }
+            do { for server in servers { try await server.readPath.flushComposers() }; try await drafts?.flush() } catch { self.error = localized("Could not save drafts.") }
         }
     }
     public func networkPathChanged(_ path: NetworkPathStatus) {

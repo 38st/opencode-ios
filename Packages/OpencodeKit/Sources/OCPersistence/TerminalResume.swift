@@ -14,11 +14,14 @@ public struct TerminalResume: Sendable, Equatable {
     /// The screen and part of its scrollback as escape sequences, at most `screenLimit` bytes.
     public var screen: String
     public var updated: Date
+    /// The app saw the process exit while attached, so the saved screen holds all of its output.
+    public var exitedLive: Bool
     public static let screenLimit = 1 << 20
     public static let lifetime: TimeInterval = 7 * 86_400
-    public init(serverID: String, ptyID: String, directory: String, cursor: Int, cols: Int, rows: Int, screen: String, updated: Date) {
+    public init(serverID: String, ptyID: String, directory: String, cursor: Int, cols: Int, rows: Int, screen: String, updated: Date,
+                exitedLive: Bool = false) {
         self.serverID = serverID; self.ptyID = ptyID; self.directory = directory; self.cursor = cursor
-        self.cols = cols; self.rows = rows; self.screen = screen; self.updated = updated
+        self.cols = cols; self.rows = rows; self.screen = screen; self.updated = updated; self.exitedLive = exitedLive
     }
 }
 
@@ -28,9 +31,9 @@ extension PersistenceWriter {
         guard !metadataOnly, value.cursor >= 0, value.screen.utf8.count <= TerminalResume.screenLimit else { return }
         try database.write { db in
             try Self.dropExpiredTerminals(db, now: value.updated)
-            try db.execute(sql: "INSERT OR REPLACE INTO pty_cursor(server_id,pty_id,cursor,directory,cols,rows,screen,updated_at) VALUES (?,?,?,?,?,?,?,?)",
+            try db.execute(sql: "INSERT OR REPLACE INTO pty_cursor(server_id,pty_id,cursor,directory,cols,rows,screen,updated_at,exited_live) VALUES (?,?,?,?,?,?,?,?,?)",
                            arguments: [value.serverID, value.ptyID, value.cursor, value.directory, value.cols, value.rows,
-                                       Data(value.screen.utf8), value.updated.timeIntervalSince1970])
+                                       Data(value.screen.utf8), value.updated.timeIntervalSince1970, value.exitedLive])
         }
     }
     /// The saved point, after dropping every point older than `TerminalResume.lifetime`.
@@ -41,7 +44,7 @@ extension PersistenceWriter {
             let screen: Data = row["screen"] ?? Data()
             return TerminalResume(serverID: serverID, ptyID: ptyID, directory: row["directory"] ?? "", cursor: row["cursor"],
                                   cols: row["cols"] ?? 0, rows: row["rows"] ?? 0, screen: String(decoding: screen, as: UTF8.self),
-                                  updated: Date(timeIntervalSince1970: row["updated_at"] ?? 0))
+                                  updated: Date(timeIntervalSince1970: row["updated_at"] ?? 0), exitedLive: row["exited_live"] ?? false)
         }
     }
     /// Saved screens live at most `TerminalResume.lifetime`, whether or not their terminal is opened again: this runs

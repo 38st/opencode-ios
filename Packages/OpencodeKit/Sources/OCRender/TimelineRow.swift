@@ -5,11 +5,11 @@ public enum TimelineDetail: String, CaseIterable, Sendable {
     case everything, detailed, compact, quiet, messagesOnly
     public var title: String {
         switch self {
-        case .everything: "Everything"
-        case .detailed: "Detailed"
-        case .compact: "Compact"
-        case .quiet: "Quiet"
-        case .messagesOnly: "Messages only"
+        case .everything: localized("Everything", comment: "Timeline detail level")
+        case .detailed: localized("Detailed", comment: "Timeline detail level")
+        case .compact: localized("Compact", comment: "Timeline detail level")
+        case .quiet: localized("Quiet", comment: "Timeline detail level")
+        case .messagesOnly: localized("Messages only", comment: "Timeline detail level")
         }
     }
     public var expanded: Bool { self == .everything || self == .detailed }

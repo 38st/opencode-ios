@@ -11,12 +11,12 @@ public enum ComposerError: Error, LocalizedError, Equatable {
     case shellRestore, cannotQueue, childSession, storeUnavailable, operationInProgress, directoryDraftConflict
     public var errorDescription: String? {
         switch self {
-        case .storeUnavailable: "This server is no longer available. Your draft has been kept."
-        case .operationInProgress: "Wait for the current action to finish, then try again."
-        case .directoryDraftConflict: "This project already has a saved draft. Choose which draft to use."
-        case .shellRestore: "Leave shell mode before undoing a queued prompt"
-        case .cannotQueue: "This prompt cannot be queued"
-        case .childSession: "Subagent sessions are read only. Send prompts to the parent session."
+        case .storeUnavailable: localized("This server is no longer available. Your draft has been kept.")
+        case .operationInProgress: localized("Wait for the current action to finish, then try again.")
+        case .directoryDraftConflict: localized("This project already has a saved draft. Choose which draft to use.")
+        case .shellRestore: localized("Leave shell mode before undoing a queued prompt")
+        case .cannotQueue: localized("This prompt cannot be queued")
+        case .childSession: localized("Subagent sessions are read only. Send prompts to the parent session.")
         }
     }
 }
@@ -63,7 +63,7 @@ public enum ComposerError: Error, LocalizedError, Equatable {
             if error == Self.loadFailed { error = nil }
         } catch { self.error = Self.loadFailed }
     }
-    static let loadFailed = "Could not load your saved draft."
+    static var loadFailed: String { localized("Could not load your saved draft.") }
     public func reload() async throws {
         let store = try availableStore()
         await saving?.value
@@ -193,7 +193,7 @@ public enum ComposerError: Error, LocalizedError, Equatable {
         do {
             let draft = try snapshot(), previous = saving, drafts = try availableStore().drafts
             saving = Task { await previous?.value; await drafts?.save(draft) }
-        } catch { self.error = "Could not save your draft." }
+        } catch { self.error = localized("Could not save your draft.") }
     }
     public func flush() async throws {
         guard let store else { throw ComposerError.storeUnavailable }
@@ -208,7 +208,7 @@ public enum ComposerError: Error, LocalizedError, Equatable {
         let action = ComposerDelivery.action(running: session?.status.isRunning == true, blank: blank, shell: options.shell,
                                              preference: preference, alternate: alternate, interrupt: interrupt)
         if action == .empty { return }
-        if action == .unqueueable { error = "This prompt cannot be queued"; return }
+        if action == .unqueueable { error = localized("This prompt cannot be queued"); return }
         if session?.info.parentID != nil { error = ComposerError.childSession.localizedDescription; return }
         if session?.info.revert != nil && !confirmed && action != .stop {
             pendingSend = (alternate, interrupt, preference); confirmRevert = true; return
@@ -266,7 +266,7 @@ public enum ComposerError: Error, LocalizedError, Equatable {
                 }
                 if let recovery = self.options.recoveringCreateID { try? await store.discardOutbox(recovery) }
                 do { try await store.drafts?.delete(draft) }
-                catch { self.error = "Your prompt is saved to send. Could not clean up the previous draft." }
+                catch { self.error = localized("Your prompt is saved to send. Could not clean up the previous draft.") }
                 self.text = AttributedString(); self.attachments = []; self.options = .init(agent: agent, model: model); self.draftID = UUID().uuidString
                 if sendsComments { self.comments = [] }
                 self.reconcileSelection(persist: false)
@@ -279,7 +279,7 @@ public enum ComposerError: Error, LocalizedError, Equatable {
                 self.pendingSend = (alternate, interrupt, preference); self.confirmRevert = true
             } catch {
                 let message = WriteErrorMessage.message(error)
-                self.error = self.options.shell ? "Failed to send shell command. " + message : self.serverCommand(String(self.text.characters)) != nil ? "Failed to send command. " + message : message
+                self.error = self.options.shell ? localized("Failed to send shell command. \(message)", comment: "%@ is the error message") : self.serverCommand(String(self.text.characters)) != nil ? localized("Failed to send command. \(message)", comment: "%@ is the error message") : message
             }
         }
     }
@@ -292,7 +292,9 @@ public enum ComposerError: Error, LocalizedError, Equatable {
         guard let store, !store.stopped else { throw ComposerError.storeUnavailable }
         return store
     }
-    public func clearSearchError() { if error == "Could not search files." { error = nil } }
+    /// The file search's error, which editing the text clears.
+    public static var searchFailed: String { localized("Could not search files.") }
+    public func clearSearchError() { if error == Self.searchFailed { error = nil } }
     var canReplaceWithoutConfirmation: Bool { text.characters.isEmpty && attachments.isEmpty && comments.isEmpty || restoredRevision == editRevision }
     var hasDraftContent: Bool { !text.characters.isEmpty || !attachments.isEmpty || !comments.isEmpty || options != ComposerOptions() }
     func markRestored() { restoredRevision = editRevision }
