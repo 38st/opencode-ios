@@ -67,7 +67,7 @@ Generated from `Packages/OpencodeKit/Sources/OCDesign/Resources/Licenses/acknowl
 
 ## OpenCode design tokens and icons — MIT
 
-The default OpenCode (OC-2) theme, component measurements and 149 SVG icons were ported from `packages/ui` in the read-only OpenCode reference, with layout references from `packages/app` and `packages/session-ui`. The original icon geometry is preserved; SVGs are template assets. The complete licence is bundled at `Packages/OpencodeKit/Sources/OCDesign/Resources/Licenses/opencode-MIT.txt`.
+The default OpenCode (OC-2) theme, component measurements and 149 SVG icons were ported from OpenCode's `packages/ui` at `d0732ea`, with layout references from `packages/app` and `packages/session-ui`. The original icon geometry is preserved; SVGs are template assets. The complete licence is bundled at `Packages/OpencodeKit/Sources/OCDesign/Resources/Licenses/opencode-MIT.txt`.
 
 MIT License
 
@@ -98,7 +98,7 @@ The 231 `filetype-*` SVG image sets and `file-icons.json` were ported from OpenC
 
 The artwork originates in **Material Icon Theme**, created by **Philipp Kief** and maintained by **Material Extensions**. Its paths and colours were verified against the published VSIX artifacts for [v5.18.0](https://github.com/material-extensions/vscode-material-icon-theme/releases/tag/v5.18.0), [v5.30.0](https://github.com/material-extensions/vscode-material-icon-theme/releases/tag/v5.30.0) and [v5.39.0](https://github.com/material-extensions/vscode-material-icon-theme/releases/tag/v5.39.0): 220 exact XML matches after serialization normalization, ten with OpenCode's `currentColor` substitutions, and one with equivalent SVG path syntax. OpenCode's artwork adaptations are preserved; no icons were changed by this attribution review.
 
-The complete published MIT notice (Copyright (c) 2025 Material Extensions), together with the original project notice (Copyright (c) 2021 Philipp Kief, verified in [v4.34.0](https://github.com/material-extensions/vscode-material-icon-theme/blob/v4.34.0/LICENSE.md)), is bundled at `Packages/OpencodeKit/Sources/OCDesign/Resources/Licenses/material-icon-theme-MIT.txt`, beside `opencode-MIT.txt`. See `docs/m3b-audit.md` for the comparison method and evidence.
+The complete published MIT notice (Copyright (c) 2025 Material Extensions), together with the original project notice (Copyright (c) 2021 Philipp Kief, verified in [v4.34.0](https://github.com/material-extensions/vscode-material-icon-theme/blob/v4.34.0/LICENSE.md)), is bundled at `Packages/OpencodeKit/Sources/OCDesign/Resources/Licenses/material-icon-theme-MIT.txt`, beside `opencode-MIT.txt`.
 
 ## Inter — SIL Open Font License 1.1
 
@@ -112,14 +112,14 @@ Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/
 
 Source: `packages/ui/src/assets/fonts/JetBrainsMonoNerdFontMono-Regular.woff2`. Its name table identifies the family as `JetBrainsMono NFM`, PostScript name `JetBrainsMonoNFM-Regular`, and SIL OFL 1.1. The WOFF2 container was decoded to TTF for Core Text using FontTools; glyph outlines and name-table metadata are preserved. The complete licence is bundled in `Resources/Licenses/JetBrainsMono-OFL.txt` within OCDesign. The common OFL text comes from `packages/app/src/settings/about/notices/fonts/OFL-1.1.txt`, prefixed with each font's own copyright line.
 
-## Existing Swift dependencies
+## Swift dependencies
 
 - GRDB 7.8.0 — MIT, copyright Gwendal Roué and contributors; https://github.com/groue/GRDB.swift/blob/v7.8.0/LICENSE
 - swift-clocks 1.1.1 — MIT, copyright Point-Free, Inc.; https://github.com/pointfreeco/swift-clocks/blob/1.1.1/LICENSE
 - swift-snapshot-testing 1.18.7 (tests only) — MIT, copyright Point-Free, Inc.; https://github.com/pointfreeco/swift-snapshot-testing/blob/1.18.7/LICENSE
 - swift-concurrency-extras (transitive dependency of swift-clocks / snapshot testing) — MIT, copyright Point-Free, Inc.; https://github.com/pointfreeco/swift-concurrency-extras/blob/main/LICENSE
 
-Full dependency licences remain in their SwiftPM checkouts. The design-asset port adds no app library; M2b's rendering dependencies are listed below. Local capture tooling uses Playwright 1.56.1 (Apache 2.0), its Chromium browser (Chromium third-party notices), FontTools (MIT), Brotli (MIT), and Pillow (HPND); these are not bundled in the application. New development dependencies are installed under `.build`; existing Python tools are reused without global installation or reconfiguration. Reference web screenshots stay in `.build` and are not redistributed in Git.
+Full dependency licences remain in their SwiftPM checkouts. The rendering dependencies are listed below. Local capture tooling uses Playwright 1.56.1 (Apache 2.0), its Chromium browser (Chromium third-party notices), FontTools (MIT), Brotli (MIT), and Pillow (HPND); these are not bundled in the application. New development dependencies are installed under `.build`; existing Python tools are reused without global installation or reconfiguration. Reference web screenshots stay in `.build` and are not redistributed in Git.
 
 ### GRDB.swift licence
 
@@ -181,7 +181,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## M2b rendering engines and grammars
+## Rendering engines and grammars
 
 The Swift package pins swift-markdown 0.7.3, Textual 0.5.0 and SwiftTreeSitter
 0.10.0. SwiftTreeSitter's unrelated older 0.25.0 tag is deliberately not selected.
@@ -198,8 +198,9 @@ Swift uses the generated-files revision pinned by SwiftTreeSitter 0.10.0.
 The importer adjusts TypeScript scanner include paths and adds explicit bounded
 serialization casts in the Python/YAML scanners for warning-free Apple builds.
 
-The model-output cleanup and session indicator implementations are original code,
-informed by the ideas documented in research/09. No grapeot source was copied.
+The model-output cleanup and the session indicator are original code, informed by
+ideas from [grapeot/opencode_ios_client](https://github.com/grapeot/opencode_ios_client).
+None of its source was copied.
 
 ## SwiftTerm — MIT
 
