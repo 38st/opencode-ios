@@ -32,6 +32,22 @@ export async function jsonBody(request: Request): Promise<Json | undefined> {
   }
 }
 
+/** A JSON object from raw body bytes, for routes that also hash the exact bytes they received. */
+export function jsonBytes(bytes: Uint8Array): Json | undefined {
+  try {
+    const value: unknown = JSON.parse(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes));
+    return isObject(value) ? value : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Standard base64 (App Attest key IDs, attestations and assertions), decoded, or undefined. */
+export function base64Bytes(value: unknown, maxLength: number): Uint8Array | undefined {
+  if (typeof value !== "string" || value.length > maxLength || value.length % 4 !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(value)) return undefined;
+  return Uint8Array.from(atob(value), (character) => character.charCodeAt(0));
+}
+
 /** The bearer credential from an Authorization header, or undefined. */
 export function bearer(header: string | undefined): string | undefined {
   const match = /^Bearer ([A-Za-z0-9_-]{16,200})$/.exec(header ?? "");

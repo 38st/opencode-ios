@@ -5,7 +5,8 @@ import { collapseForRequest, collapseForResult, collapseForTest, threadFor } fro
 import type { Host, HostEvent } from "./host.ts";
 import { serverKeys } from "./keys.ts";
 import { failureSummary, formDetails, parseForm, parsePermission, permissionDetails, type RequestDetails } from "./payloads.ts";
-import { RelayClient, type Outcome } from "./relay.ts";
+import type { DirectSender } from "./direct.ts";
+import { RelayClient, type ActivityUpdate, type Outcome, type PushRequest } from "./relay.ts";
 import { keys, Registry, scanAll, type ActivityRegistration, type Device, type Presence } from "./registry.ts";
 import { Sessions, type LookupFailure } from "./sessions.ts";
 import { sharedState, type PushedRequest, type Resolution, type SharedState } from "./shared.ts";
@@ -14,6 +15,8 @@ export interface ServiceOptions {
   readonly host: Host;
   readonly shared?: SharedState;
   readonly relay?: RelayClient;
+  /** Direct mode (direct.ts): present when the plugin's `apns` option loaded. */
+  readonly direct?: DirectSender;
   /** Unix milliseconds. */
   readonly now?: () => number;
   readonly log?: (message: string) => void;
@@ -59,6 +62,7 @@ export class PushService {
   readonly #host: Host;
   readonly #shared: SharedState;
   readonly #relay: RelayClient;
+  readonly #direct: DirectSender | undefined;
   readonly #now: () => number;
   readonly #log: (message: string) => void;
   readonly #grace: number;
@@ -83,6 +87,7 @@ export class PushService {
     this.#host = options.host;
     this.#shared = options.shared ?? sharedState();
     this.#relay = options.relay ?? new RelayClient();
+    this.#direct = options.direct;
     this.#now = options.now ?? Date.now;
     this.#log = options.log ?? ((message) => console.warn(`[mobilepush] ${message}`));
     this.#grace = options.graceMilliseconds ?? CONTRACT.plugin.graceMilliseconds;
@@ -95,6 +100,20 @@ export class PushService {
 
   get registry(): Registry {
     return this.#registry;
+  }
+
+  /** The direct-mode sender, when the plugin's `apns` option configured one. */
+  get direct(): DirectSender | undefined {
+    return this.#direct;
+  }
+
+  /**
+   * Relay devices go through their relay; direct devices straight to Apple. A direct device is
+   * unreachable while direct mode is off (say, the key was removed), and keeps its registration.
+   */
+  #push(device: Device, request: PushRequest): Promise<Outcome> {
+    if (device.transport !== "direct") return this.#relay.push(device, request);
+    return this.#direct ? this.#direct.push(device, request) : Promise.resolve({ result: "unreachable", attempts: 0 });
   }
 
   /** For `status`: which location this instance serves and the events it has received. */
@@ -526,7 +545,7 @@ export class PushService {
     }
     const envelope = await sealEnvelope({ kind, exp, kid: device.keyID, plaintext, recipientPublicKey: recipient, sender: await this.serverKeys() });
     const thread = await threadFor(device.keyID, fields.rootSessionID ?? fields.sessionID ?? kind);
-    const outcome = await this.#relay.push(device, { kind, priority: policy.priority, collapse, thread, expiresAt: exp, envelope });
+    const outcome = await this.#push(device, { kind, priority: policy.priority, collapse, thread, expiresAt: exp, envelope });
     await this.#registry.recordDelivery(device.keyID, { kind, result: outcome.result, attempts: outcome.attempts, at: this.#now() });
     if (outcome.result === "gone") await this.#registry.remove(device.keyID);
     return outcome;
@@ -537,10 +556,13 @@ export class PushService {
    * follows the run. When the family cannot be read it says why: the caller answers `not_found`
    * for a session opencode does not have, and `unavailable` for a read that failed.
    */
-  async registerActivity(keyID: string, activityRef: string, sessionID: string): Promise<"registered" | LookupFailure> {
+  async registerActivity(keyID: string, activityRef: string, sessionID: string, token?: { readonly pushToken: string; readonly expiresAt: number }): Promise<"registered" | LookupFailure> {
     const family = await this.#sessions.family(sessionID);
     if ("failure" in family) return family.failure;
-    const registration: ActivityRegistration = { keyID, activityRef, sessionID: family.root, registeredAt: this.#now(), step: 0, toolGlyph: "none", phase: "running", waiting: [] };
+    const registration: ActivityRegistration = {
+      keyID, activityRef, sessionID: family.root, registeredAt: this.#now(), step: 0, toolGlyph: "none", phase: "running", waiting: [],
+      ...(token ? { pushToken: token.pushToken, expiresAt: token.expiresAt } : {}),
+    };
     await this.#host.storage.set(keys.activity(keyID, activityRef), { ...registration, waiting: [] });
     return "registered";
   }
@@ -649,14 +671,19 @@ export class PushService {
       startedAt: Math.floor((registration.startedAt ?? registration.registeredAt) / 1000),
       updatedAt: seconds,
     };
-    const outcome = await this.#relay.activity(device, {
+    const update: ActivityUpdate = {
       ref: registration.activityRef,
       event,
       state,
       staleAt: seconds + staleSeconds,
       ...(event === "end" ? { dismissAt: seconds + dismissSeconds } : {}),
       priority,
-    });
+    };
+    let outcome: Outcome;
+    if (device.transport !== "direct") outcome = await this.#relay.activity(device, update);
+    else if (!registration.pushToken || (registration.expiresAt ?? 0) <= seconds) outcome = { result: "gone", attempts: 0 };
+    else if (!this.#direct) outcome = { result: "unreachable", attempts: 0 };
+    else outcome = await this.#direct.activity(registration.pushToken, update);
     if (outcome.result === "gone" && key) await this.#host.storage.remove(key);
   }
 }

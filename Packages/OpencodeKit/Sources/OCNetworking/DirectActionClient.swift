@@ -28,7 +28,16 @@ public struct DirectActionClient: Sendable {
         self.endpoints = endpoints; self.credential = credential; self.headers = headers
         self.transport = transport; self.clock = clock
     }
+    /// Encrypted endpoints are tried first; the credential goes over plain HTTP only when none of them answers.
     public func connect() async throws -> DirectActionSession {
+        let encrypted = endpoints.filter(EndpointPolicy.isEncrypted), plain = endpoints.filter { !EndpointPolicy.isEncrypted($0) }
+        guard !encrypted.isEmpty, !plain.isEmpty else { return try await connect(endpoints) }
+        do { return try await connect(encrypted) }
+        catch { try Task.checkCancellation() }
+        return try await connect(plain)
+    }
+    /// The first endpoint (the last one that worked) for 3 seconds, then a race of the others.
+    private func connect(_ endpoints: [URL]) async throws -> DirectActionSession {
         guard let first = endpoints.first else { throw APIError.refused(.invalidURL) }
         do { return try await withActionDeadline(seconds: .seconds(3), clock: clock) { try await probe(first) } }
         catch { try Task.checkCancellation() }

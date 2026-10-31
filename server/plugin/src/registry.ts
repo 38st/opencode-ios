@@ -9,11 +9,22 @@ export interface Prefs {
 
 export const DEFAULT_PREFS: Prefs = { permission: true, question: true, finished: true, failed: true };
 
+/** `relay`: sealed pushes go through the device's relay. `direct`: the plugin sends them to Apple itself (direct.ts). */
+export type Transport = "relay" | "direct";
+
 /** One device's registration for this server, keyed by the device's key ID. */
 export interface Device {
   readonly keyID: string;
-  readonly sendToken: string;
-  readonly relayURL: string;
+  readonly transport: Transport;
+  /** Relay devices only. */
+  readonly sendToken?: string;
+  /** Relay devices only. */
+  readonly relayURL?: string;
+  /** Direct devices only: the APNs device token, lowercase hex. */
+  readonly apnsToken?: string;
+  /** Direct devices only: the app's bundle ID and APNs environment, which match the plugin's `apns` option. */
+  readonly bundleID?: string;
+  readonly environment?: "sandbox" | "production";
   /** base64url of the device's raw 32-byte X25519 public key. */
   readonly devicePublicKey: string;
   readonly appServerRef: string;
@@ -50,8 +61,12 @@ export interface ActivityRegistration {
   readonly phase: string;
   /** Requests (in the root or a subagent) still pending after their grace period: needs input until empty. */
   readonly waiting?: readonly string[];
-  /** Unix milliseconds of the last update sent to the relay. */
+  /** Unix milliseconds of the last update sent. */
   readonly sentAt?: number;
+  /** Direct devices only: the activity's APNs push token, which the relay keeps for relay devices. */
+  readonly pushToken?: string;
+  /** Direct devices only: Unix seconds after which the push token is no longer used. */
+  readonly expiresAt?: number;
 }
 
 // Storage layout (ctx.storage is already namespaced to this plugin):
@@ -122,16 +137,31 @@ export class Registry {
   }
 }
 
+const string = (value: Json | undefined): string | undefined => (typeof value === "string" ? value : undefined);
+
 function parseDevice(value: Json | undefined): Device | undefined {
   const item = record(value);
   if (!item) return undefined;
-  const fields = ["keyID", "sendToken", "relayURL", "devicePublicKey", "appServerRef"] as const;
+  const fields = ["keyID", "devicePublicKey", "appServerRef"] as const;
   if (!fields.every((field) => typeof item[field] === "string")) return undefined;
+  // Registrations stored before direct mode existed have no transport: they are relay devices.
+  const transport: Transport = item.transport === "direct" ? "direct" : "relay";
+  let route: Partial<Device>;
+  if (transport === "relay") {
+    const sendToken = string(item.sendToken), relayURL = string(item.relayURL);
+    if (!sendToken || !relayURL) return undefined;
+    route = { sendToken, relayURL };
+  } else {
+    const apnsToken = string(item.apnsToken), bundleID = string(item.bundleID);
+    const environment = item.environment === "sandbox" || item.environment === "production" ? item.environment : undefined;
+    if (!apnsToken || !bundleID || !environment) return undefined;
+    route = { apnsToken, bundleID, environment };
+  }
   const prefs = record(item.prefs) ?? {};
   return {
     keyID: item.keyID as string,
-    sendToken: item.sendToken as string,
-    relayURL: item.relayURL as string,
+    transport,
+    ...route,
     devicePublicKey: item.devicePublicKey as string,
     appServerRef: item.appServerRef as string,
     label: typeof item.label === "string" ? item.label : "",

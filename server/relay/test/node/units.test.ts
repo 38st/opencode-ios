@@ -8,11 +8,14 @@ import { mapResponse } from "../../src/apns/delivery.ts";
 import { Http2Sender } from "../../src/apns/http2-sender.ts";
 import { alertRequest } from "../../src/apns/request.ts";
 import { signProviderToken, TokenCache, TOKEN_LIFETIME } from "../../src/apns/token.ts";
+import { APPLE_APP_ATTEST_ROOT } from "../../src/attest/apple-root.ts";
+import { pemCertificates } from "../../src/attest/x509.ts";
 import { ConfigError, readConfig } from "../../src/config.ts";
 import { hitCounters, type CounterStorage, type LimitRule } from "../../src/limiter.ts";
 import { formatLog } from "../../src/log.ts";
 import { clientAddress, parseTrustProxy, startNodeRelay } from "../../src/node-server.ts";
 import { SqliteLimiter } from "../../src/sql-sqlite.ts";
+import { attestFixture } from "../support/attest-fixture.ts";
 import { envelope } from "../support/suite.ts";
 import { BUNDLE_ID, KEY_ID, TEAM_ID } from "../support/fixture.ts";
 import { startMockApns } from "../support/mock-apns.ts";
@@ -160,7 +163,8 @@ describe("configuration", () => {
     expect(config.apns.sandboxURL).toBe("https://api.sandbox.push.apple.com");
     expect(config.apns.productionURL).toBe("https://api.push.apple.com");
     expect(config.limits).toEqual(CONTRACT.limits);
-    expect(config.appAttest).toBe("off");
+    expect(config.appAttest).toMatchObject({ mode: "off", environment: "production", appIDs: [`${TEAM_ID}.${BUNDLE_ID}`] });
+    expect(config.appAttest.roots).toHaveLength(1);
     expect([...config.bundleIDs]).toEqual([BUNDLE_ID]);
   });
   test("accepts test limits only in test mode, and only valid ones", () => {
@@ -187,6 +191,17 @@ describe("configuration", () => {
   test("refuses a missing key or an unknown App Attest mode", () => {
     expect(() => readConfig({ APNS_TEAM_ID: TEAM_ID, APNS_KEY_ID: KEY_ID })).toThrow(ConfigError);
     expect(() => readConfig(env("pem", { APP_ATTEST: "maybe" }))).toThrow(ConfigError);
+    expect(() => readConfig(env("pem", { APP_ATTEST_ENVIRONMENT: "staging" }))).toThrow(ConfigError);
+  });
+  test("pins Apple's App Attest root unless test mode supplies one", async () => {
+    const { roots } = readConfig(env("pem")).appAttest;
+    const fingerprint = new Uint8Array(await crypto.subtle.digest("SHA-256", pemCertificates(APPLE_APP_ATTEST_ROOT)[0]!));
+    expect(Buffer.from(fingerprint).toString("hex")).toBe("1cb9823ba28ba6ad2d33a006941de2ae4f513ef1d4e831b9f7e0fa7b6242c932");
+    expect(roots[0]!.isCA).toBe(true);
+    const fixture = await attestFixture(`${TEAM_ID}.${BUNDLE_ID}`);
+    expect(() => readConfig(env("pem", { APP_ATTEST_TEST_ROOTS: fixture.rootPEM }))).toThrow(/RELAY_TEST_MODE/);
+    expect(readConfig(env("pem", { RELAY_TEST_MODE: "1", APP_ATTEST_TEST_ROOTS: fixture.rootPEM })).appAttest.roots).toHaveLength(1);
+    expect(() => readConfig(env("pem", { RELAY_TEST_MODE: "1", APP_ATTEST_TEST_ROOTS: "not a certificate" }))).toThrow(ConfigError);
   });
   test("health reports a configuration it cannot use", async () => {
     const app = createApp({ resolve: () => { throw new ConfigError("APNS_PRIVATE_KEY is not set"); }, clientIP: () => undefined });
@@ -194,11 +209,12 @@ describe("configuration", () => {
     expect(response.status).toBe(503);
     expect(await response.json()).toMatchObject({ status: "misconfigured" });
   });
-  test("registration fails closed while App Attest is required but unimplemented", async () => {
+  test("with App Attest required and Apple's root, registration without an assertion fails closed", async () => {
     const relay = await startNodeRelay({ env: env(keys().pem, { APP_ATTEST: "required" }), database: ":memory:" });
     try {
       const response = await fetch(`${relay.url}/v1/devices`, { method: "POST", body: JSON.stringify({ apnsToken: "ab".repeat(32), env: "sandbox", bundleID: BUNDLE_ID }) });
-      expect(response.status).toBe(501);
+      expect(response.status).toBe(401);
+      expect(await response.json()).toEqual({ error: "attestation_required" });
     } finally {
       await relay.close();
     }

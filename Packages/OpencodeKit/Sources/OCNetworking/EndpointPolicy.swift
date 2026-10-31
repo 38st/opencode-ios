@@ -22,6 +22,8 @@ public enum EndpointPolicy {
         let tailnetIP = ipv4(host).map { $0[0] == 100 && (64...127).contains($0[1]) } ?? false
         guard url.scheme == "https" || isLocal(host) || tailnetIP else { throw APIError.refused(.insecureRemote) }
     }
+    /// HTTPS, or a tailnet address (WireGuard encrypts it). Anything else crosses the network in the clear.
+    public static func isEncrypted(_ url: URL) -> Bool { url.scheme == "https" || classify(url) == .tailnet }
     public static func isLoopback(_ url: URL) -> Bool {
         let host = hostname(url)
         return host == "localhost" || host == "::1" || ipv4(host)?.first == 127

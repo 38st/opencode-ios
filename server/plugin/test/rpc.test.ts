@@ -36,7 +36,7 @@ describe("the mobilepush RPC", () => {
     expect(base64url.decode(first.serverPublicKey)?.length).toBe(32);
     expect(await register(server, relay, device, { label: "Renamed" })).toEqual(first);
     const { devices } = await server.call("listDevices");
-    expect(devices).toEqual([{ keyID: device.keyID, label: "Renamed", appServerRef: "srv_home_mac", relayURL: relay.url, prefs: { permission: true, question: true, finished: true, failed: true }, registeredAt: expect.any(Number) }]);
+    expect(devices).toEqual([{ keyID: device.keyID, transport: "relay", label: "Renamed", appServerRef: "srv_home_mac", relayURL: relay.url, prefs: { permission: true, question: true, finished: true, failed: true }, registeredAt: expect.any(Number) }]);
   });
 
   test("registerDevice rejects bad input with the offending field", async () => {

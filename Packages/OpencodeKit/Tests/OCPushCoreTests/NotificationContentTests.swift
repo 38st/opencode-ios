@@ -48,7 +48,8 @@ func notificationBuilderUsesSharedVectors(item: JSONValue) throws {
                 if kind == "question" { #expect(actions.map(\.id) == (freeText ? [.open, .answer] : [.open])) }
                 if ["finished", "failed"].contains(kind) { #expect(actions.map(\.id) == [.open, .reply]) }
                 for action in actions {
-                    if action.id == .allow || action.id == .reply { #expect(action.authenticationRequired) }
+                    // Every action that sends something to the server needs the device unlocked.
+                    if action.id != .open && action.id != .reject { #expect(action.authenticationRequired) }
                     if action.id == .reject { #expect(action.destructive) }
                     if [.rejectWithNote, .answer, .reply].contains(action.id) { #expect(action.textInput) }
                 }

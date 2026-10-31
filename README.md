@@ -16,7 +16,7 @@ Follow every session live, answer approvals with the full diff in front of you, 
 ![Swift 6](https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white)
 [![Licence: GPL-3.0-only](https://img.shields.io/badge/licence-GPL--3.0--only-blue)](LICENSE)
 
-<img src="docs/images/hero.webp" width="900" alt="The app on iPad and iPhone: a finished coding session in the iPad workspace, and Home on the iPhone with sessions that need you, a running session and today's sessions">
+<img src="docs/images/hero.webp" width="900" alt="The app on iPad and iPhone: a finished session in the iPad workspace beside Home, and Home on the iPhone with sessions that need you, a running session and today's sessions">
 
 </div>
 
@@ -47,17 +47,17 @@ Follow every session live, answer approvals with the full diff in front of you, 
 <table>
   <tr>
     <td align="center" valign="top" width="33%"><img src="docs/images/iphone-home.webp" width="260" alt="Home with Needs you, Running and Today sections"><br><sub><b>Home.</b> Every server and project, with what needs you on top.</sub></td>
-    <td align="center" valign="top" width="33%"><img src="docs/images/iphone-session.webp" width="260" alt="A finished session with reasoning, grouped tool calls and a summary"><br><sub><b>Sessions.</b> Reasoning, grouped tool calls, context and cost.</sub></td>
-    <td align="center" valign="top" width="33%"><img src="docs/images/iphone-permission.webp" width="260" alt="A permission request showing the full diff of a CI workflow edit"><br><sub><b>Approvals.</b> The full diff before you allow an edit.</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/images/iphone-session.webp" width="260" alt="A finished session with its tool calls and a summary that links to the files it describes"><br><sub><b>Sessions.</b> Tool calls, results, context and cost.</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/images/iphone-permission.webp" width="260" alt="A permission request showing the diff of a config file edit"><br><sub><b>Approvals.</b> The full diff before you allow an edit.</sub></td>
   </tr>
   <tr>
-    <td align="center" valign="top" width="33%"><img src="docs/images/iphone-question.webp" width="260" alt="A question from the agent with three options"><br><sub><b>Questions.</b> The agent asks; you pick or write an answer.</sub></td>
-    <td align="center" valign="top" width="33%"><img src="docs/images/iphone-markdown.webp" width="260" alt="An answer with a Markdown table and highlighted Swift code"><br><sub><b>Markdown.</b> Tables and highlighted code, rendered natively.</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/images/iphone-question.webp" width="260" alt="A question from the agent with two options and a free answer"><br><sub><b>Questions.</b> The agent asks; you pick or write an answer.</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/images/iphone-markdown.webp" width="260" alt="An answer with a Markdown table and highlighted TypeScript code"><br><sub><b>Markdown.</b> Tables and highlighted code, rendered natively.</sub></td>
     <td align="center" valign="top" width="33%"><img src="docs/images/iphone-commands.webp" width="260" alt="The prompt dock showing slash commands"><br><sub><b>Prompt dock.</b> Slash commands, mentions and attachments.</sub></td>
   </tr>
 </table>
 
-<sub>These are screenshots of the real app in dark mode, connected to a sandboxed opencode 2.0.32 server. The projects are small demos and the repository's scripted model (`Tools/mock-llm`) drives the runs, but the tool calls, diffs and test output come from the server.</sub>
+<sub>These are screenshots of the app's built-in demo, which you can open from the first screen. It replays sessions recorded from a sandboxed opencode server, with the repository's scripted model (`Tools/mock-llm`) driving the runs, so the tool calls, diffs and output come from a real server.</sub>
 
 ## How it works
 
@@ -91,21 +91,57 @@ opencode pair --remote                  # add an OpenTunnel address for use away
 
 In the app, tap **Add your first server**, then scan the code or paste a link. You can also enter the server URL and the password from `opencode service get password`. Pairing tokens last 30 days; when one expires, the app asks you to pair again.
 
-Add as many servers as you like. Each one can have several addresses, such as a LAN address and an OpenTunnel address, and the app uses whichever answers first.
+Add as many servers as you like. Each one can have several addresses, such as a LAN address and an OpenTunnel address, and the app uses whichever answers first, trying encrypted addresses before plain HTTP.
+
+No server at hand? Tap **Try a demo** on the first screen to explore recorded sessions: approve a request, answer a question, review a diff. The demo is built into the app, makes no network connections and keeps nothing when you leave it.
 
 <br clear="right">
 
 ## Notifications
 
-opencode itself has no push notifications, so they come from a small server plugin in this repository ([`server/plugin`](server/plugin)). The plugin watches your sessions and, when one needs you or finishes, seals a notification for each of your devices with HPKE. Only the device holds the key to open it. Approving from a notification never goes through anything but the app's own connection to your server, and the app re-reads the request and checks that it still matches what you saw before it answers.
+opencode itself has no push notifications, so they come from a small server plugin in this repository ([`server/plugin`](server/plugin)). The plugin watches your sessions and, when one needs you or finishes, seals a notification for each of your devices with HPKE on your computer, so whoever forwards it to Apple sees only a generic alert. Approving from a notification never goes through anything but the app's own connection to your server, and the app re-reads the request and checks that it still matches what you saw before it answers.
 
-Install the plugin once on each server, as [`server/plugin/README.md`](server/plugin/README.md) describes, then open **Settings → Notifications** in the app and tap **Enable notifications**. The app detects the plugin on each server and shows the install command where it is missing.
+Install the plugin in your opencode server:
 
-**Through the relay.** Sealed notifications reach Apple through a relay ([`server/relay`](server/relay)) that holds the app's APNs key. The relay sees device tokens, timing, the kind of notification, the padded size and the IP addresses of your server and phone, but never the content, and it is not on the path of any approval. If you build the app yourself, you can run your own relay; its README covers deploying it.
+```sh
+opencode plugin add @opencode-ios/opencode-mobile-push
+```
+
+Until that package is published on npm, load the plugin from a checkout of this repository instead, as [`server/plugin/README.md`](server/plugin/README.md) describes. Restart opencode, then in the app open the server's settings, choose **Notifications** and tap **Enable notifications**. The app detects the plugin and shows the install command when it is missing.
+
+The plugin reaches Apple in one of two ways, chosen per server under **Delivery**:
+
+- **Through the relay** (the default). The plugin posts the sealed push to the push relay ([`server/relay`](server/relay)), which holds the APNs key for the published app. Nothing to configure. The relay sees device tokens, timing, the kind of notification, the padded size and the IP addresses of your server and phone, but never the content, and it is not on the path of any approval.
+- **Directly to Apple.** The plugin sends to APNs itself with your own key, and no relay is involved. This needs an Apple Developer Program membership, an APNs authentication key (`.p8`) from your account, and the app built with your own bundle ID (`Config/Signing.xcconfig`), since APNs only delivers to apps your team signs. Keep the key readable only by you; the plugin refuses a key file other users can read:
+
+  ```sh
+  chmod 600 /Users/Shared/opencode/AuthKey_ABC123DEFG.p8
+  ```
+
+  Then give the plugin its options in your opencode configuration, in place of the plain package name:
+
+  ```json
+  {
+    "plugins": [{
+      "package": "@opencode-ios/opencode-mobile-push",
+      "options": { "apns": {
+        "keyFile": "/Users/Shared/opencode/AuthKey_ABC123DEFG.p8",
+        "keyID": "ABC123DEFG",
+        "teamID": "TEAM123456",
+        "bundleID": "com.example.opencode",
+        "environment": "production"
+      } }
+    }]
+  }
+  ```
+
+  Use `"environment": "sandbox"` for a development build from Xcode. After a restart, open the server's **Notifications** settings in the app and set **Delivery** to **Direct to Apple**; the app then gives its device and Live Activity tokens to the plugin over your server connection instead of to the relay. The key never leaves your computer and is never logged or returned to the app.
+
+If you build the app yourself and would rather keep a relay, you can also run your own; [`server/relay/README.md`](server/relay/README.md) covers deploying it.
 
 ## Privacy
 
-- **No account and no telemetry.** The app has no analytics, crash-reporting or advertising SDKs, and it talks only to your servers, plus the push relay and Apple's push service if you turn on notifications. Its privacy manifest declares one data type: the push token the relay needs, not linked to you and not used for tracking.
+- **No account and no telemetry.** The app has no analytics, crash-reporting or advertising SDKs. It talks only to your servers and, if you turn on notifications, to Apple's push service and the push relay (unless your server sends straight to Apple). Its privacy manifest declares one data type: the push token the relay needs, not linked to you and not used for tracking.
 - **Credentials stay on the device.** Server passwords and pairing tokens live in the device's Keychain. They don't sync through iCloud and don't move to a new device.
 - **History is cached on the device** for fast launches and offline reading: up to the 200 most recent sessions or 300 MB, protected by iOS data protection.
 - **Notifications are sealed.** See [Notifications](#notifications). A Live Activity's status (its phase, step count, current tool kind and two timestamps) is visible to the relay and to Apple, so it carries nothing else.
@@ -149,7 +185,8 @@ CI builds and tests the app with Xcode 27.0 and 27.1 on GitHub's arm64 [`xcode-2
 | `server/` | The push side, MIT-licensed: `contracts` (the payload, envelope, digest and risk rules shared with the app), `plugin` (the opencode plugin) and `relay` (the APNs relay for Cloudflare Workers, with a Node entry point). |
 | `Fixtures/` | Recorded opencode traffic that the tests replay. |
 | `Tools/` | The sandboxed server launcher, scripted model, fixture recorder, contract checks, push end to end, UI smoke harness and design reference capture. |
-| `docs/`, `research/` | Design notes and the opencode V2 protocol reference. |
+| `docs/`, `research/` | Design notes and the opencode V2 protocol reference, with the OpenAPI document the daily upstream check compares against. |
+| `web/` | The "Pair your phone" onboarding page: installing the plugin and pairing, step by step. |
 
 ## Documentation
 

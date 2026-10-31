@@ -1,3 +1,5 @@
+#include "Version.xcconfig"
+
 BUNDLE_ID_PREFIX = dev.opencodeios
 DEVELOPMENT_TEAM =
 APP_GROUP_ID = group.$(BUNDLE_ID_PREFIX)
@@ -6,3 +8,6 @@ SHARED_KEYCHAIN_GROUP = $(AppIdentifierPrefix)$(BUNDLE_ID_PREFIX).push
 // the relay both read it, so a Release (TestFlight or App Store) build always uses production.
 APNS_ENVIRONMENT = production
 APNS_ENVIRONMENT[config=Debug] = development
+// App Attest: keys made by a Debug build are checked by Apple's development service, a Release build's by production.
+APP_ATTEST_ENVIRONMENT = production
+APP_ATTEST_ENVIRONMENT[config=Debug] = development

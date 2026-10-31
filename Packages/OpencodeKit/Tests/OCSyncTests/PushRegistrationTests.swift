@@ -114,3 +114,74 @@ private actor RelayFake {
         }
     }
 }
+
+/// Relay or direct to Apple, chosen per server: in direct mode the plugin receives the APNs and Live Activity
+/// tokens over the server connection, and the relay is never asked for a sender.
+@MainActor @Suite struct PushDeliveryChoiceTests {
+    private func setup(direct: Bool, available: Bool) throws -> (PushRegistration, RelayFake, ServerID, PushRegistration.RPC, () -> [String: [JSONValue]], URL) {
+        let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        let store = PushSnapshotStore(directory: root), relay = RelayFake(), server = ServerID()
+        var preferences = PushPreferences()
+        if direct { preferences.directServers.insert(server.rawValue.uuidString) }
+        try store.save(preferences: preferences)
+        let manager = PushRegistration(relayURL: try #require(URL(string: "https://relay.example.invalid")), keys: PushKeyStore(secrets: InMemorySecretStore()),
+            store: store, secrets: InMemorySecretStore(), relay: { method, path, secret, body in try await relay.request(method, path, secret, body) })
+        let serverKey = Curve25519.KeyAgreement.PrivateKey().publicKey.rawRepresentation
+        var calls: [String: [JSONValue]] = [:]
+        let rpc: PushRegistration.RPC = { method, input in
+            calls[method, default: []].append(input)
+            if method == "status" {
+                return .object(["pluginVersion": .string("0.2.0"), "direct": .object(available
+                    ? ["available": .bool(true), "bundleID": .string("dev.example.client"), "environment": .string("sandbox")]
+                    : ["available": .bool(false)])])
+            }
+            return .object(["serverPublicKey": .string(Base64URL.encode(serverKey)), "pluginVersion": .string("0.2.0"), "devices": .array([])])
+        }
+        return (manager, relay, server, rpc, { calls }, root)
+    }
+
+    @Test func directModeRegistersTheAPNsTokenWithThePluginOnly() async throws {
+        let (manager, relay, server, rpc, calls, root) = try setup(direct: true, available: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        await relay.setFailing(true) // The relay being down does not matter in direct mode.
+        try? await manager.registerToken("abcd1234", bundleID: "dev.example.client", environment: "sandbox")
+        await manager.register(server: server, name: "direct", rpc: rpc)
+        let input = try #require(calls()["registerDevice"]?.first)
+        #expect(input["transport"] == .string("direct"))
+        #expect(input["apnsToken"] == .string("abcd1234"))
+        #expect(input["bundleID"] == .string("dev.example.client"))
+        #expect(input["environment"] == .string("sandbox"))
+        #expect(input["sendToken"] == nil && input["relayURL"] == nil)
+        #expect(manager.health[server.rawValue.uuidString]?.isRegistered == true)
+        #expect(manager.health[server.rawValue.uuidString]?.directAvailable == true)
+
+        try await manager.registerActivity(token: "beef", ref: "activity", expiresAt: Date(timeIntervalSince1970: 2_000_000_000),
+                                           server: server, sessionID: "ses_test", rpc: rpc)
+        let activity = try #require(calls()["registerActivity"]?.first)
+        #expect(activity["pushToken"] == .string("beef"))
+        #expect(activity["expiresAt"] == .integer(2_000_000_000))
+        #expect(await relay.calls.isEmpty)
+    }
+
+    @Test func directModeWithoutAKeyOnTheServerSaysSoAndRegistersNothing() async throws {
+        let (manager, relay, server, rpc, calls, root) = try setup(direct: true, available: false)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try await manager.registerToken("abcd1234", bundleID: "dev.example.client")
+        await manager.register(server: server, name: "direct", rpc: rpc)
+        #expect(calls()["registerDevice"] == nil)
+        #expect(manager.health[server.rawValue.uuidString]?.isRegistered == false)
+        #expect(await relay.calls.map(\.1) == ["/v1/devices"])
+    }
+
+    @Test func relayModeStaysTheDefault() async throws {
+        let (manager, relay, server, rpc, calls, root) = try setup(direct: false, available: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try await manager.registerToken("abcd1234", bundleID: "dev.example.client")
+        await manager.register(server: server, name: "relay", rpc: rpc)
+        let input = try #require(calls()["registerDevice"]?.first)
+        #expect(input["transport"] == nil)
+        #expect(input["sendToken"] != nil && input["apnsToken"] == nil)
+        #expect(await relay.calls.map(\.1).contains { $0.hasSuffix("/senders") })
+        #expect(manager.isDirect(server.rawValue.uuidString) == false)
+    }
+}

@@ -63,6 +63,8 @@ export class RelayClient {
   }
 
   async #post(device: Device, path: string, body: unknown, expiresAt: number): Promise<Outcome> {
+    const { relayURL, sendToken } = device;
+    if (!relayURL || !sendToken) return { result: "rejected", attempts: 0 };
     let result: PushResult = "unreachable";
     let attempts = 0;
     while (attempts <= this.#retries) {
@@ -73,10 +75,12 @@ export class RelayClient {
       attempts++;
       try {
         // A relay URL may carry a path prefix (a relay behind a reverse proxy), so append rather than resolve.
-        const response = await this.#fetch(device.relayURL.replace(/\/+$/, "") + path, {
+        const response = await this.#fetch(relayURL.replace(/\/+$/, "") + path, {
           method: "POST",
-          headers: { authorization: `Bearer ${device.sendToken}`, "content-type": "application/json" },
+          headers: { authorization: `Bearer ${sendToken}`, "content-type": "application/json" },
           body: JSON.stringify(body),
+          // A redirect would carry the send token to another origin.
+          redirect: "error",
           signal: AbortSignal.timeout(10_000),
         });
         if (response.status === 401) return { result: "gone", attempts };

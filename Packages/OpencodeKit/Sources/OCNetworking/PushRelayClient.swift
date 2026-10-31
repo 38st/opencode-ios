@@ -4,6 +4,15 @@ import OCFoundation
 /// The relay could not be reached, or did not answer within the client's deadline.
 public enum PushRelayError: Error, Equatable, Sendable { case unreachable }
 
+/// A relay answer with its status kept, for callers that act on specific refusals.
+public struct RelayReply: Sendable, Equatable {
+    public let status: Int
+    public let body: JSONValue
+    public init(status: Int, body: JSONValue) { self.status = status; self.body = body }
+    /// The relay's `{"error": code}`, if any.
+    public var error: String? { body["error"]?.stringValue }
+}
+
 public struct PushRelayClient: Sendable {
     public let url: URL
     private let transport: any HTTPTransport
@@ -31,6 +40,26 @@ public struct PushRelayClient: Sendable {
         try Task.checkCancellation()
         try APIClient.validate(result.response, data: result.data, now: .now)
         return result.response.statusCode == 204 ? .null : try JSONDecoder().decode(JSONValue.self, from: result.data)
+    }
+    /// Sends exact body bytes with extra headers and returns any status, so App Attest can sign the body it
+    /// sends and tell the relay's refusals apart. Only a JSON answer (or 204) is accepted.
+    public func exchange(_ method: HTTPMethod, path: String, headers: [String: String] = [:], body: Data?) async throws -> RelayReply {
+        var request = try APIClient.request(baseURL: url, path: path, method: method, body: body, timeout: requestTimeout.seconds)
+        for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }
+        let result: HTTPResponse
+        do {
+            let transport = transport, sent = request
+            result = try await withTimeout(resourceTimeout, clock: clock) { try await transport.send(sent) }
+        } catch let error as URLError where Self.unreachable.contains(error.code) {
+            throw PushRelayError.unreachable
+        }
+        try Task.checkCancellation()
+        let status = result.response.statusCode
+        if status == 204 { return RelayReply(status: status, body: .null) }
+        guard let body = try? JSONDecoder().decode(JSONValue.self, from: result.data) else {
+            throw APIError.notOpencode(contentType: result.response.value(forHTTPHeaderField: "Content-Type"))
+        }
+        return RelayReply(status: status, body: body)
     }
     private static let unreachable: Set<URLError.Code> = [.timedOut, .cannotConnectToHost, .cannotFindHost,
         .networkConnectionLost, .notConnectedToInternet, .dnsLookupFailed]

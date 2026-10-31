@@ -55,3 +55,38 @@ jobs:
             .build/opencode-sandbox/audits
           if-no-files-found: warn
           include-hidden-files: true
+
+
+  spec-watch:
+    # New @opencode/cli releases: oasdiff of /openapi.json against research/opencode-openapi.json and a diff
+    # of the event union, reported as one issue per release with this workflow's own token.
+    runs-on: xcode-27
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '26'
+      - name: Install oasdiff
+        run: |
+          brew install oasdiff
+          oasdiff --version
+      - name: Test the spec watch
+        run: node --test Tools/spec-watch/*.test.mjs
+      - name: Compare the newest release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node Tools/spec-watch/index.mjs --issue --require-oasdiff
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: spec-watch
+          path: .build/spec-watch
+          if-no-files-found: ignore

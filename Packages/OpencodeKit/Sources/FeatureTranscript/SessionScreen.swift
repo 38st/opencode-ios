@@ -35,6 +35,7 @@ public struct SessionScreen: View {
     @Environment(\.scenePhase) private var phase
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var meetsBottomEdge = false
     /// - Parameter ownsCommands: whether this screen is on top, so the menu bar's composer commands and Toggle review act
     ///   here; false for a parent session under a subagent or under New session.
     public init(server: ServerStore, sessionID: String, requestID: String? = nil, newSession: @escaping () -> Void = {}, deleted: @escaping () -> Void = {}, openSettings: @escaping () -> Void = {}, reviewToggle: UUID? = nil, ownsCommands: Bool = true, openRoot: @escaping (String) -> Void = { _ in }, openChild: @escaping (String) -> Void) {
@@ -118,7 +119,11 @@ public struct SessionScreen: View {
                 }
             }
         }.environment(\.ocFileLinks, fileLinks)
-            .background(OCColor.background).clipShape(RoundedRectangle(cornerRadius: OCRadius.xl))
+            .clipShape(panelShape)
+            // Where the panel meets the bottom of the screen (iPhone), it runs under the home indicator, so no strip of
+            // the window shows below the composer; the composer itself stays inside the safe area.
+            .background { panelShape.fill(OCColor.background).ignoresSafeArea(.container, edges: .bottom) }
+            .onGeometryChange(for: Bool.self) { $0.safeAreaInsets.bottom > 0 } action: { meetsBottomEdge = $0 }
             .navigationTitle(server.sessions[sessionID]?.info.title ?? localized("Session", comment: "Fallback title for a session without a title")).navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $review) {
                 // Close the sheet first, as the context sheet does, so the session does not open beneath it.
@@ -162,6 +167,11 @@ public struct SessionScreen: View {
             .onDisappear { server.readPath.close(sessionID) }
     }
     /// The cached transcript stays readable while the server is unreachable; say so, with a way back.
+    /// Rounded on every corner, except at the bottom where the panel meets the screen edge.
+    private var panelShape: UnevenRoundedRectangle {
+        let bottom = meetsBottomEdge ? 0 : OCRadius.xl
+        return UnevenRoundedRectangle(topLeadingRadius: OCRadius.xl, bottomLeadingRadius: bottom, bottomTrailingRadius: bottom, topTrailingRadius: OCRadius.xl)
+    }
     private var connectionBanner: some View {
         TimelineView(.periodic(from: .now, by: 1)) { _ in
             if let notice = server.notice(now: .now) {

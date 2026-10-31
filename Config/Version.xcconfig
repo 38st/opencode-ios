@@ -1,0 +1,4 @@
+// The version and build number of the app and both extensions: the one place they are set.
+// App Store validation requires the three bundles to match. Tools/release/version.mjs reads and changes these lines.
+MARKETING_VERSION = 0.1.0
+CURRENT_PROJECT_VERSION = 1

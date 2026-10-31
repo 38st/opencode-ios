@@ -1,11 +1,13 @@
 // The local end-to-end for push: the sandboxed opencode with the plugin installed, the relay
-// in the Workers local runtime (wrangler dev), and the mock APNs server. Nothing leaves this Mac.
-//   node Tools/push-e2e/index.mjs [--version 2.x.y]
+// in the Workers local runtime (wrangler dev), and the mock APNs server. The plugin also sends
+// straight to the mock in direct mode, with the same throwaway key. Nothing leaves this Mac.
+//   node Tools/push-e2e/index.mjs [--version 2.x.y] [--no-swift]
+// --no-swift skips the step that opens the captured pushes with OCPushCore in Swift.
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import net from 'node:net';
 import { generateKeyPairSync, randomBytes } from 'node:crypto';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { setTimeout as delay } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
 import { base64url, CONTRACT, formDigest, GENERIC_ALERTS, openEnvelope, permissionDigest } from '../../server/contracts/src/index.ts';
@@ -15,10 +17,11 @@ import { audit } from '../opencode-sandbox/isolation.mjs';
 import { launch, run, stopAll } from '../opencode-sandbox/process.mjs';
 import { startMock } from '../mock-llm/server.mjs';
 import { Capture } from '../fixture-recorder/transport.mjs';
-import { configurePlugin, fakeDevice, openFor, registerDevice, repository, rpc, script, until } from './support.mjs';
+import { fakeDevice, openFor, pluginDirectory, registerDevice, repository, rpc, RpcFailure, script, until } from './support.mjs';
+import { configureReview } from '../review-fixture/index.mjs';
 import { changedWranglerHomes, isolatedEnvironment, snapshotWranglerHomes } from '../../server/relay/scripts/isolated.mjs';
 
-const { values } = parseArgs({ options: { version: { type: 'string' }, simulator: { type: 'boolean' } } });
+const { values } = parseArgs({ options: { version: { type: 'string' }, simulator: { type: 'boolean' }, 'no-swift': { type: 'boolean' } } });
 const version = await resolveVersion(values.version);
 const runDirectory = path.join(repository, '.build/push-e2e', String(Date.now()));
 const relayDirectory = path.join(repository, 'server/relay');
@@ -87,11 +90,11 @@ async function turn(api, mock, server, name, calls) {
  * matches `match`, and when this process saw it. Every session's end is pushed too, so alerts are
  * found by what they carry, not by position.
  */
-async function nextAPNs(apns, phone, serverPublicKey, from, kind, match, label, timeout = grace + 20000) {
+async function nextAPNs(apns, phone, serverPublicKey, from, kind, match, label, timeout = grace + 20000, token = undefined) {
   const opened = new Map();
   const found = await until(async () => {
     for (const [index, request] of apns.requests.entries()) {
-      if (index < from || request.body?.oc?.kind !== kind) continue;
+      if (index < from || request.body?.oc?.kind !== kind || (token && request.token !== token)) continue;
       if (!opened.has(index)) opened.set(index, (await openFor(request.body.oc, phone, serverPublicKey)).payload);
       const payload = opened.get(index);
       if (Object.entries(match).every(([key, value]) => payload[key] === value)) return { request, payload, index };
@@ -117,20 +120,103 @@ function checkAlert(request, kind, device) {
   return request.body.oc;
 }
 
+/**
+ * Direct mode: the same sealed pushes, sent by the plugin to the mock APNs over HTTP/2 with the
+ * server owner's key, with no relay involved. The mock checks each request as it checks the relay's.
+ */
+async function directPass({ api, mock, server, apns, relayPhone }) {
+  const status = await rpc(server, 'status');
+  assert.deepEqual(status.direct, { available: true, bundleID: BUNDLE_ID, environment: 'sandbox' });
+  // Only the direct phone from here on, so every alert below is the plugin's own.
+  assert.deepEqual(await rpc(server, 'unregisterDevice', { keyID: relayPhone.keyID }), { removed: true });
+
+  const phone = await fakeDevice('E2E direct iPhone');
+  phone.apnsToken = '0' + randomBytes(32).toString('hex').slice(1);
+  const direct = { transport: 'direct', apnsToken: phone.apnsToken, bundleID: BUNDLE_ID, environment: 'sandbox' };
+  const refused = await registerDevice(server, phone, undefined, undefined, { ...direct, bundleID: 'com.example.other' }).catch(error => error);
+  assert.ok(refused instanceof RpcFailure && refused.body?.data?.field === 'bundleID', `A mismatched bundle ID was not refused: ${refused}`);
+  const { serverPublicKey } = await registerDevice(server, phone, undefined, undefined, direct);
+  const listed = (await rpc(server, 'listDevices')).devices;
+  assert.deepEqual(listed.map(device => [device.keyID, device.transport, device.relayURL]), [[phone.keyID, 'direct', undefined]]);
+  assert.ok(!JSON.stringify([status, listed]).includes(phone.apnsToken), 'An RPC returned the APNs token');
+  log('PASS direct mode is on from the plugin options; a direct device registered, and a mismatched bundle ID was refused');
+
+  const next = (from, kind, match, label, timeout) => nextAPNs(apns, phone, serverPublicKey, from, kind, match, label, timeout, phone.apnsToken);
+  const start = apns.requests.length;
+  let mark = api.events.length;
+  const session = await turn(api, mock, server, 'direct', [edit, text('Edited.')]);
+  const asked = await api.event('permission.asked', item => api.events.indexOf(item) >= mark && item.data.sessionID === session.id, 60000);
+  const alert = await next(start, 'permission', { requestID: asked.data.id }, 'direct permission alert');
+  assert.equal(alert.request.protocol, 'h2', 'A direct push must arrive over HTTP/2');
+  const envelope = checkAlert(alert.request, 'permission', phone);
+  const fresh = (await api.request('GET', `/api/session/${session.id}/permission/${asked.data.id}`)).data;
+  assert.equal((await openFor(envelope, phone, serverPublicKey)).payload.digest, await permissionDigest(fresh));
+  await api.request('POST', `/api/session/${session.id}/permission/${asked.data.id}/reply`, { decision: 'once' });
+  const replacement = await next(alert.index + 1, 'resolved', { requestID: asked.data.id }, 'direct replacement');
+  checkAlert(replacement.request, 'resolved', phone);
+  assert.equal(replacement.request.headers['apns-collapse-id'], alert.request.headers['apns-collapse-id']);
+  await api.request('POST', `/api/experimental/session/${session.id}/wait`);
+  checkAlert((await next(start, 'finished', { sessionID: session.id }, 'direct finished alert', 20000)).request, 'finished', phone);
+  const providerTokens = new Set(apns.requests.slice(start).filter(request => request.protocol === 'h2').map(request => request.jwt));
+  assert.equal(providerTokens.size, 1, 'The plugin minted more than one provider token');
+  log('PASS the permission alert, its replacement under the same collapse ID and the session\'s end went straight to the mock APNs over HTTP/2, with one signed provider token');
+
+  // A Live Activity: the push token is kept by the plugin, and the updates use the activity topic.
+  await writeFile(path.join(server.project, 'sample.txt'), 'original fixture line\nsecond line\n');
+  await script(mock, 'direct activity', [text('Done.')]);
+  const activity = (await api.request('POST', '/api/session', { title: 'E2E direct activity', location: { directory: server.project }, model: { providerID: 'mock', id: 'mock-1' } })).data;
+  const pushToken = '0' + randomBytes(40).toString('hex').slice(1);
+  assert.deepEqual(await rpc(server, 'registerActivity', { keyID: phone.keyID, activityRef: 'act_direct', sessionID: activity.id, pushToken, expiresAt: Math.floor(Date.now() / 1000) + 3600 }), { registered: true });
+  await api.request('POST', `/api/session/${activity.id}/prompt`, { text: 'Run the direct activity end-to-end.' });
+  await api.request('POST', `/api/experimental/session/${activity.id}/wait`);
+  const updates = await until(() => {
+    const found = apns.requests.filter(request => request.token === pushToken);
+    return found.some(request => request.body?.aps?.event === 'end') && found;
+  }, 'direct Live Activity end', 30000);
+  for (const request of updates) {
+    assert.deepEqual(request.problems, [], request.problems.join('; '));
+    assert.equal(request.headers['apns-topic'], `${BUNDLE_ID}.push-type.liveactivity`);
+    assert.equal(request.headers['apns-push-type'], 'liveactivity');
+  }
+  assert.equal(updates.at(-1).headers['apns-priority'], '10');
+  log(`PASS a Live Activity registered with its push token got ${updates.length} direct update(s) on the activity topic, ending with priority 10`);
+
+  // gone: the mock answers 410 Unregistered for this token, and the plugin removes the registration.
+  const lost = await fakeDevice('E2E direct lost iPhone');
+  await registerDevice(server, lost, undefined, undefined, { ...direct, apnsToken: '410' + randomBytes(31).toString('hex').slice(0, 61) });
+  assert.equal((await rpc(server, 'test', { keyID: lost.keyID })).result, 'gone');
+  assert.deepEqual((await rpc(server, 'listDevices')).devices.map(device => device.keyID), [phone.keyID]);
+  log('PASS APNs 410 on a direct push removed that registration');
+}
+
 await mkdir(runDirectory, { recursive: true });
 const auditDir = path.join(repository, '.build/opencode-sandbox/audits', `push-e2e-${Date.now()}`);
 // The account's own wrangler state must not change during the run; see server/relay/scripts/isolated.mjs.
 const wranglerBefore = await snapshotWranglerHomes();
+let serverRoot, privateKeyPEM;
 await audit(auditDir, async () => {
   const { privateKey, publicKey } = generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
+  privateKeyPEM = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
   const apns = await startMockApns({ teamID: TEAM_ID, keyID: KEY_ID, publicKeyPEM: publicKey.export({ type: 'spki', format: 'pem' }).toString(), bundleIDs: [BUNDLE_ID] });
   const mock = await startMock();
+  /**
+   * The plugin from this checkout, with direct mode on: the same throwaway key as the relay, in a
+   * 600 file inside the sandbox, sending to the mock's cleartext HTTP/2 port instead of Apple.
+   */
+  const configurePlugin = async (config, dirs, env) => {
+    const keyFile = path.join(dirs.config, 'apns', `AuthKey_${KEY_ID}.p8`);
+    await mkdir(path.dirname(keyFile), { recursive: true, mode: 0o700 });
+    await writeFile(keyFile, privateKeyPEM, { mode: 0o600 });
+    config.plugins = [{ package: pluginDirectory, options: { apns: { keyFile, keyID: KEY_ID, teamID: TEAM_ID, bundleID: BUNDLE_ID, environment: 'sandbox', origin: apns.h2URL } } }];
+    return configureReview(config, dirs, env);
+  };
   let relay, server, api;
   try {
     log(`Push end-to-end against V2 ${version}; run ${path.relative(repository, runDirectory)}; audit ${path.relative(repository, auditDir)}`);
     relay = await startRelay(apns, privateKey.export({ type: 'pkcs8', format: 'pem' }).toString());
     log('PASS the relay runs in workerd (wrangler dev) with local D1 and Durable Objects');
     server = await startSandbox({ version, mockURL: mock.url, configure: configurePlugin });
+    serverRoot = server.root;
     api = new Capture(server);
     await api.openSSE();
 
@@ -235,6 +321,8 @@ await audit(auditDir, async () => {
     log('PASS presence suppresses the request\'s push and the session\'s result');
 
     // The app's own code opens what reached the mock APNs.
+    if (values['no-swift']) log('SKIP opening the captured pushes in Swift (--no-swift)');
+    else {
     capture.now = Math.floor(Date.now() / 1000);
     const capturePath = path.join(runDirectory, 'swift-capture.json');
     await writeFile(capturePath, JSON.stringify(capture, null, 2) + '\n', { mode: 0o600 });
@@ -243,6 +331,7 @@ await audit(auditDir, async () => {
     await writeFile(path.join(runDirectory, 'swift.log'), swift);
     assert.equal((swift.match(/PASS Swift opened/g) ?? []).length, capture.pushes.length, swift.slice(-3000));
     log(`PASS OCPushCore opened all ${capture.pushes.length} captured pushes in Swift, recomputed both digests and refused tampered copies`);
+    }
 
     // The relay's limit: test pushes until it answers throttled, without contacting APNs.
     count = apns.requests.length;
@@ -281,6 +370,8 @@ await audit(auditDir, async () => {
     }
     results.measurements.relayLogLines = lines.length;
     log(`PASS the relay's ${lines.length} log lines carry only event, route, kind, result, status and count, and its output no token, secret or envelope`);
+
+    await directPass({ api, mock, server, apns, relayPhone: phone });
     await writeFile(path.join(runDirectory, 'report.json'), JSON.stringify(results, null, 2) + '\n');
     console.log(JSON.stringify(results.measurements));
   } finally {
@@ -301,6 +392,12 @@ await audit(auditDir, async () => {
     }
   }
 });
+// The server's own log: direct mode said it was on, and never printed the key.
+const serverLog = await readFile(path.join(serverRoot, 'server.log'), 'utf8');
+assert.match(serverLog, /\[mobilepush\] direct mode on: sending to APNs sandbox for /);
+const keyBody = privateKeyPEM.split('\n').filter(line => line && !line.startsWith('-----'));
+assert.ok(keyBody.every(line => !serverLog.includes(line)), 'The server log contains the APNs key');
+console.log('PASS the server log shows direct mode on and never the APNs key');
 const wranglerChanged = changedWranglerHomes(wranglerBefore, await snapshotWranglerHomes());
 assert.deepEqual(wranglerChanged, [], `The account's wrangler state changed during the run: ${wranglerChanged.join(', ')}`);
 console.log('PASS process cleanup, opencode isolation audit, and the account\'s wrangler state untouched');

@@ -45,8 +45,14 @@ public struct PushPayload: Sendable, Equatable {
               let pending = integer("pending"), pending >= 0
         else { throw PushEnvelopeError.payload }
         self.kind = kind; self.server = server; self.expiry = expiry; self.pending = Int(pending)
-        sessionID = try text("sessionID"); rootSessionID = try text("rootSessionID")
-        title = try text("title"); project = try text("project"); requestID = try text("requestID")
+        // Identifiers go into server paths when an action is answered: only the server's own ID alphabet is accepted.
+        func identifier(_ key: String) throws -> String? {
+            guard let value = try text(key) else { return nil }
+            guard (1...256).contains(value.utf8.count), value.utf8.allSatisfy({ Self.identifierBytes.contains($0) }) else { throw PushEnvelopeError.payload }
+            return value
+        }
+        sessionID = try identifier("sessionID"); rootSessionID = try identifier("rootSessionID")
+        title = try text("title"); project = try text("project"); requestID = try identifier("requestID")
         action = try text("action"); summary = try text("summary"); risk = try text("risk")
         digest = try text("digest"); reply = try text("reply")
         if let value = present("freeText") {
@@ -61,4 +67,5 @@ public struct PushPayload: Sendable, Equatable {
             }
         } else { options = nil }
     }
+    static let identifierBytes = Set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-".utf8)
 }
