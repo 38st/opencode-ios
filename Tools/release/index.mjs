@@ -1,4 +1,4 @@
-// Archives, exports and uploads a release build. Signing is automatic and needs the owner's team.
+// Archives, exports and uploads a release build. Signing is automatic and needs a team (TEAM_ID).
 //
 //   node Tools/release/index.mjs archive --unsigned   # dry run: a Release archive with signing off
 //   TEAM_ID=… node Tools/release/index.mjs archive    # signed archive

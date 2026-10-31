@@ -18,7 +18,7 @@ public struct ResyncRecord: Sendable {
     public let succeeded: Bool
 }
 
-/// M2 supplies session/transcript refresh work here, after the server info refresh.
+/// The read projection supplies session and transcript refresh work here, after the server info refresh.
 @MainActor public protocol ResyncExtension {
     func resync(reason: ResyncReason) async throws
 }

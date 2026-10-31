@@ -81,7 +81,7 @@ npm run dev       # wrangler dev, fully local: D1 and Durable Objects are simula
 
 `npm test` and `npm run dev` go through `scripts/isolated.mjs`, which gives wrangler and workerd a `HOME`, `XDG_CONFIG_HOME` and log directory under this package's `.wrangler/`, turns telemetry off, drops any Cloudflare credentials from the environment, and fails the run if the account's own wrangler state (`~/.wrangler`, `~/Library/Preferences/.wrangler`) changed. `npm test` runs `test/support/suite.ts` twice: in the Workers runtime through `@cloudflare/vitest-plugin`, and against `src/node.ts` over HTTP. Both send to `test/support/mock-apns.ts`, a local APNs stand-in that verifies the JWT signature and claims, every header, the 4 KB payload limit, and the collapse and thread IDs, and answers by device-token prefix (`410…`, `400b…`, `4290…`, `5000…`, `403e…`). Test keys are generated for each run.
 
-`node Tools/push-e2e/index.mjs` (from the repository root) also runs this Worker under `wrangler dev --local`, after `wrangler d1 migrations apply --local`, between the sandboxed opencode server with the plugin and the same mock APNs (see `Tools/README.md`, "Push (M5a)").
+`node Tools/push-e2e/index.mjs` (from the repository root) also runs this Worker under `wrangler dev --local`, after `wrangler d1 migrations apply --local`, between the sandboxed opencode server with the plugin and the same mock APNs (see `Tools/README.md`, "Push").
 
 ### Configuration
 
@@ -98,9 +98,9 @@ npm run dev       # wrangler dev, fully local: D1 and Durable Objects are simula
 | `PORT`, `HOST`, `RELAY_DATABASE` | Node only: the listening address and the SQLite file (`relay.sqlite` by default, which holds APNs tokens and secret hashes) |
 | `TRUST_PROXY` | Node only, for the registration limit behind a proxy: `fly` reads `Fly-Client-IP`, which Fly's edge sets; `forwarded` reads the rightmost `X-Forwarded-For` entry, the address one trusted proxy saw. Clients can forge every other entry, so unset uses the connection's address |
 
-## Deploying (for the owner)
+## Deploying
 
-Nothing here has been run: it needs the owner's Cloudflare account and APNs key.
+You need a Cloudflare account and an APNs authentication key. These steps have not yet been run against a live deployment.
 
 1. Create an APNs authentication key in the Apple Developer account (Keys, "Apple Push Notifications service"), and note its key ID and the team ID.
 2. `npx wrangler login`
@@ -116,7 +116,7 @@ Nothing here has been run: it needs the owner's Cloudflare account and APNs key.
 APNs accepts only HTTP/2. Whether a Worker's outbound `fetch` negotiates it with Apple is unverified. After deploying, register a real device and send one alert:
 
 1. In a development build, register with `env: "sandbox"` and the device's APNs token, then create a sender.
-2. `POST /v1/push` with a test envelope. The app's "Send test push" (M5b) does this through the plugin.
+2. `POST /v1/push` with a test envelope. The app's "Send test push" does this through the plugin.
 3. `delivered` with the notification shown means the Worker works. `rejected` with no notification means it does not; the push's log line in `wrangler tail` carries APNs's `status`, absent when no answer arrived.
 
 If the Worker cannot reach APNs, run the Node entry point instead, for example on Fly.io, with a persistent volume for the database:

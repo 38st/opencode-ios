@@ -6,7 +6,7 @@ import OCNetworking
 import OCPersistence
 import OCSecurity
 
-/// The read projection is also M1's event sink and resync extension.
+/// The read projection is also the connection's event sink and resync extension.
 @MainActor @Observable public final class ReadStore: ServerEventSink, ResyncExtension {
     @ObservationIgnored var activityProgress = ActivityProgress()
     @ObservationIgnored var pushChanged: @MainActor () -> Void = {}

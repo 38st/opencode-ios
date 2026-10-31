@@ -1,4 +1,4 @@
-// Local M5b simulator harness. No APNs connection, account, or simulator configuration.
+// Local harness for app push in the simulator. No APNs connection, account, or simulator configuration.
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import path from 'node:path';

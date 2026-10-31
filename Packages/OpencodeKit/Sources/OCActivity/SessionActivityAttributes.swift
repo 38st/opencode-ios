@@ -13,7 +13,7 @@ public struct SessionActivityAttributes: Codable, Sendable, Hashable {
     public var url: URL? { UUID(uuidString: serverID).flatMap { DeepLink.url(serverID: $0, sessionID: sessionID) } }
 
     public struct ContentState: Codable, Sendable, Hashable {
-        // Unix seconds, NOT Date's Codable seconds-since-2001. M5a pushes this exact shape.
+        // Unix seconds, NOT Date's Codable seconds-since-2001. The push plugin sends this exact shape.
         public var phase: String
         public var step: Int
         public var toolGlyph: String
