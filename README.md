@@ -23,7 +23,7 @@ Follow every session live, answer approvals with the full diff in front of you, 
 > [!NOTE]
 > This is an unofficial client. It is not affiliated with or endorsed by the opencode project or Anomaly.
 
-**Status:** version 1.0 is complete and in testing. It is not on TestFlight or the App Store yet; until it is, [build it from source](#build-from-source).
+**Status:** version 1.0 is feature-complete and in testing. It is not on TestFlight or the App Store yet; until it is, [build it from source](#build-from-source).
 
 ## Features
 
