@@ -380,8 +380,14 @@
     "Deleted %@" : {
       "comment" : "%@ is a worktree name"
     },
+    "Delivery" : {
+      "comment" : "How notifications reach this phone"
+    },
     "Denies by default" : {
       "comment" : "Shown in Catalog Settings"
+    },
+    "Direct to Apple" : {
+      "comment" : "Notifications sent by the server's plugin straight to Apple"
     },
     "Directories whose services the server has started. Evicting one stops them until it is used again." : {
       "comment" : "Text in Administration Settings"
@@ -403,6 +409,9 @@
     },
     "Enable notifications" : {
       "comment" : "Button title in Notification Settings"
+    },
+    "Encrypted notifications pass through the relay, which cannot read them." : {
+      "comment" : "Shown in Notification Settings"
     },
     "Enter your %@ API key to connect your account and use %@ models on this server." : {
       "comment" : "Both %@ are the provider name"
@@ -877,6 +886,9 @@
     },
     "The server installs the newest version of %@ and reloads it for every project." : {
       "comment" : "%@ is a list of plugin names"
+    },
+    "The server sends to Apple with its owner's APNs key. The relay is not used for this server." : {
+      "comment" : "Shown in Notification Settings"
     },
     "The server stops this location's services. Pending permission requests and questions there are cancelled; running sessions continue at their next step." : {
       "comment" : "Text in Administration Settings"

@@ -55,9 +55,6 @@
     "No matching sessions" : {
       "comment" : "Shown in Home View"
     },
-    "No servers yet" : {
-      "comment" : "Empty state title in Placeholder Root View"
-    },
     "Offline" : {
       "comment" : "Session row status while the server is unreachable"
     },
@@ -102,9 +99,6 @@
     },
     "Untitled session" : {
       "comment" : "Shown in Home Session Row"
-    },
-    "Version %@" : {
-      "comment" : "%@ is the app version number"
     },
     "Your sessions will appear here" : {
       "comment" : "Shown in Home View"

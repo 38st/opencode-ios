@@ -126,6 +126,9 @@
     "Could not open link" : {
       "comment" : "Alert title in Server Root View"
     },
+    "Demo: recorded sessions, no server" : {
+      "comment" : "Banner shown while the demo is open"
+    },
     "Diagnostics" : {
       "comment" : "Screen title in Server Detail View"
     },
@@ -137,6 +140,9 @@
     },
     "Enter your server address and password to get started." : {
       "comment" : "Shown in Add Server View"
+    },
+    "Exit demo" : {
+      "comment" : "Button title in Demo Root View"
     },
     "Export diagnostics" : {
       "comment" : "Link title in Server Detail View"
@@ -320,6 +326,9 @@
     "Show agent" : {
       "comment" : "Switch label in Server Settings View"
     },
+    "Shows sample sessions recorded in the app. Nothing connects to a server." : {
+      "comment" : "VoiceOver hint in Server Root View"
+    },
     "Steer" : {
       "comment" : "Follow-up option: add the message to the current run"
     },
@@ -337,6 +346,9 @@
     },
     "The camera is unavailable. Allow Camera access in Settings, or paste your pairing link." : {
       "comment" : "Shown in Add Server View"
+    },
+    "The demo could not be opened." : {
+      "comment" : "Alert title in Server Root View"
     },
     "The export excludes credentials, server names, addresses, paths and event contents." : {
       "comment" : "Text in Server Detail View"
@@ -358,6 +370,9 @@
     },
     "This server runs opencode %@. The app needs opencode %@ or later, which added pairing. Run this command on the computer hosting your server." : {
       "comment" : "The first %@ is the server's version, the second the oldest supported version"
+    },
+    "Try a demo" : {
+      "comment" : "Opens recorded sample sessions without a server"
     },
     "Try again" : {
       "comment" : "Button title in Server Root View"

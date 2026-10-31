@@ -72,15 +72,6 @@
     "Could not refresh this session. Cached messages are shown when available." : {
       "comment" : "Shown in Session Screen"
     },
-    "Could not update the saved prompt. Try again." : {
-      "comment" : "Shown in Saved Prompt Review"
-    },
-    "Create saved session" : {
-      "comment" : "Shown in Saved Prompt Review"
-    },
-    "Create this saved session?" : {
-      "comment" : "Shown in Saved Prompt Review"
-    },
     "Created" : {
       "comment" : "File status: the file was created"
     },
@@ -89,12 +80,6 @@
     },
     "Deleted" : {
       "comment" : "File status: the file was deleted"
-    },
-    "Discard" : {
-      "comment" : "Button that discards an unsent saved prompt"
-    },
-    "Discard session and saved prompts" : {
-      "comment" : "Shown in Saved Prompt Review"
     },
     "Edit and resend" : {
       "comment" : "Button title in Saved Prompt Review"
@@ -153,17 +138,11 @@
     "Permission" : {
       "comment" : "Badge on a pending permission request in the timeline"
     },
-    "Prompt" : {
-      "comment" : "Placeholder for the prompt text field"
-    },
     "Question" : {
       "comment" : "Badge on a pending question in the timeline"
     },
     "Queued" : {
       "comment" : "Shown in Timeline Projection"
-    },
-    "Resend" : {
-      "comment" : "Button title in Saved Prompt Review"
     },
     "Retrying" : {
       "comment" : "Shown in Timeline Collection"
@@ -177,17 +156,8 @@
     "Run failed" : {
       "comment" : "Shown in Timeline Row View"
     },
-    "Saved more than 10 minutes ago. It will only be sent if you choose Send." : {
-      "comment" : "Text in Saved Prompt Review"
-    },
     "Select text" : {
       "comment" : "Button title in Session Screen"
-    },
-    "Send saved prompt" : {
-      "comment" : "Shown in Saved Prompt Review"
-    },
-    "Send this saved prompt?" : {
-      "comment" : "Shown in Saved Prompt Review"
     },
     "Sending" : {
       "comment" : "Status badge: the prompt is being sent"
@@ -219,14 +189,8 @@
     "Terminals" : {
       "comment" : "Button title in Session Screen"
     },
-    "The staged undo changed. Review and confirm it before resending." : {
-      "comment" : "Shown in Saved Prompt Review"
-    },
     "Thinking" : {
       "comment" : "Status: the model is reasoning"
-    },
-    "This prompt was not sent." : {
-      "comment" : "Shown in Saved Prompt Review"
     },
     "Timeline detail" : {
       "comment" : "VoiceOver label in Session Screen"

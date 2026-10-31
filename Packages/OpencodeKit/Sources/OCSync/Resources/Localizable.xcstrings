@@ -160,6 +160,9 @@
     "Couldn't reach your server" : {
       "comment" : "Shown in Mobile App Delegate"
     },
+    "Direct mode isn't set up on this server. Add your APNs key to the plugin, or use the relay." : {
+      "comment" : "Shown in Push Registration"
+    },
     "Endpoint" : {
       "comment" : "Shown when a server address has no host name"
     },
@@ -339,6 +342,9 @@
     },
     "The action was cancelled." : {
       "comment" : "Shown in Write Error Message"
+    },
+    "The demo can't change anything. Add your own server to send prompts." : {
+      "comment" : "Shown in Scenario Transport"
     },
     "The file changed. Open it again to refresh." : {
       "comment" : "Shown in Files Model"
