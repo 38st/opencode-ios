@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Side-by-side M3b reference captures and native composer snapshots."""
+"""Side-by-side composer reference captures and native composer snapshots."""
 from pathlib import Path
 from PIL import Image, ImageOps, ImageDraw, ImageFont
 import html
@@ -32,13 +32,13 @@ for native in sorted(snapshots.glob('*.png')):
     draw.text((12, 14), 'Official OpenCode web', font=font, fill='#161616')
     draw.text((width + 24, 14), 'Native iOS composer', font=font, fill='#161616')
     canvas.paste(left, (0, 50)); canvas.paste(right, (width + 24, 50))
-    file = 'm3b-' + name + '.png'; canvas.save(output / file)
+    file = 'composer-' + name + '.png'; canvas.save(output / file)
     manifest.append(dict(file=file, native=str(native.relative_to(root)), reference=str(reference.relative_to(root))))
 if not manifest:
     raise SystemExit('No composer snapshots found; record and verify ComposerSnapshots first.')
-(output / 'm3b-manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
-(output / 'm3b.html').write_text('<!doctype html><meta charset="utf-8"><title>M3b comparisons</title>'
+(output / 'composer-manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+(output / 'composer.html').write_text('<!doctype html><meta charset="utf-8"><title>Composer comparisons</title>'
     '<style>body{font:14px system-ui;margin:24px;background:#fafafa}img{max-width:100%;height:auto}section{margin:32px 0}</style>'
-    '<h1>M3b composer and pickers</h1><p>Native controls use 44-point touch targets. Accessibility snapshots use the largest Dynamic Type.</p>'
+    '<h1>Composer and pickers</h1><p>Native controls use 44-point touch targets. Accessibility snapshots use the largest Dynamic Type.</p>'
     + ''.join(f'<section><h2>{html.escape(item["file"])}</h2><a href="{item["file"]}"><img loading="lazy" src="{item["file"]}"></a></section>' for item in manifest))
-print(f'Wrote {len(manifest)} comparisons to {output}/m3b.html')
+print(f'Wrote {len(manifest)} comparisons to {output}/composer.html')

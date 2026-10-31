@@ -18,8 +18,8 @@ node Tools/fixture-recorder/index.mjs --version 2.0.32 --scenario permission-all
 
 The default recorder queries npm once, selects the newest stable **2.x** release,
 then pins that exact version for the whole recording. `--version` accepts an
-exact stable 2.x version. It runs all 20 scenarios (a–q, with separate interrupt
-and retry variants), including the fixed `opencode-ai@1.19.3` detection probe.
+exact stable 2.x version. It runs all 20 scenarios, including the fixed
+`opencode-ai@1.19.3` detection probe.
 Fixtures are published to `Fixtures/v2/<version>/` only after every selected
 scenario passes. Use `--output` for partial recordings; `manifest.json` lists
 omitted scenarios, consumed model calls, script hashes, and file hashes. Each session
@@ -49,7 +49,7 @@ the upgrade with the Authorization header, replay frames and the one 0x00 contro
 UTF-16 cursor across a reconnection, cursor -1, single-use tickets, the 2 MiB retained buffer
 and the gap a stale cursor sees, close codes 1000 and 4404, 404 before an upgrade, and shell
 output paging and removal; the buffer numbers are written to `pty-buffer.json` in the audit
-folder), V1 health detection, and the push plugin live checks (see "Push (M5a)"). Failures exit nonzero. This is
+folder), V1 health detection, and the push plugin live checks (see "Push"). Failures exit nonzero. This is
 separate from ordinary `swift test`, which reads checked-in files and skips live cases.
 
 The contract also runs `OCNetworkingLiveTests` through `swift test --filter
@@ -77,11 +77,11 @@ contain no 503 response. The optional Keychain smoke test requires
 `.github/workflows/contract.yml` runs manually and nightly at 07:23 UTC on
 `xcode-27` with Node 26. It resolves V2 once for both the contract and recorder,
 and uploads refreshed fixtures and isolation audits as artifacts. It does not
-commit recordings. The minimum-supported V2 matrix described in ARCHITECTURE §6 remains future
-work; the networking and read-projection suites run against latest/pinned V2,
-with V1 detection checked separately.
+commit recordings. The networking and read-projection suites run against the
+latest or a pinned V2 release, with V1 detection checked separately; there is no
+matrix of older V2 releases.
 
-## Push (M5a)
+## Push
 
 Install the three push packages first: `npm ci` in `server/contracts`, `server/plugin` and
 `server/relay`. Nothing here creates an account, deploys, or contacts APNs.
@@ -121,15 +121,15 @@ with its `HOME`, XDG and log directories inside the run (`server/relay/scripts/i
 telemetry off and no Cloudflare credentials, and the run fails if the account's own wrangler state
 changed.
 
-## App push in the simulator (M5b)
+## App push in the simulator
 
 ```sh
-node Tools/push-e2e/index.mjs --simulator # M5a checks, then the app bridge run
+node Tools/push-e2e/index.mjs --simulator # the checks above, then the app bridge run
 node Tools/push-e2e/simulator.mjs        # only the app bridge run
 ```
 
 The bridge run uses the existing booted **iPhone 17 Pro**, a sandbox with the plugin,
-M5a's Node relay adapter and its HTTP/2 mock APNs. Each accepted payload is saved
+the relay's Node entry point and its HTTP/2 mock APNs. Each accepted payload is saved
 unchanged and passed to `xcrun simctl push`. It never creates or reconfigures a
 simulator. The full `node Tools/ui-smoke/index.mjs` run includes this check after
 its normal iPhone and iPad flows, with all simulator-dependent commands serialized.
@@ -162,7 +162,7 @@ decrypted alert comes from the DEBUG renderer above), it cannot deliver an Activ
 update (`NSPOSIXErrorDomain 14`), and it issues no APNs device token (the driver
 substitutes one; Live Activity push tokens do arrive and are registered with the local
 relay and plugin). Real APNs delivery, lock-screen latency, device-owner authentication
-for Allow once and remote Live Activity updates need the owner's team.
+for Allow once and remote Live Activity updates need a build signed with a team.
 
 ## Isolation and lifecycle
 
@@ -170,7 +170,7 @@ for Allow once and remote Live Activity updates need the owner's team.
 `npx -y @opencode/cli@<version> serve --hostname 127.0.0.1 --port <free-port>`
 (or `npx -y opencode-ai@1.19.3 serve` for detection). It invokes npm's npx entry
 point through the active Node executable. It never runs a preinstalled opencode
-or anything from the reference checkout. Ports 49374 and 49375 are excluded.
+or an opencode source checkout. Ports 49374 and 49375 are excluded.
 
 Each run lives under `.build/opencode-sandbox/<version>/<run-id>/`. HOME, all XDG
 roots/search paths, temp directories, Git config, npm config/prefix/cache,
@@ -191,7 +191,8 @@ The source at `d0732ea` establishes these controls:
   remote logging/tracing. The environment omits all inherited OTEL values and
   additionally sets `OTEL_SDK_DISABLED=true` and `DO_NOT_TRACK=1`.
 - `packages/schema/src/config.ts`: `share: "disabled"`. V1 also gets
-  `OPENCODE_DISABLE_SHARE=1`. Project/Claude config discovery, model fetches,
+  `OPENCODE_DISABLE_SHARE=1`. Project config discovery (including the compatibility
+  paths for other agents' files), model fetches,
   watchers, LSP, formatters, and warming are disabled.
 - Persistent PTY daemon execution is blocked by an `OPENCODE_PTY_BIN` path to a
   nonexistent sandbox file. Tests use ordinary `/api/pty`, which is owned by the
@@ -319,7 +320,7 @@ the terminal's visible rows (`terminalScreen`), its size (`terminalSize`) and th
 its whole buffer (`terminalSequence`); the resume and size findings are copied next to the result
 bundles as `terminal-resume-*.txt` and `terminal-size-*.txt`. A live full-screen program is
 `nettop`: macOS refuses the sandboxed server's processes the set-user-ID `/usr/bin/top`, and `htop`
-is not installed on this Mac.
+is not part of macOS.
 
 ## Shortcuts, Spotlight and widgets
 
@@ -350,7 +351,7 @@ it also exposes an `intentTrace` element: each intent records in the App Group w
 ran it and what it answered, and the test reads the answers there. What each system app
 exposed to XCUITest is attached as `finding-*` and copied next to the result bundle.
 
-## Server UI smoke and snapshots (M1b)
+## UI smoke and snapshots
 
 ```sh
 xcodegen generate
@@ -433,7 +434,7 @@ Missing references are recorded and fail the first run. Review the PNGs under
 Ordinary `swift test` uses no network, runs the sync tests with fake connections
 and virtual clocks, and skips live networking and iOS-only image comparisons.
 
-## Design references (D1)
+## Design references
 
 `node Tools/design-reference/index.mjs --version 2.0.32` seeds real V2 sessions using the fixture mock, signs into the UI served by that sandbox, and captures desktop, both iPad orientations, and iPhone in light/dark. Playwright and Chromium remain under `.build`; no installed browser profile or installed OpenCode is used. See `docs/design.md` for snapshot recording, import scripts, and `.build/design-compare/index.html` generation.
 

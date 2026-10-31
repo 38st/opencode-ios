@@ -51,7 +51,7 @@ for mode in ['light','dark']:
         draw.text((12,36),'Project tabs, timeline slot, disabled prompt dock and review panel. Home sidebar collapses.',font=small,fill='#5c5c5c')
         image.paste(left,(0,78));image.paste(right,(width+24,78))
         name=f'ipad-shell-{mode}' + ('' if width==1180 else '-portrait') + '.png';image.save(out/name)
-        manifest.append({'file':name,'note':'Shell composition; timeline/review contents await M2b'})
+        manifest.append({'file':name,'note':'Shell composition only'})
 for mode in ['light','dark']:
     image=Image.new('RGB',(2384,898),'#eeeeee');draw=ImageDraw.Draw(image)
     draw.text((12,10),'OpenCode Home · 1180×820',font=font,fill='#161616')
@@ -62,5 +62,5 @@ for mode in ['light','dark']:
     name=f'ipad-home-sidebar-{mode}.png';image.save(out/name)
     manifest.append({'file':name,'note':'Expanded Home sidebar; session content is a placeholder'})
 (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
-(out/'index.html').write_text('<!doctype html><meta charset="utf-8"><title>D1 comparisons</title><style>body{font:14px system-ui;background:#fafafa;margin:24px;color:#161616}img{max-width:100%;height:auto;border:1px solid #ddd}section{margin:32px 0}nav a{margin-right:16px}</style><h1>D1 visual comparisons</h1><p>Official web capture on the left; native snapshot on the right. Viewport dimensions match. Labels identify screens without a direct web counterpart.</p>'+''.join(f'<section><h2>{html.escape(x["file"])}</h2><p>{html.escape(x["note"])}</p><a href="{x["file"]}"><img loading="lazy" src="{x["file"]}"></a></section>' for x in manifest))
+(out/'index.html').write_text('<!doctype html><meta charset="utf-8"><title>Design comparisons</title><style>body{font:14px system-ui;background:#fafafa;margin:24px;color:#161616}img{max-width:100%;height:auto;border:1px solid #ddd}section{margin:32px 0}nav a{margin-right:16px}</style><h1>Visual comparisons</h1><p>Official web capture on the left; native snapshot on the right. Viewport dimensions match. Labels identify screens without a direct web counterpart.</p>'+''.join(f'<section><h2>{html.escape(x["file"])}</h2><p>{html.escape(x["note"])}</p><a href="{x["file"]}"><img loading="lazy" src="{x["file"]}"></a></section>' for x in manifest))
 print(f'Wrote {len(manifest)} comparisons: {out}/index.html')

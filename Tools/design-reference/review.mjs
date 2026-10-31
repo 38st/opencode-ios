@@ -15,9 +15,9 @@ export async function captureReview({ server, mock, browser, output, manifest, s
     const mobile = width < 768;
     const capture = async name => {
       await page.evaluate(() => document.fonts.ready);
-      const file = `m4-${name}-${mode}-${width}x${height}.png`;
+      const file = `review-${name}-${mode}-${width}x${height}.png`;
       await page.screenshot({ path: path.join(output, file), animations: 'disabled' });
-      manifest.captures.push({ name: 'm4-' + name, mode, width, height, file, route: new URL(page.url()).pathname });
+      manifest.captures.push({ name: 'review-' + name, mode, width, height, file, route: new URL(page.url()).pathname });
       console.log(`Captured ${file}`);
     };
     const goto = async id => {
@@ -111,8 +111,8 @@ export async function captureReview({ server, mock, browser, output, manifest, s
       await goto(fixture.noGitSession); await showReview();
       await page.getByRole('button', { name: 'Create Git repository', exact: true }).waitFor(); await capture('no-git');
     } catch (error) {
-      await page.screenshot({ path: path.join(output, `m4-failure-${mode}-${width}.png`) });
-      await writeFile(path.join(output, `m4-failure-${mode}-${width}.txt`), (await page.locator('body').innerText()).replaceAll(server.password, '[REDACTED]'));
+      await page.screenshot({ path: path.join(output, `review-failure-${mode}-${width}.png`) });
+      await writeFile(path.join(output, `review-failure-${mode}-${width}.txt`), (await page.locator('body').innerText()).replaceAll(server.password, '[REDACTED]'));
       throw error;
     } finally { await context.close(); }
   }

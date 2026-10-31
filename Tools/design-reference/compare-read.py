@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare M2b native captures with the existing official-app reference captures."""
+"""Compare the native read screens with the official-app reference captures."""
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import html, json
@@ -12,7 +12,7 @@ pairs = [
     ('inbox', 'session-list-light-393x852', 393, 'Home with native cross-server triage and unread markers'),
     ('session-list', 'session-list-light-393x852', 393, 'Project picker, search, letter avatars and sessions by day'),
     ('transcript-tools', 'timeline-light-393x852', 393, 'Native header, tool details and disabled prompt dock'),
-    ('ipad-split', 'timeline-light-1180x820', 1180, 'Expanded Home sidebar; empty M4 review panel collapsed'),
+    ('ipad-split', 'timeline-light-1180x820', 1180, 'Expanded Home sidebar; empty review panel collapsed'),
     ('ipad-portrait', 'timeline-light-820x1180', 820, 'Portrait timeline with collapsible Home and review'),
 ]
 manifest = []
@@ -29,8 +29,8 @@ for native_name, reference_name, width, note in pairs:
     draw.text((width + 24, 10), 'Native iOS · ' + native_name, fill='#161616', font=font)
     draw.text((12, 38), note, fill='#5c5c5c', font=small)
     canvas.paste(left, (0, 78)); canvas.paste(right, (width + 24, 78))
-    name = f'm2b-{native_name}.png'; canvas.save(output/name)
+    name = f'read-{native_name}.png'; canvas.save(output/name)
     manifest.append(dict(file=name, native=str(native_file.relative_to(root)), reference=str(reference_file.relative_to(root)), note=note))
-(output/'m2b-manifest.json').write_text(json.dumps(manifest, indent=2)+'\n')
-(output/'m2b.html').write_text('<!doctype html><meta charset="utf-8"><title>M2b comparisons</title><style>body{font:14px system-ui;margin:24px;background:#fafafa}img{max-width:100%;height:auto}section{margin:32px 0}</style><h1>M2b read screens</h1>'+''.join(f'<section><h2>{html.escape(item["note"])}</h2><img src="{item["file"]}"></section>' for item in manifest))
-print(f'Wrote {len(manifest)} comparisons to {output}/m2b.html')
+(output/'read-manifest.json').write_text(json.dumps(manifest, indent=2)+'\n')
+(output/'read.html').write_text('<!doctype html><meta charset="utf-8"><title>Read screen comparisons</title><style>body{font:14px system-ui;margin:24px;background:#fafafa}img{max-width:100%;height:auto}section{margin:32px 0}</style><h1>Read screens</h1>'+''.join(f'<section><h2>{html.escape(item["note"])}</h2><img src="{item["file"]}"></section>' for item in manifest))
+print(f'Wrote {len(manifest)} comparisons to {output}/read.html')
