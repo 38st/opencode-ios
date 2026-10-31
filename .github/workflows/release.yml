@@ -23,6 +23,7 @@ permissions:
 
 jobs:
   release:
+    name: Archive, sign and upload
     runs-on: xcode-27
     timeout-minutes: 60
     env:

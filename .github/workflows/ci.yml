@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   build:
-    name: Xcode ${{ matrix.xcode }}
+    name: Build and test (Xcode ${{ matrix.xcode }})
     # GitHub's arm64 Xcode 27 preview image runs macOS 27 (see README).
     runs-on: xcode-27
     timeout-minutes: 30

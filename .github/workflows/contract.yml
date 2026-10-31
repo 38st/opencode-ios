@@ -1,4 +1,4 @@
-name: Server contract
+name: opencode contract
 
 on:
   workflow_dispatch:
@@ -15,6 +15,7 @@ permissions:
 
 jobs:
   contract:
+    name: Live contract
     runs-on: xcode-27
     timeout-minutes: 30
     steps:
@@ -58,6 +59,7 @@ jobs:
 
 
   spec-watch:
+    name: Spec watch
     # New @opencode/cli releases: oasdiff of /openapi.json against research/opencode-openapi.json and a diff
     # of the event union, reported as one issue per release with this workflow's own token.
     runs-on: xcode-27
