@@ -33,8 +33,9 @@ struct SessionActivityView: View {
         HStack(alignment: .top) {
             Image(systemName: state.symbol).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
-                Text(attributes.title).font(.headline).lineLimit(2)
-                Text(attributes.project).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                // Redacted on a locked device when the person hides notification previews.
+                Text(attributes.title).font(.headline).lineLimit(2).privacySensitive()
+                Text(attributes.project).font(.caption).foregroundStyle(.secondary).lineLimit(1).privacySensitive()
             }
         }
     }

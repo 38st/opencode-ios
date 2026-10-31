@@ -1,4 +1,4 @@
-import { mkdir, writeFile, realpath, symlink } from 'node:fs/promises';
+import { access, chmod, copyFile, mkdir, writeFile, realpath, symlink } from 'node:fs/promises';
 import path from 'node:path';
 import net from 'node:net';
 import { randomBytes } from 'node:crypto';
@@ -109,6 +109,18 @@ export async function startSandbox({ version, mockURL, v1 = false, configure }) 
   await run('/usr/bin/git', ['init', '--quiet', dirs.project], { env, cwd: root });
   const port = await freePort(), baseURL = `http://127.0.0.1:${port}`;
   const invocation = await verifiedSandboxCommand(process.execPath, [npx, '-y', `${v1 ? 'opencode-ai' : '@opencode/cli'}@${version}`, 'serve', '--hostname', '127.0.0.1', '--port', String(port)], root, undefined, restrictions?.deniedReads);
+  // opencode downloads ripgrep from GitHub into its cache on first use. Each sandbox has a fresh cache, so the
+  // binary one run downloaded is kept under .build and given to the next, and runs need no network for it.
+  const ripgrep = path.join(repository, '.build/opencode-sandbox/ripgrep/rg'), sandboxRipgrep = path.join(dirs.cache, 'opencode/bin/rg');
+  if (!v1 && await access(ripgrep).then(() => true, () => false)) {
+    await mkdir(path.dirname(sandboxRipgrep), { recursive: true });
+    await copyFile(ripgrep, sandboxRipgrep); await chmod(sandboxRipgrep, 0o755);
+  }
+  const keepRipgrep = async () => {
+    if (v1 || await access(ripgrep).then(() => true, () => false) || !await access(sandboxRipgrep).then(() => true, () => false)) return;
+    await mkdir(path.dirname(ripgrep), { recursive: true });
+    await copyFile(sandboxRipgrep, ripgrep).catch(() => {});
+  };
   const group = launch(invocation.command, invocation.args, { cwd: dirs.project, env, sandboxed: true, enforcement: invocation.enforcement });
   try {
     const deadline = Date.now() + 180000;
@@ -122,7 +134,7 @@ export async function startSandbox({ version, mockURL, v1 = false, configure }) 
           if (info.version !== version) throw new Error(`Wrong server version: ${info.version}, expected ${version}`);
           await writeFile(path.join(root, 'run.json'), JSON.stringify({ version, baseURL, pid: group.child.pid, mode: 'foreground', project: dirs.project }, null, 2));
           return { version, baseURL, password, root, project: dirs.project, env, info, pid: group.child.pid,
-            async stop() { await group.stop(); await writeFile(path.join(root, 'server.log'), group.output); await writeFile(path.join(root, 'cleanup.json'), JSON.stringify({ processGroup: group.child.pid, survivors: [] }) + '\n'); } };
+            async stop() { await group.stop(); await keepRipgrep(); await writeFile(path.join(root, 'server.log'), group.output); await writeFile(path.join(root, 'cleanup.json'), JSON.stringify({ processGroup: group.child.pid, survivors: [] }) + '\n'); } };
         }
       } catch (error) {
         if (error.message.startsWith('Wrong server')) throw error;

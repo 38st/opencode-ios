@@ -1,0 +1,5 @@
+[
+  { "id": "api-removed-without-deprecation", "text": "api removed without deprecation", "level": 3, "operation": "POST", "operationId": "session.share", "path": "/api/session/{sessionID}/share", "source": "base.json", "section": "paths" },
+  { "id": "new-required-request-parameter", "text": "added the new required 'query' request parameter 'limit'", "level": 3, "operation": "GET", "operationId": "session.list", "path": "/api/session", "source": "next.json", "section": "paths" },
+  { "id": "endpoint-added", "text": "endpoint added", "level": 1, "operation": "PUT", "operationId": "session.goal", "path": "/api/session/{sessionID}/goal", "source": "next.json", "section": "paths" }
+]

@@ -1,0 +1,13 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "opencode HttpApi", "version": "0.0.1" },
+  "paths": {
+    "/api/info": { "get": { "operationId": "server.info", "responses": { "200": { "description": "ServerInfo" } } } },
+    "/api/session": { "get": { "operationId": "session.list", "parameters": [{ "name": "limit", "in": "query", "required": true, "schema": { "type": "integer" } }], "responses": { "200": { "description": "Sessions" } } } },
+    "/api/session/{sessionID}/goal": { "put": { "operationId": "session.goal", "responses": { "204": { "description": "Set" } } } }
+  },
+  "components": { "schemas": {
+    "ServerInfo": { "type": "object", "properties": { "version": { "type": "string" }, "pid": { "type": "integer" } } },
+    "Goal": { "type": "object" }
+  } }
+}

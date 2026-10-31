@@ -1,4 +1,7 @@
 import { CONTRACT } from "../../contracts/src/constants.ts";
+import { APPLE_APP_ATTEST_ROOT } from "./attest/apple-root.ts";
+import type { AttestEnvironment } from "./attest/verify.ts";
+import { parseCertificate, pemCertificates, type Certificate } from "./attest/x509.ts";
 
 /** Everything the relay reads from its environment. Workers bindings and Node's process.env share these names. */
 export interface RelayEnvironment {
@@ -11,8 +14,12 @@ export interface RelayEnvironment {
   readonly APNS_PRODUCTION_URL?: string;
   /** Comma-separated app bundle IDs this relay may push to. */
   readonly ALLOWED_BUNDLE_IDS?: string;
-  /** "off" until App Attest verification exists (M9); "required" makes registration fail closed. */
+  /** "off" (default) or "required": registration then needs an App Attest assertion. */
   readonly APP_ATTEST?: string;
+  /** "production" (default; TestFlight and App Store builds) or "development" (builds signed for development). */
+  readonly APP_ATTEST_ENVIRONMENT?: string;
+  /** PEM roots replacing Apple's App Attest root. Refused outside test mode. */
+  readonly APP_ATTEST_TEST_ROOTS?: string;
   /** "1" only in the test suites and the local end-to-end; enables RELAY_TEST_LIMITS. */
   readonly RELAY_TEST_MODE?: string;
   /** JSON overriding rate limits, for example {"alertsPerMinute":3}. Refused outside test mode. */
@@ -36,8 +43,16 @@ export interface RelayConfig {
     readonly productionURL: string;
   };
   readonly bundleIDs: ReadonlySet<string>;
-  readonly appAttest: "off" | "required";
+  readonly appAttest: AppAttestConfig;
   readonly limits: Limits;
+}
+
+export interface AppAttestConfig {
+  readonly mode: "off" | "required";
+  readonly environment: AttestEnvironment;
+  /** `<team ID>.<bundle ID>` for every allowed bundle ID. */
+  readonly appIDs: readonly string[];
+  readonly roots: readonly Certificate[];
 }
 
 export class ConfigError extends Error {
@@ -67,20 +82,36 @@ function testLimits(env: RelayEnvironment): Partial<Limits> {
   return value as Partial<Limits>;
 }
 
+function appAttest(env: RelayEnvironment, teamID: string, bundleIDs: ReadonlySet<string>): AppAttestConfig {
+  const mode = env.APP_ATTEST?.trim() || "off";
+  if (mode !== "off" && mode !== "required") throw new ConfigError("APP_ATTEST must be off or required");
+  const environment = env.APP_ATTEST_ENVIRONMENT?.trim() || "production";
+  if (environment !== "production" && environment !== "development") throw new ConfigError("APP_ATTEST_ENVIRONMENT must be production or development");
+  if (env.APP_ATTEST_TEST_ROOTS && env.RELAY_TEST_MODE !== "1") throw new ConfigError("APP_ATTEST_TEST_ROOTS is only accepted with RELAY_TEST_MODE=1");
+  let roots: Certificate[];
+  try {
+    roots = pemCertificates(env.APP_ATTEST_TEST_ROOTS || APPLE_APP_ATTEST_ROOT).map(parseCertificate);
+  } catch {
+    throw new ConfigError("APP_ATTEST_TEST_ROOTS is not a PEM certificate");
+  }
+  if (!roots.length) throw new ConfigError("APP_ATTEST_TEST_ROOTS is not a PEM certificate");
+  return { mode, environment, appIDs: [...bundleIDs].map((bundle) => `${teamID}.${bundle}`), roots };
+}
+
 export function readConfig(env: RelayEnvironment): RelayConfig {
-  const appAttest = env.APP_ATTEST?.trim() || "off";
-  if (appAttest !== "off" && appAttest !== "required") throw new ConfigError("APP_ATTEST must be off or required");
   const overrides = testLimits(env);
+  const teamID = required(env.APNS_TEAM_ID, "APNS_TEAM_ID");
+  const bundleIDs = new Set((env.ALLOWED_BUNDLE_IDS ?? "").split(",").map((item) => item.trim()).filter(Boolean));
   return {
     apns: {
-      teamID: required(env.APNS_TEAM_ID, "APNS_TEAM_ID"),
+      teamID,
       keyID: required(env.APNS_KEY_ID, "APNS_KEY_ID"),
       privateKey: required(env.APNS_PRIVATE_KEY, "APNS_PRIVATE_KEY"),
       sandboxURL: (env.APNS_SANDBOX_URL?.trim() || CONTRACT.apns.hosts.sandbox).replace(/\/+$/, ""),
       productionURL: (env.APNS_PRODUCTION_URL?.trim() || CONTRACT.apns.hosts.production).replace(/\/+$/, ""),
     },
-    bundleIDs: new Set((env.ALLOWED_BUNDLE_IDS ?? "").split(",").map((item) => item.trim()).filter(Boolean)),
-    appAttest,
+    bundleIDs,
+    appAttest: appAttest(env, teamID, bundleIDs),
     limits: { ...CONTRACT.limits, ...overrides },
   };
 }

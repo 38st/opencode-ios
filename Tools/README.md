@@ -440,3 +440,19 @@ and virtual clocks, and skips live networking and iOS-only image comparisons.
 Every V1/V2 server, including npx, runs under macOS `sandbox-exec`. The profile denies `file-write*` in the real user's OpenCode config/data/state/cache directories and LaunchAgents, including resolved symlink destinations. Before starting npx, an in-sandbox bootstrap must fail to write a disposable canary covered by the same profile. A PID-, nonce- and profile-digest-bound receipt proves the check; restrictions inherit to all descendants. A missing/invalid receipt or successful canary write aborts the launch. Audits retain proof after process cleanup and fail if any launch lacks it.
 
 Before/after snapshots still compare mtimes. `lsof` samples identify writable descriptors, process groups and change intervals. Changes attributed to sandbox processes always fail. With verified enforcement on every launch, unattributed writes are warnings naming the path and time; unique external writers are named too. OpenCode.app may independently modify models.json, storage/ and its databases. Missing enforcement, a failed denied-write check or an inspection failure still fails the run.
+
+## Demo, screenshots, upstream watch and release
+
+```sh
+node Tools/demo/record.mjs                       # record the in-app demo from the sandbox and the scripted model
+node Tools/screenshots/index.mjs --device "iPhone 17 Pro" --device "opencode-ios iPad" --readme
+node Tools/spec-watch/index.mjs --issue --dry-run  # check the newest opencode release against the baseline
+node Tools/release/version.mjs                    # print the version and build number
+node Tools/release/index.mjs archive --unsigned   # unsigned archive, the dry run of the release
+node Tools/onboarding/sync.mjs --check           # web/index.html matches the app's constants
+```
+
+- **Demo.** `Tools/demo/script.mjs` holds the sample project and the scripted sessions; the recorder runs them on a sandboxed server with the scripted model and writes `Packages/OpencodeKit/Sources/OCSync/Resources/Demo/demo.json`, with sandbox paths moved to `/Users/Shared/trailhead`. The app plays it with `ScenarioTransport`, which answers only its own `.invalid` host. Recording again changes the session IDs that `DemoSmokeTests` and `ScreenshotTests` name.
+- **Screenshots.** `ScreenshotTests` walks the demo in light and dark on each named simulator (existing ones only) and the tool saves `.build/store-screenshots/<device>/<light|dark>-<n>-<screen>.png`. `--readme` rebuilds `docs/images/hero.webp` and `docs/images/iphone-*.webp` from the light captures; it needs `cwebp` (Homebrew `webp`). The full UI run skips this test.
+- **Spec watch.** Compares the newest `@opencode/cli` release with the newest `Fixtures/v2` baseline: its `/openapi.json` (with `oasdiff` when installed, else a built-in summary) and its event union against the app's `ServerEvent.knownTypes`. With `--issue` it opens or updates a GitHub issue using `GITHUB_TOKEN`; `--dry-run` writes the issue to `.build/spec-watch/<version>/issue.md` instead. CI runs it daily.
+- **Release.** `Config/Version.xcconfig` is the only place the version and build number are set. Every signed step (`archive`, `export`, `upload`) refuses to run without `TEAM_ID`; `.github/workflows/release.yml` runs them on manual dispatch.

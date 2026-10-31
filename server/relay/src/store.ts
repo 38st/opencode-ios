@@ -27,6 +27,14 @@ export interface Activity {
   readonly expiresAt: number;
 }
 
+export interface AttestKey {
+  readonly keyID: string;
+  /** SubjectPublicKeyInfo, base64url. */
+  readonly publicKey: string;
+  readonly appID: string;
+  readonly counter: number;
+}
+
 export const MAX_SENDERS = 32;
 export const MAX_ACTIVITIES = 16;
 
@@ -107,5 +115,35 @@ export class Store {
 
   async deleteActivity(deviceID: string, ref: string): Promise<void> {
     await this.#sql.run("DELETE FROM activities WHERE device_id = ? AND ref = ?", [deviceID, ref]);
+  }
+
+  async createChallenge(challenge: string, expiresAt: number, now: number): Promise<void> {
+    await this.#sql.batch([
+      ["DELETE FROM attest_challenges WHERE expires_at <= ?", [now]],
+      ["INSERT INTO attest_challenges (challenge, expires_at) VALUES (?, ?)", [challenge, expiresAt]],
+    ]);
+  }
+
+  /** Deletes the challenge; true only if it existed and had not expired, so each one works once. */
+  async consumeChallenge(challenge: string, now: number): Promise<boolean> {
+    return (await this.#sql.run("DELETE FROM attest_challenges WHERE challenge = ? AND expires_at > ?", [challenge, now])) === 1;
+  }
+
+  /** False if the key ID is already stored. */
+  async createAttestKey(key: AttestKey, now: number): Promise<boolean> {
+    const changes = await this.#sql.run(
+      "INSERT INTO attest_keys (key_id, public_key, app_id, counter, created_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT (key_id) DO NOTHING",
+      [key.keyID, key.publicKey, key.appID, key.counter, now],
+    );
+    return changes === 1;
+  }
+
+  attestKey(keyID: string): Promise<AttestKey | undefined> {
+    return this.#sql.first<AttestKey>("SELECT key_id AS keyID, public_key AS publicKey, app_id AS appID, counter FROM attest_keys WHERE key_id = ?", [keyID]);
+  }
+
+  /** Stores a higher counter; false if another request already stored this one or a higher one. */
+  async advanceAttestCounter(keyID: string, counter: number, now: number): Promise<boolean> {
+    return (await this.#sql.run("UPDATE attest_keys SET counter = ?, used_at = ? WHERE key_id = ? AND counter < ?", [counter, now, keyID, counter])) === 1;
   }
 }

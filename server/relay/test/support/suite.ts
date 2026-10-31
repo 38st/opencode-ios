@@ -81,6 +81,10 @@ export function relaySuite(target: () => Target) {
       const response = await t().relay("/v1/nothing");
       expect(response.status).toBe(404);
     });
+    test("App Attest routes are 404 while APP_ATTEST is off", async () => {
+      expect((await t().relay("/v1/attest/challenge", { ...json({}), ip: freshIP() })).status).toBe(404);
+      expect((await t().relay("/v1/attest/keys", { ...json({}), ip: freshIP() })).status).toBe(404);
+    });
   });
 
   describe("POST /v1/devices", () => {

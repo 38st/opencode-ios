@@ -42,6 +42,7 @@ public struct NotificationSettings: View {
                     Text(server.name).font(OCType.heading)
                     status(localized("Plugin"), server.pluginVersion.map { localized("Installed · \($0)", comment: "%@ is the plugin version") } ?? (server.pluginMissing ? localized("Not installed") : localized("Checking")))
                     status(localized("Registration"), server.registration)
+                    if server.directAvailable || controller.isDirect(server: server.id) { delivery(server) }
                     status(localized("Last delivery"), server.lastDelivery ?? localized("None yet"))
                     if let date = server.lastDeliveryAt { Text(date, style: .relative).font(OCType.small).foregroundStyle(OCColor.textMuted) }
                     if server.pluginMissing { Text(controller.installCommand).font(OCType.code).textSelection(.enabled) }
@@ -114,6 +115,21 @@ public struct NotificationSettings: View {
     private static func minutes(_ date: Date) -> Int {
         let parts = Calendar.current.dateComponents([.hour, .minute], from: date)
         return (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
+    }
+    /// Relay (the default) or direct to Apple, offered once the server's plugin has an APNs key configured.
+    private func delivery(_ server: PushServerHealth) -> some View {
+        VStack(alignment: .leading, spacing: OCSpacing.xs) {
+            Text(localized("Delivery", comment: "How notifications reach this phone")).font(OCType.small).foregroundStyle(OCColor.textMuted)
+            Picker(localized("Delivery", comment: "How notifications reach this phone"), selection: Binding(
+                get: { controller.isDirect(server: server.id) }, set: { controller.setDirect($0, server: server.id) })) {
+                Text(localized("Relay", comment: "Push notification relay server")).tag(false)
+                Text(localized("Direct to Apple", comment: "Notifications sent by the server's plugin straight to Apple")).tag(true)
+            }.pickerStyle(.segmented).accessibilityIdentifier("pushDelivery-" + server.id)
+            Text(controller.isDirect(server: server.id)
+                 ? localized("The server sends to Apple with its owner's APNs key. The relay is not used for this server.")
+                 : localized("Encrypted notifications pass through the relay, which cannot read them."))
+                .font(OCType.small).foregroundStyle(OCColor.textMuted)
+        }.frame(maxWidth: .infinity, alignment: .leading)
     }
     private func status(_ title: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: OCSpacing.xs) {

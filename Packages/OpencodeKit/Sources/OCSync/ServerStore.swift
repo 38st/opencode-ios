@@ -49,7 +49,7 @@ import OCPersistence
     public init(record: ServerRecord, connection: any ConnectionControlling, credentials: CredentialStore,
                 clock: NetworkClock = .init(), cache: CacheStore? = nil, residency: TranscriptResidency = .init(),
                 drafts: DraftStore? = nil, background: (any BackgroundTaskProviding)? = nil, eventSink: (any ServerEventSink)? = nil,
-                extensionWork: (any ResyncExtension)? = nil,
+                extensionWork: (any ResyncExtension)? = nil, transport: (any HTTPTransport)? = nil,
                 fetchInfo: (@Sendable (URL, Credential?, [String: String]) async throws -> ServerInfo)? = nil,
                 canConnect: @escaping @MainActor () -> Bool = { true },
                 recordChanged: @escaping @MainActor () async throws -> Void = {}) {
@@ -60,8 +60,9 @@ import OCPersistence
         self.readPath = readPath; self.eventSink = eventSink ?? readPath
         self.recordChanged = recordChanged
         self.canConnect = canConnect
+        let transport = transport ?? URLSessionTransport()
         self.fetchInfo = fetchInfo ?? { url, credential, headers in
-            try await APIClient(baseURL: url, credential: credential, headers: headers, clock: clock)
+            try await APIClient(baseURL: url, credential: credential, headers: headers, transport: transport, clock: clock)
                 .send(Endpoint<ServerInfo>.json(path: "/api/info"))
         }
         resync = ResyncCoordinator(date: clock.date, extensionWork: extensionWork ?? readPath) { [weak self] _ in
@@ -71,7 +72,8 @@ import OCPersistence
         readPath.client = { [weak self] in
             guard let self, let endpoint = self.lastResolution?.selected ?? self.record.endpoints.first else { throw CancellationError() }
             return try await APIClient(baseURL: endpoint.url, credential: self.credentials.credential(for: self.id),
-                                       headers: self.credentials.headers(for: self.id), clock: clock, serverClock: self.readPath.serverClock)
+                                       headers: self.credentials.headers(for: self.id), transport: transport, clock: clock,
+                                       serverClock: self.readPath.serverClock)
         }
         consumer = Task { [weak self, connection] in
             for await output in connection.output {

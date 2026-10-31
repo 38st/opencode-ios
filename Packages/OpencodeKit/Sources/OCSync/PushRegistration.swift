@@ -15,6 +15,8 @@ public struct PushServerHealth: Sendable, Identifiable {
     public var pluginMissing = false
     public var lastDelivery: String?
     public var lastDeliveryAt: Date?
+    /// The server's plugin can send to Apple directly (its `apns` option is set).
+    public var directAvailable = false
     public var isRegistered: Bool { registration == PushRegistration.registered }
     public init(id: String, name: String) { self.id = id; self.name = name }
 }
@@ -48,6 +50,10 @@ enum PushRegistrationError: Error { case deviceNotRegistered }
     @ObservationIgnored private var registering: [String: Task<Void, Never>] = [:]
     @ObservationIgnored private var tokenTask: Task<Void, any Error>?
     @ObservationIgnored private var revocationsLoaded = false
+    /// This device's APNs token, kept for servers that send to Apple directly.
+    @ObservationIgnored private var apnsDevice: (token: String, bundleID: String, environment: String)?
+    /// Registers a new device with the relay; set to `AppAttestClient.registerDevice` so the relay can check the app.
+    @ObservationIgnored public var registerDevice: (@MainActor ([String: JSONValue]) async throws -> JSONValue)?
 
     public init(relayURL: URL, keys: PushKeyStore, store: PushSnapshotStore, secrets: any SecretStore, relay: @escaping Relay) {
         self.relayURL = relayURL; self.keys = keys; self.store = store; self.secrets = secrets; self.relay = relay
@@ -55,6 +61,7 @@ enum PushRegistrationError: Error { case deviceNotRegistered }
     deinit { tokenTask?.cancel(); for task in registering.values { task.cancel() } }
     public func unavailable() { relayState = localized("APNs registration unavailable in this build") }
     public func registerToken(_ token: String, bundleID: String, environment: String = "sandbox") async throws {
+        apnsDevice = (token, bundleID, environment)
         let previous = tokenTask
         let task = Task { [self] in
             _ = try? await previous?.value
@@ -63,8 +70,10 @@ enum PushRegistrationError: Error { case deviceNotRegistered }
                 _ = try await relay(.put, "/v1/devices/" + identity.deviceID, identity.deviceSecret,
                                     .object(["apnsToken": .string(token), "env": .string(environment)]))
             } else {
-                let raw = try await relay(.post, "/v1/devices", nil,
-                    .object(["apnsToken": .string(token), "env": .string(environment), "bundleID": .string(bundleID)]))
+                let fields: [String: JSONValue] = ["apnsToken": .string(token), "env": .string(environment), "bundleID": .string(bundleID)]
+                let raw: JSONValue
+                if let registerDevice { raw = try await registerDevice(fields) }
+                else { raw = try await relay(.post, "/v1/devices", nil, .object(fields)) }
                 let identity = try JSONDecoder().decode(RelayIdentity.self, from: JSONEncoder().encode(raw))
                 try await secrets.write(JSONEncoder().encode(identity), account: "device")
             }
@@ -89,6 +98,11 @@ enum PushRegistrationError: Error { case deviceNotRegistered }
             do {
                 let status = try await rpc("status", .object([:]))
                 state.pluginVersion = status["pluginVersion"]?.stringValue
+                state.directAvailable = status["direct"]?["available"]?.boolValue == true
+                if isDirect(ref) {
+                    try await registerDirect(server: server, ref: ref, status: status, state: &state, rpc: rpc)
+                    return
+                }
                 guard let identity = try await identity(), isRelayRegistered else { state.registration = localized("Waiting for APNs registration"); return }
                 let key = try await keys.key(for: server)
                 let sender: PushSender
@@ -121,6 +135,11 @@ enum PushRegistrationError: Error { case deviceNotRegistered }
         registering[ref] = task
         await task.value
         registering[ref] = nil
+    }
+    /// Registers again from the start, replacing a registration still running with the previous settings.
+    public func reregister(server: ServerID, name: String, rpc: @escaping RPC) async {
+        if let task = registering[server.rawValue.uuidString] { task.cancel(); await task.value }
+        await register(server: server, name: name, rpc: rpc)
     }
     /// Unpairing never waits on the network: an in-flight registration is cancelled, the plugin and relay
     /// revocations are best effort with deadlines, and the local key, shown files, pending count and sender
@@ -177,9 +196,39 @@ enum PushRegistrationError: Error { case deviceNotRegistered }
         try? await secrets.write(JSONEncoder().encode(pendingRevocations), account: "revocations")
     }
     public func registerActivity(token: String, ref: String, expiresAt: Date, server: ServerID, sessionID: String, rpc: RPC) async throws {
+        if isDirect(server.rawValue.uuidString) {
+            guard let key = try await keys.existingKey(for: server) else { throw PushRegistrationError.deviceNotRegistered }
+            _ = try await rpc("registerActivity", .object(["keyID": .string(key.keyID), "activityRef": .string(ref), "sessionID": .string(sessionID),
+                "pushToken": .string(token), "expiresAt": .integer(Int64(expiresAt.timeIntervalSince1970))]))
+            return
+        }
         guard let identity = try await identity(), let key = try await keys.existingKey(for: server) else { throw PushRegistrationError.deviceNotRegistered }
         _ = try await relay(.put, "/v1/devices/\(identity.deviceID)/activities/\(ref)", identity.deviceSecret,
             .object(["pushToken": .string(token), "expiresAt": .integer(Int64(expiresAt.timeIntervalSince1970))]))
         _ = try await rpc("registerActivity", .object(["keyID": .string(key.keyID), "activityRef": .string(ref), "sessionID": .string(sessionID)]))
+    }
+
+    // MARK: Direct to Apple
+
+    /// Relay (the default) or direct, chosen per server in notification settings.
+    public func isDirect(_ ref: String) -> Bool { (try? store.preferences().directServers.contains(ref)) == true }
+    /// Registers the device with the server's plugin, which then sends to Apple with the owner's own key.
+    private func registerDirect(server: ServerID, ref: String, status: JSONValue, state: inout PushServerHealth, rpc: RPC) async throws {
+        guard state.directAvailable else {
+            state.registration = localized("Direct mode isn't set up on this server. Add your APNs key to the plugin, or use the relay.")
+            return
+        }
+        guard let device = apnsDevice else { state.registration = localized("Waiting for APNs registration"); return }
+        let key = try await keys.key(for: server)
+        let output = try await rpc("registerDevice", .object([
+            "transport": .string("direct"), "apnsToken": .string(device.token), "bundleID": .string(device.bundleID),
+            "environment": .string(device.environment == "production" ? "production" : "sandbox"),
+            "devicePublicKey": .string(Base64URL.encode(key.publicKey)), "keyID": .string(key.keyID),
+            "appServerRef": .string(ref), "label": .string("Opencode iOS"), "prefs": .object([:])]))
+        guard let encoded = output["serverPublicKey"]?.stringValue, let pinned = Base64URL.decode(encoded) else { throw PushEnvelopeError.authentication }
+        try await keys.pin(serverPublicKey: pinned, for: server)
+        try store.register(keyID: key.keyID, server: ref)
+        state.pluginVersion = output["pluginVersion"]?.stringValue ?? state.pluginVersion
+        state.registration = Self.registered
     }
 }

@@ -48,6 +48,8 @@ public struct PushPreferences: Codable, Sendable, Equatable {
     /// Muted sessions as `server/sessionID`; a muted root session mutes its subagents.
     public var mutedSessions: Set<String> = []
     public var quietHours: QuietHours?
+    /// Servers (by app server ref) whose plugin sends to Apple itself with the owner's APNs key, without the relay.
+    public var directServers: Set<String> = []
     public init() {}
     public init(from decoder: any Decoder) throws {
         // Every field is optional on disk: older files and newer ones with unknown fields both load.
@@ -57,6 +59,7 @@ public struct PushPreferences: Codable, Sendable, Equatable {
         silencedKinds = (try? container.decodeIfPresent(Set<String>.self, forKey: .silencedKinds)) ?? []
         mutedSessions = (try? container.decodeIfPresent(Set<String>.self, forKey: .mutedSessions)) ?? []
         quietHours = try? container.decodeIfPresent(QuietHours.self, forKey: .quietHours)
+        directServers = (try? container.decodeIfPresent(Set<String>.self, forKey: .directServers)) ?? []
     }
     public static func muteKey(server: String, session: String) -> String { server + "/" + session }
     public func muted(server: String, sessionID: String?, rootSessionID: String?) -> Bool {

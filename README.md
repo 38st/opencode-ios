@@ -14,7 +14,7 @@ Follow every session live, answer approvals with the full diff in front of you, 
 [![Licence: GPL-3.0-only](https://img.shields.io/badge/licence-GPL--3.0--only-blue)](LICENSE)
 [![CI](https://github.com/38st/opencode-ios/actions/workflows/ci.yml/badge.svg)](https://github.com/38st/opencode-ios/actions/workflows/ci.yml)
 
-<img src="docs/images/hero.webp" width="900" alt="The app on iPad and iPhone: a finished coding session in the iPad workspace, and Home on the iPhone with sessions that need you, a running session and today's sessions">
+<img src="docs/images/hero.webp" width="900" alt="The app on iPad and iPhone: a finished session in the iPad workspace beside Home, and Home on the iPhone with sessions that need you, a running session and today's sessions">
 
 </div>
 
@@ -43,12 +43,12 @@ Follow every session live, answer approvals with the full diff in front of you, 
 <table>
   <tr>
     <td align="center" valign="top" width="33%"><img src="docs/images/iphone-home.webp" width="260" alt="Home with Needs you, Running and Today sections"><br><sub><b>Home.</b> Every server and project, with what needs you on top.</sub></td>
-    <td align="center" valign="top" width="33%"><img src="docs/images/iphone-session.webp" width="260" alt="A finished session with reasoning, grouped tool calls and a summary"><br><sub><b>Sessions.</b> Reasoning, grouped tool calls, context and cost.</sub></td>
-    <td align="center" valign="top" width="33%"><img src="docs/images/iphone-permission.webp" width="260" alt="A permission request showing the full diff of a CI workflow edit"><br><sub><b>Approvals.</b> The full diff before you allow an edit.</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/images/iphone-session.webp" width="260" alt="A finished session with its tool calls and a summary that links to the files it describes"><br><sub><b>Sessions.</b> Tool calls, results, context and cost.</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/images/iphone-permission.webp" width="260" alt="A permission request showing the diff of a config file edit"><br><sub><b>Approvals.</b> The full diff before you allow an edit.</sub></td>
   </tr>
   <tr>
-    <td align="center" valign="top" width="33%"><img src="docs/images/iphone-question.webp" width="260" alt="A question from the agent with three options"><br><sub><b>Questions.</b> The agent asks; you pick or write an answer.</sub></td>
-    <td align="center" valign="top" width="33%"><img src="docs/images/iphone-markdown.webp" width="260" alt="An answer with a Markdown table and highlighted Swift code"><br><sub><b>Markdown.</b> Tables and highlighted code, rendered natively.</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/images/iphone-question.webp" width="260" alt="A question from the agent with two options and a free answer"><br><sub><b>Questions.</b> The agent asks; you pick or write an answer.</sub></td>
+    <td align="center" valign="top" width="33%"><img src="docs/images/iphone-markdown.webp" width="260" alt="An answer with a Markdown table and highlighted TypeScript code"><br><sub><b>Markdown.</b> Tables and highlighted code, rendered natively.</sub></td>
     <td align="center" valign="top" width="33%"><img src="docs/images/iphone-commands.webp" width="260" alt="The prompt dock showing slash commands"><br><sub><b>Prompt dock.</b> Slash commands, mentions and attachments.</sub></td>
   </tr>
 </table>
@@ -78,6 +78,44 @@ opencode pair --remote                  # add an OpenTunnel address for use away
 ```
 
 In the app, tap **Add your first server**, then scan the code or paste a link. You can also enter the server URL and the password from `opencode service get password`. Pairing tokens last 30 days; when one expires, the app asks you to pair again.
+
+No server at hand? Tap **Try a demo** on the first screen to explore recorded sessions: approve a request, answer a question, review a diff. The demo is built into the app, makes no network connections and keeps nothing when you leave it.
+
+### Notifications
+
+Notifications need the push plugin in your opencode server ([`server/plugin`](server/plugin/README.md)):
+
+```sh
+opencode plugin add @opencode-ios/opencode-mobile-push
+```
+
+Restart opencode, then in the app open the server's settings, choose **Notifications** and tap **Enable notifications**. The plugin seals every notification for your device on your computer, so whoever forwards it to Apple sees only a generic alert. It can reach Apple in two ways:
+
+- **Through the relay** (the default). The plugin posts the sealed push to the push relay ([`server/relay`](server/relay)), which holds the APNs key for the published app. Nothing to configure.
+- **Directly to Apple.** The plugin sends to APNs itself with your own key, and no relay is involved. This needs an Apple Developer Program membership, an APNs authentication key (`.p8`) from your account, and the app built with your own bundle ID (`Config/Signing.xcconfig`), since APNs only delivers to apps your team signs. Keep the key readable only by you; the plugin refuses a key file other users can read:
+
+  ```sh
+  chmod 600 /Users/Shared/opencode/AuthKey_ABC123DEFG.p8
+  ```
+
+  Then give the plugin its options in your opencode configuration, in place of the plain package name:
+
+  ```json
+  {
+    "plugins": [{
+      "package": "@opencode-ios/opencode-mobile-push",
+      "options": { "apns": {
+        "keyFile": "/Users/Shared/opencode/AuthKey_ABC123DEFG.p8",
+        "keyID": "ABC123DEFG",
+        "teamID": "TEAM123456",
+        "bundleID": "com.example.opencode",
+        "environment": "production"
+      } }
+    }]
+  }
+  ```
+
+  Use `"environment": "sandbox"` for a development build from Xcode. After a restart, open the server's **Notifications** settings in the app and set **Delivery** to **Direct to Apple**; the app then gives its device and Live Activity tokens to the plugin over your server connection instead of to the relay. The key never leaves your computer and is never logged or returned to the app.
 
 ## Build from source
 

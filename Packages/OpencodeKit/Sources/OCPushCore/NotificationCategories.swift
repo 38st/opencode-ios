@@ -26,9 +26,9 @@ public enum NotificationCategories {
         let reject = NotificationAction(id: .reject, title: localized("Reject", comment: "Notification action: reject a permission request"), destructive: true)
         switch category {
         case "PERMISSION": return [open, .init(id: .allow, title: localized("Allow once"), authenticationRequired: true), reject,
-                                    .init(id: .rejectWithNote, title: localized("Reject with note…"), destructive: true, textInput: true)]
+                                    .init(id: .rejectWithNote, title: localized("Reject with note…"), authenticationRequired: true, destructive: true, textInput: true)]
         case "PERMISSION_HIGH_RISK": return [open, reject]
-        case "QUESTION": return [open, .init(id: .answer, title: localized("Answer…", comment: "Notification action: answer a question"), textInput: true)]
+        case "QUESTION": return [open, .init(id: .answer, title: localized("Answer…", comment: "Notification action: answer a question"), authenticationRequired: true, textInput: true)]
         case "FINISHED", "FAILED": return [open, .init(id: .reply, title: localized("Reply…", comment: "Notification action: reply to a session"), authenticationRequired: true, textInput: true)]
         default: return [open]
         }

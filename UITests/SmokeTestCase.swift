@@ -7,10 +7,11 @@ nonisolated class SmokeTestCase: XCTestCase {
 
     /// - Parameter animations: false launches the Debug build without UIKit animations.
     /// - Parameter dark: launches the Debug build in dark mode (XCUIDevice's appearance does not reach the app here).
-    @MainActor func launchFreshApp(suffix: String, animations: Bool = true, dark: Bool = false) throws {
+    /// - Parameter arguments: further launch arguments for this launch only.
+    @MainActor func launchFreshApp(suffix: String, animations: Bool = true, dark: Bool = false, arguments: [String] = []) throws {
         let id = try XCTUnwrap(ProcessInfo.processInfo.environment["OPENCODE_UI_TEST_ID"])
         app.launchEnvironment["OPENCODE_UI_TEST_ID"] = id + suffix
-        app.launchArguments = ["--ui-testing-reset"] + (animations ? [] : ["--ui-testing-no-animations"]) + (dark ? ["--ui-testing-dark"] : [])
+        app.launchArguments = ["--ui-testing-reset"] + (animations ? [] : ["--ui-testing-no-animations"]) + (dark ? ["--ui-testing-dark"] : []) + arguments
         addTeardownBlock { @MainActor [self] in finishTest() }
         app.launch()
         // XCUIApplication.open can relaunch the process. Only the test's initial launch resets data; dark mode stays.

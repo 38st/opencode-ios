@@ -33,7 +33,26 @@ public actor EndpointResolver: EndpointResolving {
     public func resolve(endpoints: [EndpointRecord], credential: Credential?, headers: [String: String] = [:],
                         localNetworkDenied: Bool = false) async -> EndpointResolution {
         let enabled = endpoints.filter(\.isEnabled)
-        return await withTaskGroup(of: Result.self) { group in
+        let encrypted = enabled.filter { EndpointPolicy.isEncrypted($0.url) }
+        // On a network the app cannot trust, the credential reaches a plain-HTTP endpoint only when no encrypted
+        // endpoint answers: whoever holds the home network's address on a café's Wi-Fi never receives it.
+        guard prefersHTTPS, !encrypted.isEmpty, encrypted.count < enabled.count else {
+            return await race(enabled, known: endpoints, credential: credential, headers: headers, localNetworkDenied: localNetworkDenied)
+        }
+        let first = await race(encrypted, known: endpoints, credential: credential, headers: headers, localNetworkDenied: localNetworkDenied)
+        let plain = enabled.filter { !EndpointPolicy.isEncrypted($0.url) }
+        guard first.selected == nil else {
+            var diagnoses = first.diagnoses
+            for endpoint in plain { diagnoses[endpoint.id] = .notSelected }
+            return EndpointResolution(selected: first.selected, diagnoses: diagnoses, discovered: first.discovered)
+        }
+        let second = await race(plain, known: endpoints, credential: credential, headers: headers, localNetworkDenied: localNetworkDenied)
+        return EndpointResolution(selected: second.selected, diagnoses: first.diagnoses.merging(second.diagnoses) { _, new in new },
+                                  discovered: first.discovered + second.discovered.filter { found in !first.discovered.contains { $0.url == found.url } })
+    }
+    private func race(_ enabled: [EndpointRecord], known endpoints: [EndpointRecord], credential: Credential?, headers: [String: String],
+                      localNetworkDenied: Bool) async -> EndpointResolution {
+        await withTaskGroup(of: Result.self) { group in
             for endpoint in enabled {
                 group.addTask { [probe] in
                     .probe(endpoint, await probe.probe(endpoint: endpoint.url, credential: credential, headers: headers,

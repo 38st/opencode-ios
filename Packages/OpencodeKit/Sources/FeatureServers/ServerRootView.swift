@@ -76,14 +76,25 @@ public struct ServerRootView: View {
     @State private var homeShowsHidden = false
     /// A window state to open with instead of the saved one; snapshots use it to draw the regular layouts.
     private let initialState: WindowState?
+    /// The demo's root: it neither saves nor restores window state, and offers a way out instead of onboarding.
+    private let exitDemo: (() -> Void)?
+    @State private var demo: DemoSession?
+    @State private var openingDemo = false
+    @State private var demoError = false
     public init(registry: ServerRegistry, windows: WindowCoordinator = WindowCoordinator(), links: LinkInbox = LinkInbox(), window: Binding<SessionRef?> = .constant(nil)) {
         self.init(registry: registry, windows: windows, links: links, window: window, initialState: nil)
     }
-    init(registry: ServerRegistry, windows: WindowCoordinator = WindowCoordinator(), links: LinkInbox = LinkInbox(), window: Binding<SessionRef?> = .constant(nil), initialState: WindowState?) {
+    init(registry: ServerRegistry, windows: WindowCoordinator = WindowCoordinator(), links: LinkInbox = LinkInbox(), window: Binding<SessionRef?> = .constant(nil),
+         initialState: WindowState?, exitDemo: (() -> Void)? = nil) {
         self.registry = registry; self.windows = windows; self.links = links; _windowValue = window; self.initialState = initialState
+        self.exitDemo = exitDemo
     }
     public var body: some View {
-        status(presentations(routing(lifecycle(workspace)))).environment(\.ocPushController, registry.notifications)
+        Group {
+            // The demo takes no links and owns no window state: those stay with the real window beneath it.
+            if exitDemo == nil { status(presentations(routing(lifecycle(workspace)))) }
+            else { status(presentations(demoLifecycle(workspace))) }
+        }.environment(\.ocPushController, registry.notifications)
             .environment(\.ocServerAdminScope, adminScope)
             .preferredColorScheme(Self.forcedColorScheme)
     }
@@ -96,6 +107,10 @@ public struct ServerRootView: View {
                         Button { settingsDestination = .addServer } label: { OCLabel(localized("Add your first server"), icon: "plus") }
                             .buttonStyle(OCButtonStyle(.contrast)).accessibilityIdentifier("addFirstServer")
                             .disabled(!registry.isLoaded)
+                        Button { startDemo() } label: { OCLabel(localized("Try a demo", comment: "Opens recorded sample sessions without a server"), icon: "eye") }
+                            .buttonStyle(OCButtonStyle(.ghost)).accessibilityIdentifier("tryDemo")
+                            .accessibilityHint(localized("Shows sample sessions recorded in the app. Nothing connects to a server."))
+                            .disabled(openingDemo)
                     }.ocNavigationTitle(localized("Opencode", comment: "App name"))
                 }
             } else if sizeClass == .regular {
@@ -170,6 +185,14 @@ public struct ServerRootView: View {
             .modifier(SavesWindowState(layout: layout, server: selectedServer, project: selectedProject, tab: currentReview?.tab,
                                        treeWidth: currentReview?.sidebarWidth, save: save))
     }
+    /// The demo's registry follows the scene phase directly; nothing is registered with the window coordinator.
+    private func demoLifecycle(_ content: some View) -> some View {
+        content.ocTheme()
+            .onChange(of: scenePhase, initial: true) { _, phase in
+                let next: AppScenePhase = phase == .active ? .active : phase == .background ? .background : .inactive
+                Task { await registry.setScenePhase(next) }
+            }
+    }
     /// Links, notifications and dropped activities.
     private func routing(_ content: some View) -> some View {
         content
@@ -227,6 +250,10 @@ public struct ServerRootView: View {
     }
     private func presentations(_ content: some View) -> some View {
         content
+            .alert(localized("The demo could not be opened."), isPresented: $demoError) { Button(localized("OK")) {} }
+            .fullScreenCover(item: $demo) { demo in
+                DemoRootView(registry: demo.registry) { endDemo() }
+            }
             .alert(localized("Could not open link"), isPresented: Binding(get: { routingError != nil }, set: { if !$0 { routingError = nil } })) {
                 Button(localized("OK")) { routingError = nil }
             } message: { Text(routingError ?? "") }
@@ -548,7 +575,7 @@ public struct ServerRootView: View {
         _ = first
         #endif
         if let initialState { apply(initialState); return }
-        guard supportsMultipleWindows else { return }
+        guard supportsMultipleWindows, exitDemo == nil else { return }
         if let state = WindowState.restore(storedState, owner: Self.owner, servers: Set(registry.servers.map(\.id))) {
             apply(state)
         } else if let value = windowValue {
@@ -575,8 +602,23 @@ public struct ServerRootView: View {
         if supportsMultipleWindows { WindowScenes.mark(session, root: sessionPath.first.flatMap(rootRef)) }
         if let link = windows.takeParked(scene: session.persistentIdentifier) { pendingLink = link; routeLink() }
     }
+    private func startDemo() {
+        guard demo == nil, !openingDemo else { return }
+        openingDemo = true
+        Task {
+            defer { openingDemo = false }
+            do { demo = DemoSession(registry: try await DemoMode.registry()) }
+            catch { demoError = true }
+        }
+    }
+    /// Leaving the demo discards it; the next one starts from the recording again.
+    private func endDemo() {
+        guard let current = demo else { return }
+        demo = nil
+        Task { await current.registry.shutdown() }
+    }
     private func save() {
-        guard registered, supportsMultipleWindows else { return }
+        guard registered, supportsMultipleWindows, exitDemo == nil else { return }
         var state = WindowState(owner: Self.owner)
         state.path = sessionPath; state.server = selectedServer; state.project = selectedProject
         state.homeOpen = layout.homeOpen; state.reviewOpen = layout.reviewOpen; state.chatWidth = layout.chatWidth; state.homeWidth = layout.homeWidth

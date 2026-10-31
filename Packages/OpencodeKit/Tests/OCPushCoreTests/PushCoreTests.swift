@@ -128,3 +128,17 @@ import Testing
     #expect("\u{FEFF}".range(of: #"\s"#, options: .regularExpression) == nil)
     #expect(PermissionRisk.classify(action: "shell", resources: ["git\u{FEFF}push"]).rule == "git-history")
 }
+
+@Test func payloadIdentifiersUseTheServerAlphabet() throws {
+    func payload(_ field: String, _ value: String) throws -> PushPayload {
+        let object: JSONValue = .object(["v": .integer(1), "kind": .string("permission"), "server": .string("s"), "exp": .integer(1),
+                                         "pending": .integer(0), field: .string(value)])
+        return try PushPayload(plaintext: JSONEncoder().encode(object))
+    }
+    #expect(try payload("sessionID", "ses_01JABC-def_9").sessionID == "ses_01JABC-def_9")
+    for field in ["sessionID", "rootSessionID", "requestID"] {
+        for bad in ["", "../session", "ses/1", "ses?x=1", "ses 1", "ses%2F", String(repeating: "a", count: 257)] {
+            #expect(throws: PushEnvelopeError.payload) { try payload(field, bad) }
+        }
+    }
+}

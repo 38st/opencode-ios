@@ -1,7 +1,7 @@
 {
   "name": "@opencode-ios/opencode-mobile-push",
   "version": "0.1.0",
-  "description": "opencode plugin that sends sealed push notifications to the opencode-ios app through its relay.",
+  "description": "opencode plugin that sends sealed push notifications to the opencode-ios app through its relay, or directly to APNs with your own key.",
   "license": "MIT",
   "type": "module",
   "keywords": ["opencode", "opencode-plugin", "push", "ios"],

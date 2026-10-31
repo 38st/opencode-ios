@@ -16,9 +16,6 @@ configFiles:
   Release: Config/Signing.xcconfig
 settings:
   base:
-    # One version for the app and its extensions; App Store validation requires them to match.
-    MARKETING_VERSION: 0.1.0
-    CURRENT_PROJECT_VERSION: 1
     OTHER_LDFLAGS: ["$(inherited)", "-framework", "AppIntents"]
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete

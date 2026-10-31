@@ -11,7 +11,9 @@ It is a [Hono](https://hono.dev) app with two entry points that share every rout
 
 | Method and path | Caller and auth | Body → result |
 | --- | --- | --- |
-| `POST /v1/devices` | App. Per-IP limit (20 an hour); the App Attest check is a disabled hook until M9 | `{apnsToken, env: "sandbox" \| "production", bundleID}` → 201 `{deviceID, deviceSecret}` |
+| `POST /v1/attest/challenge` | App, only with `APP_ATTEST=required` (404 otherwise). Per-IP limit (60 an hour) | `{}` → 201 `{challenge, expiresAt}`. Single use, valid 5 minutes |
+| `POST /v1/attest/keys` | App, only with `APP_ATTEST=required` | `{keyID, challenge, attestation}` → 201 `{keyID}`, or 409 if the key is already stored |
+| `POST /v1/devices` | App. Per-IP limit (20 an hour). With `APP_ATTEST=required`, the `x-app-attest-key` and `x-app-attest-assertion` headers and a `challenge` in the body | `{apnsToken, env: "sandbox" \| "production", bundleID, challenge?}` → 201 `{deviceID, deviceSecret}` |
 | `PUT /v1/devices/{id}` | App, `Authorization: Bearer <deviceSecret>` | `{apnsToken, env?}` → 200 `{deviceID}`. Sent on every launch; repeating it is harmless |
 | `DELETE /v1/devices/{id}` | App, device secret | → 204. Removes the device, its senders and its activities |
 | `POST /v1/devices/{id}/senders` | App, device secret | → 201 `{senderID, sendToken}`. One per paired server, at most 32 |
@@ -22,6 +24,16 @@ It is a [Hono](https://hono.dev) app with two entry points that share every rout
 | `GET /v1/health` | Public | 200 `{status: "ok", version}`, or 503 `{status: "misconfigured"}` |
 
 Invalid bodies are 400, a missing or wrong secret or token is 401 (the same answer whether the device exists or not), a disallowed bundle ID is 403, a full sender or activity list is 409, the registration limit is 429 and bodies over 16 KB are 413.
+
+### App Attest
+
+Off by default. With `APP_ATTEST=required` a device registers in three steps, each with a fresh challenge:
+
+1. `POST /v1/attest/challenge`, then `DCAppAttestService.attestKey` with SHA-256 of the challenge's UTF-8 bytes as the client data hash. `POST /v1/attest/keys` sends the key ID and the attestation (standard base64). The relay checks the chain to Apple's App Attestation root (pinned in `src/attest/apple-root.ts`), the nonce extension, the app ID (`<team ID>.<bundle ID>` for an allowed bundle ID), the AAGUID for `APP_ATTEST_ENVIRONMENT`, a zero counter and the key ID, then stores the public key.
+2. `POST /v1/attest/challenge` again, and a `POST /v1/devices` body that carries that challenge.
+3. `generateAssertion` over SHA-256 of the exact body bytes, sent as `x-app-attest-key` (the key ID) and `x-app-attest-assertion` (base64). The relay checks the signature, the app ID against the body's bundle ID, and that the counter is higher than the last one it accepted.
+
+Refusals are 401 with `attestation_required` (headers missing or malformed), `challenge_invalid` (unknown, used or expired challenge), `attest_key_unknown` (no stored key with that ID) or `attestation_invalid` (any check failed, including a replayed counter or an edited body). Verification uses WebCrypto only, so it runs the same on Workers and Node. Only `POST /v1/devices` is gated; the device secret authenticates every later request.
 
 `POST /v1/push` checks that `envelope` is a well-formed v1 envelope whose `kind` and `exp` equal the request's `kind` and `expiresAt`. It forwards only the six envelope fields, so nothing else a sender adds reaches Apple. An envelope that has already expired is `rejected` without contacting APNs.
 
@@ -53,7 +65,7 @@ The relay's own limits also answer `throttled`, without contacting APNs: 30 aler
 
 ### What the relay stores and logs
 
-D1 (or SQLite) holds, per device: the SHA-256 of its secret, its APNs token (or nothing once gone), its environment and bundle ID; per sender, the SHA-256 of its send token; and per live activity, its push token and expiry. `migrations/` creates the tables.
+D1 (or SQLite) holds, per device: the SHA-256 of its secret, its APNs token (or nothing once gone), its environment and bundle ID; per sender, the SHA-256 of its send token; and per live activity, its push token and expiry. With App Attest, per key: its ID, public key, app ID and last assertion counter, and unused challenges until they expire. `migrations/` creates the tables.
 
 Logs are one JSON line per event with only `event`, `route`, `kind`, `result`, `status` (APNs's numeric HTTP status, when it answered) and `count`. They never contain a token, secret, ID, IP address, APNs reason or envelope; `src/log.ts` drops anything else, and both test runs check the captured logs.
 
@@ -78,9 +90,11 @@ npm run dev       # wrangler dev, fully local: D1 and Durable Objects are simula
 | `APNS_TEAM_ID`, `APNS_KEY_ID` | The Apple Developer team ID and the APNs key's ID (placeholders in `wrangler.toml`) |
 | `APNS_PRIVATE_KEY` | The `.p8` key (PKCS#8 PEM). A secret; never commit it |
 | `ALLOWED_BUNDLE_IDS` | Comma-separated bundle IDs devices may register with |
-| `APP_ATTEST` | `off` (default). `required` makes registration fail with 501 until M9 implements the check |
+| `APP_ATTEST` | `off` (default) or `required`: registration then needs an App Attest assertion (see "App Attest") |
+| `APP_ATTEST_ENVIRONMENT` | `production` (default; TestFlight and App Store builds) or `development` (builds signed for development). Picks the AAGUID attestations must carry |
 | `APNS_SANDBOX_URL`, `APNS_PRODUCTION_URL` | Test overrides; Apple's hosts by default |
 | `RELAY_TEST_MODE`, `RELAY_TEST_LIMITS` | Tests only: with `RELAY_TEST_MODE=1`, JSON overriding the limits, for example `{"alertsPerMinute":3}`. Unknown names, values that are not positive integers, and limits without test mode are configuration errors |
+| `APP_ATTEST_TEST_ROOTS` | Tests only: with `RELAY_TEST_MODE=1`, PEM roots that replace Apple's, so the suites can sign attestations. A configuration error without test mode |
 | `PORT`, `HOST`, `RELAY_DATABASE` | Node only: the listening address and the SQLite file (`relay.sqlite` by default, which holds APNs tokens and secret hashes) |
 | `TRUST_PROXY` | Node only, for the registration limit behind a proxy: `fly` reads `Fly-Client-IP`, which Fly's edge sets; `forwarded` reads the rightmost `X-Forwarded-For` entry, the address one trusted proxy saw. Clients can forge every other entry, so unset uses the connection's address |
 

@@ -54,6 +54,10 @@ import UserNotifications
         registration = PushRegistration(relayURL: url, keys: keys, store: store, secrets: secrets) { method, path, secret, body in
             try await relay.request(method, path: path, secret: secret, body: body)
         }
+        let attest = AppAttestClient(service: DeviceAppAttestService(), secrets: secrets) { method, path, headers, body in
+            try await relay.exchange(method, path: path, headers: headers, body: body)
+        }
+        registration.registerDevice = { try await attest.registerDevice($0) }
         preferences = (try? store.preferences()) ?? .init()
         audit = (try? store.audit()) ?? []
     }
@@ -127,6 +131,21 @@ import UserNotifications
         savePreferences()
     }
     public func setQuietHours(_ value: QuietHours?) { preferences.quietHours = value; savePreferences() }
+    /// Whether a server's plugin sends to Apple itself instead of through the relay.
+    public func isDirect(server ref: String) -> Bool { preferences.directServers.contains(ref) }
+    /// Switches a server between the relay and direct delivery, then registers this device again over the server
+    /// connection: in direct mode the plugin, not the relay, receives the APNs and Live Activity tokens.
+    public func setDirect(_ direct: Bool, server ref: String) {
+        if direct { preferences.directServers.insert(ref) } else { preferences.directServers.remove(ref) }
+        savePreferences()
+        guard let store = server(ref) else { return }
+        own { [weak self] in
+            guard let self else { return }
+            // A registration already running chose the old transport; start over with the new one.
+            await self.registration.reregister(server: store.id, name: store.record.name, rpc: self.rpc(store))
+            await self.activities.retryRegistrations()
+        }
+    }
     /// UI tests that do not drive the push harness never start an activity: one left on the simulator outlives the
     /// test, and when the next install ends it iOS launches the app in the background without the test environment.
     private var startsLiveActivities: Bool {
@@ -149,14 +168,15 @@ import UserNotifications
         } catch { self.error = localized("Could not send the test push") }
     }
     func registered(token: Data) async {
+        let environment = Bundle.main.object(forInfoDictionaryKey: "OCAPNSEnvironment") as? String == "production" ? "production" : "sandbox"
         do {
-            let environment = Bundle.main.object(forInfoDictionaryKey: "OCAPNSEnvironment") as? String == "production" ? "production" : "sandbox"
             try await registration.registerToken(token.map { String(format: "%02x", $0) }.joined(),
                 bundleID: Bundle.main.bundleIdentifier ?? "", environment: environment)
-            await refresh()
-            await activities.retryRegistrations()
-            await presence.setForeground(registry?.phase == .active)
         } catch { self.error = localized("Could not register notifications") }
+        // Servers in direct mode need only the token, so they register even when the relay could not be reached.
+        await refresh()
+        await activities.retryRegistrations()
+        await presence.setForeground(registry?.phase == .active)
     }
     func connected(_ server: ServerStore) {
         guard !removing.contains(server.id.rawValue.uuidString) else { return }
@@ -173,6 +193,7 @@ import UserNotifications
         removing.insert(ref)
         changeTasks.removeValue(forKey: ref)?.cancel()
         await registration.unregister(server: server.id, rpc: rpc(server))
+        if preferences.directServers.remove(ref) != nil { savePreferences() }
         await activities.removeServer(ref)
         if let badge = try? registration.store.badge() { try? await UNUserNotificationCenter.current().setBadgeCount(badge) }
     }

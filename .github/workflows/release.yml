@@ -1,0 +1,79 @@
+name: Release
+
+# Manual only. Without the signing secrets this archives with signing off (a dry run that proves
+# everything up to signing); with them it archives, signs automatically and exports or uploads.
+on:
+  workflow_dispatch:
+    inputs:
+      signed:
+        description: Sign with the team (needs the APPLE_TEAM_ID and App Store Connect API key secrets)
+        type: boolean
+        default: false
+      upload:
+        description: Upload the signed build to App Store Connect (otherwise export an .ipa)
+        type: boolean
+        default: false
+      build:
+        description: Build number (empty uses this workflow's run number)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: xcode-27
+    timeout-minutes: 60
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '26'
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Test the release scripts
+        run: node --test Tools/release/*.test.mjs
+      - name: Set the build number
+        env:
+          BUILD: ${{ inputs.build || github.run_number }}
+        run: node Tools/release/version.mjs --build "$BUILD"
+      - name: Archive without signing (dry run)
+        if: ${{ !inputs.signed }}
+        run: node Tools/release/index.mjs archive --unsigned
+      - name: Write the App Store Connect API key
+        if: ${{ inputs.signed }}
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          test -n "$ASC_KEY_P8" || { echo "The ASC_KEY_P8 secret is not set"; exit 1; }
+          umask 077
+          printf '%s' "$ASC_KEY_P8" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"
+      - name: Archive, sign and ${{ inputs.upload && 'upload' || 'export' }}
+        if: ${{ inputs.signed }}
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
+          STEP: ${{ inputs.upload && 'upload' || 'export' }}
+        run: |
+          node Tools/release/index.mjs archive
+          node Tools/release/index.mjs "$STEP"
+      - name: Remove the API key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/AuthKey.p8"
+      - name: Keep the logs and the archive summary
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-logs
+          path: |
+            .build/release/*.log
+            .build/release/archive.json
+          if-no-files-found: warn
+          retention-days: 14

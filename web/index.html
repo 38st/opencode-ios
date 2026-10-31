@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:">
+<meta name="referrer" content="no-referrer">
+<title>Pair your phone · Opencode</title>
+<style>
+  :root {
+    --background: #ffffff; --deep: #fafafa; --band: #f2f2f2; --text: #161616; --muted: #5c5c5c;
+    --accent: #3b5cf6; --border: rgba(0, 0, 0, 0.1);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --background: #161616; --deep: #080808; --band: #242424; --text: #fafafa; --muted: #aeaeae; --accent: #a2bcff; --border: rgba(255, 255, 255, 0.1); }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--deep); color: var(--text); line-height: 1.55; font-size: 16px; }
+  main { max-width: 720px; margin: 0 auto; padding: 40px 16px 64px; }
+  header p { color: var(--muted); margin-top: 4px; }
+  h1 { font-size: 28px; line-height: 1.2; margin: 0; letter-spacing: -0.01em; }
+  h2 { font-size: 20px; margin: 0 0 4px; }
+  section { background: var(--background); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-top: 24px; }
+  section > p:first-of-type { color: var(--muted); margin-top: 0; }
+  ol { padding-left: 22px; margin: 12px 0 0; }
+  li { margin: 10px 0; }
+  li p { margin: 4px 0; color: var(--muted); }
+  .command { display: flex; gap: 8px; align-items: stretch; margin: 6px 0; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 14px; }
+  .command code { flex: 1; background: var(--band); border-radius: 8px; padding: 9px 12px; overflow-x: auto; white-space: nowrap; }
+  button { font: inherit; font-size: 14px; color: var(--text); background: var(--background); border: 1px solid var(--border); border-radius: 8px; padding: 0 12px; cursor: pointer; min-height: 40px; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .note { font-size: 14px; color: var(--muted); border-left: 3px solid var(--border); padding-left: 12px; margin-top: 16px; }
+  strong { font-weight: 600; }
+  footer { margin-top: 32px; font-size: 14px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Pair your phone</h1>
+    <p>Connect <span data-constant="app-name">Opencode</span> on your iPhone or iPad to the opencode server on your computer, then turn on notifications so a session can reach you when it needs an answer.</p>
+  </header>
+
+  <section aria-labelledby="pair">
+    <h2 id="pair">1. Pair your phone</h2>
+    <p>The app talks directly to your own opencode server. Nothing passes through a cloud service.</p>
+    <ol>
+      <li>
+        <strong>Use opencode <span data-constant="minimum-version">2.0.25</span> or later on your computer</strong>, and start it as you usually do.
+      </li>
+      <li>
+        <strong>Create a pairing code.</strong> On the same computer, run:
+        <div class="command"><code>opencode pair</code><button type="button" data-copy>Copy</button></div>
+        <p>It prints a pairing link and a QR code. A code works once and expires after five minutes; run the command again for a new one.</p>
+      </li>
+      <li>
+        <strong>Add the server in the app.</strong> Open <span data-constant="app-name">Opencode</span>, tap <strong>Add server</strong>, then <strong>Scan QR code</strong>, or paste the pairing link.
+      </li>
+      <li>
+        <strong>Allow local network access</strong> when iOS asks, so the app can reach your computer on your Wi-Fi.
+      </li>
+    </ol>
+    <p class="note">Away from home, the app needs an HTTPS address for your server, such as an opencode tunnel, <code>tailscale serve</code> or your own reverse proxy. On your home network it can use plain HTTP, and marks those addresses as unencrypted.</p>
+  </section>
+
+  <section aria-labelledby="notify">
+    <h2 id="notify">2. Enable notifications</h2>
+    <p>Notifications need a small plugin in your opencode server. The app works without it; you just won't hear from it while it's closed.</p>
+    <ol>
+      <li>
+        <strong>Install the plugin</strong> on your computer:
+        <div class="command"><code data-constant="plugin-install">opencode plugin add @opencode-ios/opencode-mobile-push</code><button type="button" data-copy>Copy</button></div>
+        <p>Then restart opencode so it loads the plugin.</p>
+      </li>
+      <li>
+        <strong>Turn notifications on in the app.</strong> Open the server's settings, choose <strong>Notifications</strong>, tap <strong>Enable notifications</strong>, and allow them when iOS asks.
+      </li>
+      <li>
+        <strong>Check it works.</strong> Under the server's name, the plugin shows as installed. Tap <strong>Send test push</strong>.
+      </li>
+    </ol>
+    <p class="note"><strong>Or send directly to Apple.</strong> If you build the app yourself with your own bundle ID, the plugin can skip the relay and send to Apple with your own APNs key (a <code>.p8</code> file from the Apple Developer Program, kept with <code>chmod 600</code>). Add an <code>apns</code> option to the plugin in your opencode configuration; the plugin's README shows how.</p>
+    <p class="note">Each notification is encrypted on your computer for your phone. The relay that hands it to Apple only sees a generic alert, and cannot read or answer it. When you approve from a notification, your phone first checks the request with your server again, directly. Requests marked high-risk can only be approved in the app, and "always allow" exists only in the app.</p>
+  </section>
+
+  <section aria-labelledby="demo">
+    <h2 id="demo">No server yet?</h2>
+    <p>Tap <strong>Try a demo</strong> on the app's first screen. The demo plays a recorded session with sample data, needs no server and sends nothing over the network.</p>
+  </section>
+
+  <footer>
+    <span data-constant="app-name">Opencode</span> is an independent open-source client for opencode servers.
+  </footer>
+</main>
+<script>
+  for (const button of document.querySelectorAll("[data-copy]")) {
+    button.addEventListener("click", async () => {
+      const text = button.previousElementSibling.textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        button.textContent = "Copied";
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(button.previousElementSibling);
+        getSelection().removeAllRanges();
+        getSelection().addRange(range);
+        button.textContent = "Selected";
+      }
+      setTimeout(() => (button.textContent = "Copy"), 2000);
+    });
+  }
+</script>
+</body>
+</html>

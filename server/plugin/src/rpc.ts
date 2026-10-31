@@ -74,20 +74,50 @@ function prefs(value: unknown): Prefs {
   return result;
 }
 
+/** APNs device and Live Activity push tokens: hex, as the relay accepts them. */
+const pushToken = (input: Record<string, unknown>, field: string): string => {
+  const value = input[field];
+  if (typeof value !== "string" || !/^[0-9a-fA-F]{64,400}$/.test(value) || value.length % 2 !== 0) throw new Invalid(field, `${field} must be an APNs token in hex`);
+  return value.toLowerCase();
+};
+
+/** Where a device's pushes go: its relay, or straight to Apple with this server's APNs key. */
+function route(service: PushService, input: Record<string, unknown>): Pick<Device, "transport" | "sendToken" | "relayURL" | "apnsToken" | "bundleID" | "environment"> {
+  const transport = input.transport ?? "relay";
+  if (transport === "relay") {
+    return {
+      transport,
+      sendToken: text(input, "sendToken", /^[A-Za-z0-9_-]{16,200}$/, "sendToken must be the relay's send token"),
+      relayURL: relayURL(input.relayURL),
+    };
+  }
+  if (transport !== "direct") throw new Invalid("transport", 'transport must be "relay" or "direct"');
+  const direct = service.direct;
+  if (!direct) throw new Invalid("transport", "Direct mode is not configured on this server: set the plugin's apns option, or register through a relay");
+  const apnsToken = pushToken(input, "apnsToken");
+  const bundleID = text(input, "bundleID", /^[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$/, "bundleID must be the app's bundle ID");
+  if (bundleID !== direct.config.bundleID) throw new Invalid("bundleID", "bundleID does not match the bundle ID this server's APNs key sends to");
+  const environment = input.environment;
+  if (environment !== "sandbox" && environment !== "production") throw new Invalid("environment", 'environment must be "sandbox" or "production"');
+  if (environment !== direct.config.environment) throw new Invalid("environment", `environment does not match this server's APNs environment (${direct.config.environment})`);
+  return { transport, apnsToken, bundleID, environment };
+}
+
 const publicDevice = async (service: PushService, device: Device) => {
   const lastDelivery = await service.registry.lastDelivery(device.keyID);
   return {
     keyID: device.keyID,
+    transport: device.transport,
     label: device.label,
     appServerRef: device.appServerRef,
-    relayURL: device.relayURL,
+    ...(device.transport === "direct" ? { bundleID: device.bundleID, environment: device.environment } : { relayURL: device.relayURL }),
     prefs: device.prefs,
     registeredAt: device.registeredAt,
     ...(lastDelivery ? { lastDelivery } : {}),
   };
 };
 
-/** The `mobilepush` RPC methods (ARCHITECTURE §4.2). No method returns a send token or the private key. */
+/** The `mobilepush` RPC methods (ARCHITECTURE §4.2). No method returns a send token, an APNs token or any private key. */
 export function handlers(service: PushService): Record<string, RpcHandler> {
   const wrap = (run: (input: Record<string, unknown>) => Promise<unknown>): RpcHandler => async (input: unknown, context: RpcContext) => {
     try {
@@ -114,6 +144,7 @@ export function handlers(service: PushService): Record<string, RpcHandler> {
       rpcVersion: RPC_VERSION,
       serverPublicKey: await serverPublicKey(),
       devices: (await service.registry.list()).length,
+      direct: service.direct ? { available: true, ...service.direct.summary } : { available: false },
       instance: service.instance,
     })),
 
@@ -128,8 +159,7 @@ export function handlers(service: PushService): Record<string, RpcHandler> {
       if (typeof label !== "string" || codePointLength(label) > 64) throw new Invalid("label", "label must be at most 64 characters");
       const device: Device = {
         keyID: keyID(input),
-        sendToken: text(input, "sendToken", /^[A-Za-z0-9_-]{16,200}$/, "sendToken must be the relay's send token"),
-        relayURL: relayURL(input.relayURL),
+        ...route(service, input),
         devicePublicKey,
         appServerRef,
         label,
@@ -155,7 +185,17 @@ export function handlers(service: PushService): Record<string, RpcHandler> {
       const device = await registered(input);
       const activityRef = text(input, "activityRef", /^[A-Za-z0-9_-]{1,64}$/, "activityRef must be 1 to 64 characters of A-Z, a-z, 0-9, _ or -");
       const sessionID = text(input, "sessionID", /^[A-Za-z0-9_-]{1,128}$/, "sessionID must be a session ID");
-      const outcome = await service.registerActivity(device.keyID, activityRef, sessionID);
+      // The relay keeps a relay device's activity push token; a direct device's is kept here.
+      let token: { pushToken: string; expiresAt: number } | undefined;
+      if (device.transport === "direct") {
+        const now = Math.floor(Date.now() / 1000);
+        const expiresAt = input.expiresAt;
+        if (typeof expiresAt !== "number" || !Number.isSafeInteger(expiresAt) || expiresAt <= now || expiresAt > 4_102_444_800) {
+          throw new Invalid("expiresAt", "expiresAt must be a future Unix time in seconds");
+        }
+        token = { pushToken: pushToken(input, "pushToken"), expiresAt: Math.min(expiresAt, now + CONTRACT.activity.maxLifetimeSeconds) };
+      }
+      const outcome = await service.registerActivity(device.keyID, activityRef, sessionID, token);
       if (outcome === "missing") throw new NotFound("sessionID", "The session or its parent does not exist");
       if (outcome === "unavailable") throw new Unavailable("sessionID", "The session's family could not be read; register the activity again");
       return { registered: true };

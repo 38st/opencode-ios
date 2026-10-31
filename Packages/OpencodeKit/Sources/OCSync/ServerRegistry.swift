@@ -31,6 +31,7 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
     @ObservationIgnored private let pathMonitor: (any NetworkPathMonitoring)?
     @ObservationIgnored private let factory: @Sendable (ServerRecord, Credential?, [String: String]) -> any ConnectionControlling
     @ObservationIgnored private let fetchInfo: (@Sendable (URL, Credential?, [String: String]) async throws -> ServerInfo)?
+    @ObservationIgnored private let transport: (any HTTPTransport)?
     @ObservationIgnored private let rememberLocalNetwork: @MainActor () -> Void
     @ObservationIgnored private var pathTask: Task<Void, Never>?
     @ObservationIgnored private var debounceTask: Task<Void, Never>?
@@ -44,13 +45,14 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
                 background: (any BackgroundTaskProviding)? = nil,
                 pathMonitor: (any NetworkPathMonitoring)? = NetworkPathMonitor(),
                 localNetworkExplained: Bool = false, rememberLocalNetwork: @escaping @MainActor () -> Void = {},
+                transport: (any HTTPTransport)? = nil,
                 fetchInfo: (@Sendable (URL, Credential?, [String: String]) async throws -> ServerInfo)? = nil,
                 factory: (@Sendable (ServerRecord, Credential?, [String: String]) -> any ConnectionControlling)? = nil) {
         self.cache = cache; self.drafts = cache.map { DraftStore(writer: $0.writer) }
         self.records = records; self.credentials = credentials; self.clock = clock
         self.background = background ?? SystemBackgroundTaskProvider(); self.pathMonitor = pathMonitor
         self.localNetworkExplained = localNetworkExplained; self.rememberLocalNetwork = rememberLocalNetwork
-        self.fetchInfo = fetchInfo
+        self.fetchInfo = fetchInfo; self.transport = transport
         // The OS cannot establish that a Wi-Fi network is trusted. Prefer TLS by default.
         self.factory = factory ?? { record, credential, headers in
             ServerConnection(endpoints: record.endpoints, credential: credential, headers: headers,
@@ -140,7 +142,7 @@ public enum AppScenePhase: Sendable { case active, inactive, background }
         let connection = factory(record, credential, headers)
         if localNetworkExplained { await connection.allowLocalNetwork() }
         let store = ServerStore(record: record, connection: connection, credentials: credentials,
-                           clock: clock, cache: cache, residency: residency, drafts: drafts, background: background, fetchInfo: fetchInfo, canConnect: { [weak self] in
+                           clock: clock, cache: cache, residency: residency, drafts: drafts, background: background, transport: transport, fetchInfo: fetchInfo, canConnect: { [weak self] in
                                guard let self, self.phase == .active,
                                      let store = self.servers.first(where: { $0.id == record.id }) else { return false }
                                return self.mayConnect(store)

@@ -1,8 +1,10 @@
 import { Hono, type Context } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { CONTRACT, isKind } from "../../contracts/src/constants.ts";
+import * as base64url from "../../contracts/src/base64url.ts";
 import { EnvelopeError, parseEnvelope } from "../../contracts/src/envelope-format.ts";
 import { activityState } from "./activity-state.ts";
+import { AttestError, sha256, verifyAssertion, verifyAttestation } from "./attest/verify.ts";
 import { deliver, type ApnsSender, type Delivery, type DeliveryResult } from "./apns/delivery.ts";
 import { activityRequest, alertRequest, fitsAPNs } from "./apns/request.ts";
 import type { TokenProvider } from "./apns/token.ts";
@@ -11,7 +13,7 @@ import { randomToken, sameDigest, sha256Hex } from "./crypto.ts";
 import type { Limiter } from "./limiter.ts";
 import type { Logger } from "./log.ts";
 import { MAX_SENDERS, type Device, type Store } from "./store.ts";
-import { apnsEnvironment, bearer, bundleID, jsonBody, opaqueID, priority, pushToken, unixSeconds } from "./validation.ts";
+import { apnsEnvironment, base64Bytes, bearer, bundleID, jsonBody, jsonBytes, opaqueID, priority, pushToken, unixSeconds, type Json } from "./validation.ts";
 
 export const RELAY_VERSION = "0.1.0";
 
@@ -35,10 +37,15 @@ export interface AppOptions {
   readonly clientIP: (c: Context) => string | undefined;
 }
 
-const error = (c: Context, status: 400 | 401 | 403 | 404 | 409 | 429 | 501 | 503, code: string) => c.json({ error: code }, status);
+const error = (c: Context, status: 400 | 401 | 403 | 404 | 409 | 429 | 503, code: string) => c.json({ error: code }, status);
 const DEVICE_ID = /^dev_[A-Za-z0-9_-]{22}$/;
 const SENDER_ID = /^snd_[A-Za-z0-9_-]{22}$/;
 const MAX_ACTIVITY_SECONDS = CONTRACT.activity.maxLifetimeSeconds;
+const CHALLENGE = /^atc_[A-Za-z0-9_-]{43}$/;
+const CHALLENGE_SECONDS = 300;
+/** An App Attest key ID: base64 of a SHA-256 digest. */
+const ATTEST_KEY_ID = /^[A-Za-z0-9+/]{43}=$/;
+const text = (value: string) => new TextEncoder().encode(value);
 
 export function createApp(options: AppOptions) {
   const app = new Hono<Env>();
@@ -79,16 +86,95 @@ export function createApp(options: AppOptions) {
     return found && owner ? { sender: found, device: owner } : undefined;
   }
 
-  app.post("/v1/devices", async (c) => {
-    const { config, store, limiter, log, now } = c.get("deps");
-    // App Attest gate for M9. While APP_ATTEST is "off" every registration passes; "required"
-    // fails closed until verification of the assertion is implemented.
-    if (config.appAttest === "required") return error(c, 501, "app_attest_unavailable");
+  /** Counts a request against the caller's hashed IP address. */
+  async function withinLimit(c: Context<Env>, scope: string, max: number): Promise<boolean> {
+    const { limiter, now } = c.get("deps");
     const ip = await sha256Hex(options.clientIP(c) ?? "unknown");
-    if (!(await limiter.hit(`ip:${ip}`, [{ windowSeconds: 3600, max: config.limits.registrationsPerHour }], now()))) {
-      return error(c, 429, "rate_limited");
+    return limiter.hit(`${scope}:${ip}`, [{ windowSeconds: 3600, max }], now());
+  }
+
+  /**
+   * With App Attest required, a registration carries the key ID and an assertion in headers, and a
+   * fresh challenge in its body. The assertion signs the exact body bytes, so it binds the challenge,
+   * the APNs token and the bundle ID. Returns the refusal, or undefined when the request may proceed.
+   */
+  async function assertionRefusal(c: Context<Env>, raw: Uint8Array, body: Json | undefined) {
+    const { config, store, log, now } = c.get("deps");
+    const keyID = c.req.header("x-app-attest-key"), assertion = base64Bytes(c.req.header("x-app-attest-assertion"), 4096);
+    if (!keyID || !ATTEST_KEY_ID.test(keyID) || !assertion) return error(c, 401, "attestation_required");
+    const challenge = body?.challenge;
+    if (typeof challenge !== "string" || !CHALLENGE.test(challenge) || !(await store.consumeChallenge(challenge, now()))) {
+      return error(c, 401, "challenge_invalid");
     }
+    const key = await store.attestKey(keyID);
+    if (!key) return error(c, 401, "attest_key_unknown");
+    try {
+      if (key.appID !== `${config.apns.teamID}.${String(body?.bundleID)}`) throw new AttestError("bundle ID mismatch");
+      const counter = await verifyAssertion({
+        assertion,
+        clientDataHash: await sha256(raw),
+        key: { publicKey: base64url.decode(key.publicKey) ?? new Uint8Array(), appID: key.appID },
+        counter: key.counter,
+      });
+      if (!(await store.advanceAttestCounter(keyID, counter, now()))) throw new AttestError("counter replayed");
+    } catch (failure) {
+      if (!(failure instanceof AttestError)) throw failure;
+      log("attest.refused", { route: "devices" });
+      return error(c, 401, "attestation_invalid");
+    }
+    return undefined;
+  }
+
+  app.post("/v1/attest/challenge", async (c) => {
+    const { config, store, now } = c.get("deps");
+    if (config.appAttest.mode === "off") return error(c, 404, "not_found");
+    if (!(await withinLimit(c, "attest", config.limits.registrationsPerHour * 3))) return error(c, 429, "rate_limited");
+    const challenge = randomToken("atc_"), current = now();
+    await store.createChallenge(challenge, current + CHALLENGE_SECONDS, current);
+    return c.json({ challenge, expiresAt: current + CHALLENGE_SECONDS }, 201);
+  });
+
+  /** Stores a newly attested key. The attestation's client data is the challenge's UTF-8 bytes. */
+  app.post("/v1/attest/keys", async (c) => {
+    const { config, store, log, now } = c.get("deps");
+    if (config.appAttest.mode === "off") return error(c, 404, "not_found");
     const body = await jsonBody(c.req.raw);
+    const keyID = typeof body?.keyID === "string" && ATTEST_KEY_ID.test(body.keyID) ? body.keyID : undefined;
+    const challenge = typeof body?.challenge === "string" && CHALLENGE.test(body.challenge) ? body.challenge : undefined;
+    const attestation = base64Bytes(body?.attestation, 12_000);
+    if (!keyID || !challenge || !attestation) return error(c, 400, "invalid_request");
+    if (!(await store.consumeChallenge(challenge, now()))) return error(c, 401, "challenge_invalid");
+    let attested;
+    try {
+      attested = await verifyAttestation({
+        attestation,
+        keyID: base64Bytes(keyID, 44)!,
+        clientDataHash: await sha256(text(challenge)),
+        appIDs: config.appAttest.appIDs,
+        environment: config.appAttest.environment,
+        roots: config.appAttest.roots,
+        now: now(),
+      });
+    } catch (failure) {
+      if (!(failure instanceof AttestError)) throw failure;
+      log("attest.refused", { route: "attest" });
+      return error(c, 401, "attestation_invalid");
+    }
+    const created = await store.createAttestKey({ keyID, publicKey: base64url.encode(attested.publicKey), appID: attested.appID, counter: 0 }, now());
+    if (!created) return error(c, 409, "key_exists");
+    log("attest.key_created", { route: "attest" });
+    return c.json({ keyID }, 201);
+  });
+
+  app.post("/v1/devices", async (c) => {
+    const { config, store, log, now } = c.get("deps");
+    if (!(await withinLimit(c, "ip", config.limits.registrationsPerHour))) return error(c, 429, "rate_limited");
+    const raw = new Uint8Array(await c.req.arrayBuffer());
+    const body = jsonBytes(raw);
+    if (config.appAttest.mode === "required") {
+      const refusal = await assertionRefusal(c, raw, body);
+      if (refusal) return refusal;
+    }
     const apnsToken = pushToken(body?.apnsToken), env = apnsEnvironment(body?.env), bundle = bundleID(body?.bundleID);
     if (!apnsToken || !env || !bundle) return error(c, 400, "invalid_request");
     if (!config.bundleIDs.has(bundle)) return error(c, 403, "bundle_not_allowed");
