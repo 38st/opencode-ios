@@ -6,6 +6,9 @@ These are not captured server responses.
 `source/` contains hand-made inputs for the approval and review snapshot tests:
 a permission request and a question form, and patches and an image to review.
 
+`performance/baselines.json` holds the memory baselines the read performance tests
+compare against, on the simulator and on the Mac that runs `swift test`.
+
 `v2/<server-version>/` contains real isolated npm-server recordings. See
 [`Tools/README.md`](../Tools/README.md) for isolation, mock scripts, and commands.
 

@@ -26,12 +26,21 @@ Outside pull requests can't be merged yet. The app is licensed under the GPL-3.0
 
 [README.md](README.md) covers the requirements, building and the test commands. [Tools/README.md](Tools/README.md) covers the sandboxed opencode server, the scripted model, fixture recording, the contract checks and the UI smoke tests. [ARCHITECTURE.md](ARCHITECTURE.md) explains how the app is put together, and [docs/design.md](docs/design.md) how it maps the opencode desktop design to native code.
 
+The repository is large, mostly because of the snapshot tests' reference images. If you don't need those, a partial clone without them takes about 80 MB instead of about 600 MB:
+
+```sh
+git clone --filter=blob:none --sparse <repository URL> opencode-ios
+cd opencode-ios
+git sparse-checkout set --no-cone '/*' '!**/__Snapshots__/'
+```
+
 Conventions the code follows:
 
 - `project.yml` is the source of truth for the Xcode project; run `xcodegen generate` after changing it, and don't commit the generated project.
 - The app target only wires things together. Logic lives in the Swift 6 modules of `Packages/OpencodeKit`, with strict concurrency.
 - Wire models are hand-written and tolerant: every union has an `.unknown` case and arrays decode lossily, so a newer server can't break decoding.
-- Dependencies are pinned to exact versions. Every bundled third-party file is credited in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) with its licence.
+- Dependencies are pinned to exact versions. Every shipped component is listed once, with its version and licence, in `Packages/OpencodeKit/Sources/OCDesign/Resources/Licenses/acknowledgements.json`. The app's Acknowledgements screen reads it, and `node Tools/notices/generate.mjs` writes the table in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) from it.
+- Every user-facing string goes through its module's `localized(_:)` helper and String Catalog. After an app build, `node Tools/strings/sync.mjs` adds new keys with comments for translators and removes unused ones.
 - Screens have snapshot tests in light and dark, at phone and iPad widths and at the largest text size. A change to a screen re-records its snapshots, and the new images are reviewed with the code.
 - The push plugin and relay change in step with `server/contracts`. A change to the payload, envelope, digest or risk rules updates the contracts and their test vectors, which the Swift and TypeScript suites both check.
 - Tests run against recorded or sandboxed opencode servers and never touch your own opencode installation, configuration or data.

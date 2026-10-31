@@ -20,7 +20,9 @@ The first release.
 - **Push notifications.** End-to-end sealed alerts for approvals, questions, finished and failed runs; lock-screen actions with risk tiers; a Live Activity for runs started from the phone; per-kind settings, per-session mute and quiet hours that never silence approvals.
 - **iPad workspace.** Project tabs, a collapsible Home sidebar, a review panel with Changes, Files, Terminal and Context, a menu bar with keyboard shortcuts, a ⌘K switcher, a window per session and drag and drop into the composer.
 - **System integration.** Shortcuts and Siri, Spotlight, Home and Lock Screen widgets, and Control Center controls.
-- **Accessibility.** VoiceOver labels and actions, Dynamic Type up to the largest accessibility sizes, and Reduce Motion.
+- **Accessibility.** XCUITest accessibility audits of every main screen on iPhone and iPad, in light and dark mode; VoiceOver rows with custom actions and announcements for permissions and questions; Dynamic Type up to the largest accessibility sizes; and Reduce Motion.
+- **Localization groundwork.** Every user-facing string is in a String Catalog with comments for translators and English plurals, and layouts are checked with double-length strings and right to left. English is the only language so far.
+- **Privacy and licences.** Privacy manifests for the app and both extensions, and an Acknowledgements screen under Settings → About with every component's licence.
 
 ### Push plugin
 

@@ -434,6 +434,21 @@ Missing references are recorded and fail the first run. Review the PNGs under
 Ordinary `swift test` uses no network, runs the sync tests with fake connections
 and virtual clocks, and skips live networking and iOS-only image comparisons.
 
+## Strings and licence notices
+
+```sh
+node Tools/strings/sync.mjs [--check]     # after an xcodebuild build into .build/DerivedData
+node Tools/notices/generate.mjs [--check]
+```
+
+`strings/sync.mjs` reads the `.stringsdata` files the compiler writes for each target and keeps every
+String Catalog in step with the code: it adds new keys, removes keys the code no longer uses, keeps
+existing translations and plural variations, and gives every key a comment for translators.
+`notices/generate.mjs` writes the component table in `THIRD_PARTY_NOTICES.md`, and copies each licence
+text, from `Packages/OpencodeKit/Sources/OCDesign/Resources/Licenses/acknowledgements.json`, the list the
+app's Acknowledgements screen shows. With `--check`, either tool changes nothing and fails when
+something has drifted.
+
 ## Design references
 
 `node Tools/design-reference/index.mjs --version 2.0.32` seeds real V2 sessions using the fixture mock, signs into the UI served by that sandbox, and captures desktop, both iPad orientations, and iPhone in light/dark. Playwright and Chromium remain under `.build`; no installed browser profile or installed OpenCode is used. See `docs/design.md` for snapshot recording, import scripts, and `.build/design-compare/index.html` generation.

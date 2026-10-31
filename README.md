@@ -105,7 +105,7 @@ Install the plugin once on each server, as [`server/plugin/README.md`](server/pl
 
 ## Privacy
 
-- **No account and no telemetry.** The app has no analytics, crash-reporting or advertising SDKs, and it talks only to your servers, plus the push relay and Apple's push service if you turn on notifications.
+- **No account and no telemetry.** The app has no analytics, crash-reporting or advertising SDKs, and it talks only to your servers, plus the push relay and Apple's push service if you turn on notifications. Its privacy manifest declares one data type: the push token the relay needs, not linked to you and not used for tracking.
 - **Credentials stay on the device.** Server passwords and pairing tokens live in the device's Keychain. They don't sync through iCloud and don't move to a new device.
 - **History is cached on the device** for fast launches and offline reading: up to the 200 most recent sessions or 300 MB, protected by iOS data protection.
 - **Notifications are sealed.** See [Notifications](#notifications). A Live Activity's status (its phase, step count, current tool kind and two timestamps) is visible to the relay and to Apple, so it carries nothing else.
