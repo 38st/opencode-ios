@@ -9,8 +9,7 @@ Follow every session live, answer approvals with the full diff in front of you, 
 
 [![CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
 [![Push plugin](../../actions/workflows/plugin.yml/badge.svg)](../../actions/workflows/plugin.yml)
-[![Push relay](../../actions/workflows/relay.yml/badge.svg)](../../actions/workflows/relay.yml)
-[![opencode contract](../../actions/workflows/contract.yml/badge.svg)](../../actions/workflows/contract.yml)<br>
+[![Push relay](../../actions/workflows/relay.yml/badge.svg)](../../actions/workflows/relay.yml)<br>
 ![iOS and iPadOS 26.4+](https://img.shields.io/badge/iOS%20%7C%20iPadOS-26.4%2B-black)
 ![opencode 2.0.25+](https://img.shields.io/badge/opencode-2.0.25%2B-555)
 ![Swift 6](https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white)
