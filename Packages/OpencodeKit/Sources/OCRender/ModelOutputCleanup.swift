@@ -1,6 +1,6 @@
 import Foundation
 
-/// Original implementation of the fence-aware cleanup idea in research/09.
+/// Removes `<think>` … `</think>` reasoning that leaks into a model's answer text.
 /// Literal tags in fenced, indented and inline code are preserved byte for byte.
 public enum ModelOutputCleanup {
     public static func clean(_ text: String) -> String {
